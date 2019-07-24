@@ -77,12 +77,12 @@ if __name__ == '__main__':
         [transforms.ToTensor(),
          transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-    trainset = torchvision.datasets.CIFAR10(root='../../../data', train=True,
+    trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
                                             download=False, transform=transform)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE,
                                               shuffle=True, num_workers=NUM_WORKERS)
 
-    testset = torchvision.datasets.CIFAR10(root='../../../data', train=False,
+    testset = torchvision.datasets.CIFAR10(root='./data', train=False,
                                            download=False, transform=transform)
     testloader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE,
                                              shuffle=False, num_workers=NUM_WORKERS)
@@ -179,12 +179,12 @@ if __name__ == '__main__':
         if epoch == 0:
             Poptimizer = Preconditioner(model.parameters(),
                                         est_rank=est_rank, num_observations=gather_obs, prior_iterations=est_prior,
-                                        weight_decay = 0.9999, set_lr = False,
+                                        weight_decay = 0.9999, lr = 0.01,
                                         optim_class=optimizer_class, optim_hyperparams=hyperparams)
         else:    #epoch > 0
             Poptimizer = Preconditioner(model.parameters(),
                                         est_rank=est_rank, num_observations=gather_obs, prior_iterations=est_prior,
-                                        weight_decay = 0.9999, set_lr = True,
+                                        weight_decay = 0.9999, lr = None,
                                         optim_class=optimizer_class, optim_hyperparams=hyperparams)
         
 

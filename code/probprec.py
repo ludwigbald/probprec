@@ -10,18 +10,18 @@ dtype=torch.float
 # The Preconditioner class runs as an Optimizer.
 class Preconditioner(torch.optim.Optimizer):
     
-    def __init__(self, params, est_rank=2, num_observations=5, prior_iterations = 10, weight_decay = 0, set_lr = True, 
-                 optim_class = torch.optim.SGD, optim_hyperparams = {'lr' : 0.01, 'momentum': 0.99}):
+    def __init__(self, params, est_rank=2, num_observations=5, prior_iterations = 10, weight_decay = 0, lr = None, 
+                 optim_class = torch.optim.SGD, optim_hyperparams = {'momentum': 0.99}):
         if not 0 <= est_rank:
             raise ValueError("Invalid Hessian rank: {}".format(est_rank))    
         if not 0 <= num_observations:
             raise ValueError("Invalid number of observations: {}".format(num_observations))
         if weight_decay < 0.0:
             raise ValueError("Invalid weight_decay value: {}".format(weight_decay))
-        theparams = list(params)
+        self.theparams = list(params)
        
         defaults = dict(weight_decay = weight_decay)
-        super(Preconditioner, self).__init__(theparams, defaults)
+        super(Preconditioner, self).__init__(self.theparams, defaults)
         self.num_observations = int(num_observations)
         self.prior_iterations = int(prior_iterations)
         self.rank=int(est_rank)
@@ -31,9 +31,9 @@ class Preconditioner(torch.optim.Optimizer):
         self.alpha=torch.zeros(1)
         
         self.optim_class = optim_class
-        self.optim_hyperparams = optim_hyperparams
-        self.the_optimizer = optim_class(theparams, **optim_hyperparams)
-        self.set_lr = set_lr
+        self.optim_hyperparams = optim_hyperparams.update(lr = lr)
+        self.the_optimizer = optim_class(self.theparams, **optim_hyperparams)
+        self.lr = lr
         
         self._InitializeLists()
         
@@ -338,9 +338,9 @@ class Preconditioner(torch.optim.Optimizer):
         elif self.stepnumber == self.prior_iterations + self.num_observations:
             self.UpdateEstimatedHessian()
             self.CreateLowRank()
-            if self.set_lr:
+            if self.lr is None:
                 self.optim_hyperparams['lr'] = self.alpha.item()
-                self.the_optimizer = self.optim_class(self.params, **optim_hyperparams)
+                self.the_optimizer = self.optim_class(self.theparams, **self.optim_hyperparams)
                 
         else: # optim step
             
