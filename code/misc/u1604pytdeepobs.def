@@ -1,0 +1,37 @@
+#header
+Bootstrap: docker
+From: ubuntu:16.04
+
+#Sections
+
+
+%environment
+# set environment variables
+
+
+%post
+#commands executed inside the container after os has been installed. Used for setup of the container
+#devine env variables for build time
+
+apt-get -y update
+apt-get -y install python3-pip git python3-tk
+
+python3 --version
+
+pip3 install --upgrade pip
+pip install torch torchvision
+pip install git+https://github.com/abahde/DeepOBS.git@master#egg=deepobs
+
+
+
+%runscript
+# commands that are run when container's run command is used
+
+
+%test
+# validate setup at the end of the build process
+
+
+
+
+  #/usr/lib/x86_64-linux-gnu/libcuda.so.1
