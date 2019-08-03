@@ -2,6 +2,10 @@
 ## Data directories
 **/data*/
 
+## Python stuff
+**/__pycache__/
+src/
+
 
 ## Core latex/pdflatex auxiliary files:
 *.aux

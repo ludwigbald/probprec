@@ -3,7 +3,7 @@ import numpy as np
 
 class SORunner(PTRunner):
     """A second order runner. Can run a normal training loop with grad-thing enabled with fixed
-    hyperparams. It should be used as a template to implement custom runners.
+    hyperparams.
     Methods:
         training: Performs the training on a testproblem instance.
     """

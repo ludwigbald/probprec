@@ -9,4 +9,4 @@ print(performance_dic)
 
 # plot again, but this time compare to the Adam baseline
 analyzer.plot_optimizer_performance('./results/mnist_2c2d/Preconditioner',
-                                    reference_path='./results/mnist_2c2d/SGD')
+                                    reference_path='./results/mnist_2c2d/Preconditioner2')
