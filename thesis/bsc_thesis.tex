@@ -9,33 +9,55 @@
 \input{teaser}
 
 \chapter*{Abstract}
-Template
+\todo{theabstract, citing!}
+In machine learning, stochastic gradient descent is a widely used optimizsation algorithm, used to update the parameters of a model after a minibatch of data has been observed, in order to improve the model's predictions. It has been shown to converge much faster when the condition number (i.e. the ratio between the largest and the smallest eigenvalue) of ... is closer to 1. A preconditioner reduces the condition value 
+In this thesis I present my implementation of the probabilistic preconditioning algorithm proposed in \cite{de2019active}. I use DeepOBS \todo{cite} as a benchmarking toolbox, examining the effect of this kind of preconditioning on various optimizers and test problems. 
+The results...
+
 
 \chapter*{Acknowledgments}
 If you have someone to Acknowledge ;)
-
+\todo{Aaron, Filip}
 \tableofcontents
 
-%% braucht kein Mensch ...
-%\listoffigures
-%\listoftables
-
-% write content here or...
 \chapter{Introduction}
 What is this all about?
+%Cite like this: \cite{agarwal2011}
 
-Cite like this: \cite{agarwal2011}
 
-\section{Problem Statement}
-\todo{what you have to do here :)}
+\chapter{Fundamentals and related work}
 
-% ... input content via other .tex files
-\input{content/conclusion}
+
+\chapter{Implementation}
+\todo{High-Level to low-level details}
+
+\section{Overview}
+
+\section{Realization of the Test problems}
+
+\section{Technical details}
+The experiments were run on the TCML cluster at the University of Tübingen.
+A Singularity container was set up on Ubuntu 16.4 LTS with python 3.5, pytorch (version) and DeepOBS (see Appendix for Singulariy recipe).
+Computation was distributed over the compute nodes using the workload manager Slurm.
+
+
+\chapter{Experiment}
+
+\section{Results}
+
+\section{Analysis}
+
+\section{Discussion}
+
+
+\chapter{Conclusion}
+
 
 \appendix
-\chapter{Blub}
+\chapter{Appendixthings}
 
-\bibliographystyle{alpha}
+\todo{Choose bibliography style}
+\bibliographystyle{apalike}
 \bibliography{bibliography}
 
 \end{document}
