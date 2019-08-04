@@ -1,0 +1,13 @@
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+// This is a comment
+int main(int argc, char **argv)
+{
+    while (--c > 1 && !fork());
+    sleep(c = atoi(v[c]));
+    printf("%d\n", c);
+    wait(0);
+    return 0;
+}

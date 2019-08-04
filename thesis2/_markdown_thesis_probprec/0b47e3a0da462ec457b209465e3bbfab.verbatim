@@ -1,0 +1,8 @@
+#!/bin/sh
+fac() {
+  if [ "$1" -leq 1 ]; then
+    echo 1
+  else
+    echo $(("$1" * fac $(("$1" - 1))))
+  fi
+}
