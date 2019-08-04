@@ -3,18 +3,18 @@
  \includegraphics[width=0.5\linewidth]{UT_WBMW_Rot_4C} % logo red
  & \hspace{0.2\linewidth}
  \parbox{0.5\linewidth}{
-   \large\bf\textsf{\color{rot}{Mathematisch-\\Naturwissenschaftliche\\Fakultät\\\\}}
-  \hspace{-.144cm}\normalsize\textsf{\color{rot}{Methoden des Maschinellen Lernens}}
+   \large\bf\textsf{\color{rot}{Mathematisch-\\Naturwissenschaftliche\\Fakultät\\\\
+   	\normalsize Methoden des \\ Maschinellen Lernens}}
    \vspace{0.6cm}
  }
 \end{tabular}
 
 \vspace*{10ex}
-Bachelorarbeit
+Bachelorarbeit \\
 
 {\huge\bf\textsf{Title of Thesis}}
 
-\vspace*{30ex}
+\vspace*{20ex}
 
 Eberhard Karls Universität Tübingen\\
 Mathematisch-Naturwissenschaftliche Fakultät\\
@@ -33,6 +33,8 @@ Ludwig Bald,~ \verb+ludwig.bald@student.uni-tuebingen.de+,~ 2019
 \thispagestyle{empty}
 \newpage
 
+\thesis@blocks@frontMatter
+
 \chapter*{Selbstst\"andigkeitserkl\"arung}
 Hiermit versichere ich, dass ich die vorliegende Bachelorarbeit selbst\"andig und
 nur mit den angegebenen Hilfsmitteln angefertigt habe und dass alle Stellen,
@@ -45,4 +47,16 @@ Studiengang als Pr\"ufungsleistung vorgelegt.
 \hrule
 \vspace*{2ex}
 Ludwig Bald (Matrikelnummer 4125813), \today
+
+\chapter*{Abstract}
+\todo{theabstract, citing!}
+In machine learning, stochastic gradient descent is a widely used optimizsation algorithm, used to update the parameters of a model after a minibatch of data has been observed, in order to improve the model's predictions. It has been shown to converge much faster when the condition number (i.e. the ratio between the largest and the smallest eigenvalue) of ... is closer to 1. A preconditioner reduces the condition value 
+In this thesis I present my implementation of the probabilistic preconditioning algorithm proposed in \cite{de2019active}. I use DeepOBS \todo{cite} as a benchmarking toolbox, examining the effect of this kind of preconditioning on various optimizers and test problems. 
+The results...
+
+
+\chapter*{Acknowledgments}
+If you have someone to Acknowledge ;)
+\todo{Aaron, Filip}
+
 
