@@ -1,0 +1,1 @@
+In this folder I will put all the cited papers, which are freely available. I will delete them after I finish working on the thesis, in order not to infringe on copyright. Please try to obtain the papers from their original sources.
