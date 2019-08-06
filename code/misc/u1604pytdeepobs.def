@@ -20,7 +20,7 @@ python3 --version
 
 pip3 install --upgrade pip
 pip install torch torchvision
-pip install git+https://github.com/abahde/DeepOBS.git@master#egg=deepobs
+pip install git+https://github.com/abahde/DeepOBS.git@v2.0.0-beta#egg=deepobs
 
 
 
