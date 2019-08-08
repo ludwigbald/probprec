@@ -1,7 +1,7 @@
 """Example run script using StandardRunner."""
 
-from torch.optim import SGD
 from deepobs import pytorch as pt
+from torch.optim import SGD
 
 optimizer_class = SGD
 hyperparams = {"lr": {"type": float, "default": 0.01},
