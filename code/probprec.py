@@ -116,9 +116,9 @@ class Preconditioner(torch.optim.Optimizer):
 
         for group in self.param_groups:
             weight_decay = group['weight_decay']
-            for grad_temp, v, ag, p in zip(self.gradient, self.vec, self.accumulated_gradient, group['params']):
-                grad_temp.data = p.grad.clone()
-                v.data = grad_temp.data + weight_decay * p.data
+            for g, v, ag, p in zip(self.gradient, self.vec, self.accumulated_gradient, group['params']):
+                g.data = p.grad.clone()
+                v.data = g.data + weight_decay * p.data
                 ag.data += v.data
                 df_sum += torch.sum(v * p.grad)
 
@@ -209,7 +209,9 @@ class Preconditioner(torch.optim.Optimizer):
                                                          [0][:, 0]).view_as(p.grad)
                 vec.data = alph * p.grad - proj
 
-    # Some math function
+    # Computes the Hessian-vector products of the true Hessian of the params and
+    # the vectors self.vec
+    # Result is saved in hv
     def HessianVectorProduct(self):
         df_sum = torch.zeros(1, device=self.device)
 
@@ -254,7 +256,8 @@ class Preconditioner(torch.optim.Optimizer):
             STLS.data[m] = lam * S_norm
 
             stls = torch.sqrt(STLS[:m + 1])
-            D, V = torch.symeig(
+
+            D, V = torch.symeig( #D: eigenvalues, V: eigenvectors
                 (STWS[:m + 1, :m + 1] / stls) / stls.unsqueeze(1), eigenvectors=True)
             F_V = V / stls.unsqueeze(1)
 
@@ -361,7 +364,7 @@ class Preconditioner(torch.optim.Optimizer):
         elif self.stepnumber < self.prior_iterations + self.num_observations - 1:
             self.ApplyEstimatedInverse()        # uses new data
             self.HessianVectorProduct()         # uses new data
-            self.UpdateEstimatedHessian()       # uses new data
+            self.UpdateEstimatedHessian()       # does not directly use new data
         elif self.stepnumber == self.prior_iterations + self.num_observations - 1:
             self.CreateLowRank()                # uses new data
             self.init_the_optimizer()           # does not use new data

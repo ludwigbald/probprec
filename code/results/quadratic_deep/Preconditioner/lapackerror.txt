@@ -1,0 +1,19 @@
+File "runscript.py", line 32, in <module>
+    prunner.run(testproblem='quadratic_deep', random_seed = i, batch_size = 32, hyperparams= {'lr': 10**lr})
+  File "/home/ludwig/Desktop/probprec/code/src/deepobs/deepobs/abstract_runner/abstract_runner.py", line 121, in run
+    output = self._run(**args)
+  File "/home/ludwig/Desktop/probprec/code/src/deepobs/deepobs/pytorch/runners/runner.py", line 55, in _run
+    tb_log_dir, **training_params)
+  File "/home/ludwig/Desktop/probprec/code/sorunner.py", line 85, in training
+    opt.step()
+  File "/home/ludwig/Desktop/probprec/code/probprec.py", line 366, in step
+    self.CreateLowRank()                # uses new data
+  File "/home/ludwig/Desktop/probprec/code/probprec.py", line 295, in CreateLowRank
+    k=effective_rank)  # ,tol=1e-2)
+  File "/home/ludwig/anaconda3/lib/python3.7/site-packages/scipy/sparse/linalg/eigen/arpack/arpack.py", line 1826, in svds
+    ncv=ncv, which=which, v0=v0)
+  File "/home/ludwig/anaconda3/lib/python3.7/site-packages/scipy/sparse/linalg/eigen/arpack/arpack.py", line 1667, in eigsh
+    params.iterate()
+  File "/home/ludwig/anaconda3/lib/python3.7/site-packages/scipy/sparse/linalg/eigen/arpack/arpack.py", line 572, in iterate
+    raise ArpackError(self.info, infodict=self.iterate_infodict)
+scipy.sparse.linalg.eigen.arpack.arpack.ArpackError: ARPACK error 3: No shifts could be applied during a cycle of the Implicitly restarted Arnoldi iteration. One possibility is to increase the size of NCV relative to NEV.

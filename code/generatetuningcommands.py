@@ -21,5 +21,5 @@ tuner = GridSearch(optimizer_class, hyperparams, grid,
 # tuner.tune('quadratic_deep', rerun_best_setting=True, num_epochs=2, output_dir='./grid_search')
 
 # Optionally, generate commands for a parallelized execution
-tuner.generate_commands_script('fmnist_2c2d', run_script='/home/bald/pre_fmnist/runscript.py',
+tuner.generate_commands_script('mnist_vae', run_script='/home/bald/pre_fmnist/runscript.py',
                                output_dir='./grid_search', generation_dir='./grid_search_commands')

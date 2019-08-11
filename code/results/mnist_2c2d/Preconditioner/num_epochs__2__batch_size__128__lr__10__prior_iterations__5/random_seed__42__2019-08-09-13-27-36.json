@@ -1,0 +1,86 @@
+{
+    "testproblem": "mnist_2c2d",
+    "batch_size": 128,
+    "num_epochs": 2,
+    "random_seed": 42,
+    "weight_decay": null,
+    "optimizer_name": "Preconditioner",
+    "optimizer_hyperparams": {
+        "lr": 10,
+        "prior_iterations": 5
+    },
+    "training_params": {},
+    "train_losses": [
+        2.3819066194387584,
+        2.3819066194387584,
+        2.3819066194387584
+    ],
+    "valid_losses": [
+        2.38106399621719,
+        2.38106399621719,
+        2.38106399621719
+    ],
+    "test_losses": [
+        2.389372174556439,
+        2.389372174556439,
+        2.389372174556439
+    ],
+    "minibatch_train_losses": [
+        2.3661463260650635,
+        2.4389448165893555,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        2.3661463260650635,
+        2.3661463260650635
+    ],
+    "train_accuracies": [
+        0.061197916666666664,
+        0.061197916666666664,
+        0.061197916666666664
+    ],
+    "valid_accuracies": [
+        0.06290064102564102,
+        0.06290064102564102,
+        0.06290064102564102
+    ],
+    "test_accuracies": [
+        0.056790865384615384,
+        0.056790865384615384,
+        0.056790865384615384
+    ]
+}
