@@ -1,160 +1,160 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% I, the copyright holder of this work, release this work into the
-%% public domain. This applies worldwide. In some countries this may
-%% not be legally possible; if so: I grant anyone the right to use
-%% this work for any purpose, without any conditions, unless such
-%% conditions are required by law.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% LaTeX-Rahmen fuer das Erstellen von Masterarbeiten
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\documentclass[
-  printed, %% This option enables the default options for the
-           %% digital version of a document. Replace with `printed`
-           %% to enable the default options for the printed version
-           %% of a document.
-  twoside, %% This option enables double-sided typesetting. Use at
-           %% least 120 g/m² paper to prevent show-through. Replace
-           %% with `oneside` to use one-sided typesetting; use only
-           %% if you don’t have access to a double-sided printer,
-           %% or if one-sided typesetting is a formal requirement
-           %% at your faculty.
-  table,   %% This option causes the coloring of tables. Replace
-           %% with `notable` to restore plain LaTeX tables.
-  nolof,     %% This option prints the List of Figures. Replace with
-           %% `nolof` to hide the List of Figures.
-  nolot,     %% This option prints the List of Tables. Replace with
-           %% `nolot` to hide the List of Tables.
-  %% More options are listed in the user guide at
-  %% <http://mirrors.ctan.org/macros/latex/contrib/fithesis/guide/mu/fi.pdf>.
-]{fithesis3}
-\include{header}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% allgemeine Einstellungen
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\documentclass[twoside,12pt,a4paper]{report}
+%\usepackage{reportpage}
+\usepackage{epsf}
+\usepackage{graphics, graphicx}
+\usepackage{latexsym}
+\usepackage[margin=10pt,font=small,labelfont=bf]{caption}
+\usepackage[utf8]{inputenc}
+\usepackage[toc,page]{appendix}
+\usepackage{todonotes}
+\usepackage[ngerman, english]{babel}
 
-%% The following section sets up the locales used in the thesis.
-\usepackage[resetfonts]{cmap} %% We need to load the T2A font encoding
-\usepackage[T1,T2A]{fontenc}  %% to use the Cyrillic fonts with Russian texts.
-\usepackage[
-  main=english, %% By using `czech` or `slovak` as the main locale
-                %% instead of `english`, you can typeset the thesis
-                %% in either Czech or Slovak, respectively.
-  english, ngerman, russian, czech, slovak %% The additional keys allow
-]{babel}        %% foreign texts to be typeset as follows:
-%%
-%%   \begin{otherlanguage}{german}  ... \end{otherlanguage}
-%%   \begin{otherlanguage}{russian} ... \end{otherlanguage}
-%%   \begin{otherlanguage}{czech}   ... \end{otherlanguage}
-%%   \begin{otherlanguage}{slovak}  ... \end{otherlanguage}
-%%
-%% For non-Latin scripts, it may be necessary to load additional
-%% fonts:
-\usepackage{paratype}
-\def\textrussian#1{{\usefont{T2A}{PTSerif-TLF}{m}{rm}#1}}
-%%
-%% The following section sets up the metadata of the thesis.
-\thesissetup{
-	autoLayout    = false,
-    date          = \the\year/\the\month/\the\day,
-    university    = mu,
-    faculty       = fi,
-    type          = bc,
-    author        = Ludwig Bald,
-    gender        = m,
-    advisor       = Philipp Hennig \hfill \textbf{Supervisor:} Filip De Roos,
-    title         = {The Proof of P = NP},
-    TeXtitle      = {The Proof of $\mathsf{P}=\mathsf{NP}$},
-    keywords      = {keyword1, keyword2, ...},
-    TeXkeywords   = {keyword1, keyword2, \ldots},
-    abstract      = { },
-	assignment	  = {}, %include additional files
-	declaration   = {\begin{otherlanguage}{ngerman}
-					Hiermit erkläre ich, dass ich diese schriftliche Abschlussarbeit selbständig verfasst habe,
-					keine anderen als die angegebenen Hilfsmittel und Quellen benutzt habe und alle wörtlich
-					oder sinngemäß aus anderen Werken übernommenen Aussagen als solche gekennzeichnet habe.
-					\end{otherlanguage}
-					},
-    thanks        = {%
-      These are the acknowledgements for my thesis, which can
+\textwidth 14cm
+\textheight 22cm
+\topmargin 0.0cm
+\evensidemargin 1cm
+\oddsidemargin 1cm
+%\footskip 2cm
+\parskip0.5explus0.1exminus0.1ex
 
-      span multiple paragraphs.
-    },
-}
-\usepackage{makeidx}      %% The `makeidx` package contains
-\makeindex                %% helper commands for index typesetting.
-%% These additional packages are used within the document:
-\usepackage{paralist} %% Compact list environments
-\usepackage{amsmath}  %% Mathematics
-\usepackage{amsthm}
-\usepackage{amsfonts}
-\usepackage{url}      %% Hyperlinks
-\usepackage{markdown} %% Lightweight markup
-\usepackage{tabularx} %% Tables
-\usepackage{tabu}
-\usepackage{booktabs}
-\usepackage{listings} %% Source code highlighting
-\lstset{
-  basicstyle      = \ttfamily,
-  identifierstyle = \color{black},
-  keywordstyle    = \color{blue},
-  keywordstyle    = {[2]\color{cyan}},
-  keywordstyle    = {[3]\color{olive}},
-  stringstyle     = \color{teal},
-  commentstyle    = \itshape\color{magenta},
-  breaklines      = true,
-}
-\usepackage{floatrow} %% Putting captions above tables
-\floatsetup[table]{capposition=top}
-%% The following code fixes the rendering of BibLaTeX ISO 690
-%% references in old TeX Live (such as the one at Overleaf).
-\thesisload
-\makeatletter
-\def\thesis@biblatexiso@fix@package{iso-numeric.bbx}
-\def\thesis@biblatexiso@fix@end{\relax}
-\newif\ifthesis@biblatexiso@fix@
-\thesis@biblatexiso@fix@false
-\def\thesis@biblatexiso@fix@next#1,{%
-  \def\thesis@biblatexiso@fix@current{#1}%
-  \ifx\thesis@biblatexiso@fix@current\thesis@biblatexiso@fix@package
-    \thesis@biblatexiso@fix@true
-  \fi
-  \ifx\thesis@biblatexiso@fix@current\thesis@biblatexiso@fix@end
-    \expandafter
-    \@gobble
-  \fi
-  \thesis@biblatexiso@fix@next
-}
-\expandafter\expandafter\expandafter\thesis@biblatexiso@fix@next\@filelist,\relax,
-\ifthesis@biblatexiso@fix@
-  \defbibenvironment{bibliography}
-    {\list%
-       {\MethodFormat}%
-       {\setlength{\labelwidth}{\labelnumberwidth}%
-        \setlength{\leftmargin}{\labelwidth}%
-        \setlength{\labelsep}{\biblabelsep}%
-        \addtolength{\leftmargin}{\labelsep}%
-        \setlength{\itemsep}{\bibitemsep}%
-        \setlength{\parsep}{\bibparsep}}%
-        \renewcommand*{\makelabel}[1]{\hss##1}
-        }%
-    {\endlist}%
-  {\item}%
-\fi
-\makeatother
+% Kann von Student auch nach pers\"onlichem Geschmack ver\"andert werden.
+\pagestyle{headings}
 
-
+\sloppy
 
 \begin{document}
-\makeatletter
-	\def \thesis@blocks@preamble {\include{teaser}
-								  %\thesis@blocks@frontMatter %styling, moved to Teaser
-						  	  	  \thesis@blocks@toc}
-	\thesis@preamble
-\makeatother
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% hier steht die neue Titelseite 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{titlepage}
+	\begin{center}
+		{\LARGE Eberhard Karls Universit\"at T\"ubingen}\\
+		{\large Mathematisch-Naturwissenschaftliche Fakult\"at \\
+			Wilhelm-Schickard-Institut f\"ur Informatik\\[4cm]}
+		{\huge Bachelor Thesis Cognitive Science\\[2cm]}
+		{\Large\bf  Title of thesis\\[1.5cm]}
+		{\large Ludwig Bald}\\[0.5cm]
+		\today \\[4cm]
+		\parbox{7cm}{\begin{center}{{\small\bf Gutachter}\\
+				[0.5cm]\large Prof. Dr. Philipp Hennig}\\
+				(Methoden des Maschinellen Lernens)\\
+				{\footnotesize Wilhelm-Schickard-Institut f\"ur Informatik\\
+				Universit\"at T\"ubingen}\end{center}}\hfill\parbox{7cm}
+				{\begin{center}
+				{\small\bf Betreuer}\\[0.5cm]
+				{\large Filip De Roos}\\
+				(Methoden des Maschinellen Lernens)\\
+				{\footnotesize Wilhelm-Schickard-Institut f\"ur Informatik\\
+					Universit\"at T\"ubingen}\end{center}
+		}
+	\end{center}
+\end{titlepage}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Titelr"uckseite: Bibliographische Angaben
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\thispagestyle{empty}
+\vspace*{\fill}
+\begin{minipage}{11.2cm}
+	\textbf{Bald, Ludwig:}\\
+	\emph{Title of thesis}\\ Bachelor Thesis Cognitive Science\\
+	Eberhard Karls Universit\"at T\"ubingen\\
+	Thesis period: von-bis
+\end{minipage}
+\newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\pagenumbering{roman}
+\setcounter{page}{1}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Seite I: Zusammenfassug, Danksagung
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\section*{Abstract}
+\todo{theabstract, citing!}
+In machine learning, stochastic gradient descent is a widely used optimizsation algorithm, used to update the parameters of a model after a minibatch of data has been observed, in order to improve the model's predictions. It has been shown to converge much faster when the condition number (i.e. the ratio between the largest and the smallest eigenvalue) of ... is closer to 1. A preconditioner reduces the condition value 
+In this thesis I present my implementation of the probabilistic preconditioning algorithm proposed in \cite{de2019active}. I use DeepOBS \todo{cite} as a benchmarking toolbox, examining the effect of this kind of preconditioning on various optimizers and test problems. 
+The results...
+
+\newpage
+\section*{Zusammenfassung}
+\todo{Abstract auf Deutsch}
+
+\newpage
+\section*{Acknowledgments}
+If you have someone to Acknowledge ;)
+\todo{Aaron, Filip}
+\cleardoublepage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Table of Contents
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\renewcommand{\baselinestretch}{1.3}
+\small\normalsize
+
+\tableofcontents
+
+\renewcommand{\baselinestretch}{1}
+\small\normalsize
+
+\cleardoublepage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Der Haupttext, ab hier mit arabischer Numerierung
+%%% Mit \input{dateiname} werden die Datei `dateiname' eingebunden
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
 
 \chapter{Introduction}
 What is this all about?
 %Cite like this: \cite{agarwal2011}
 
 
-\chapter{Fundamentals and related work}
+\chapter{Fundamentals and Related Rork}
+
+\section{Deep learning}
+\subsection{Artificial Neural Networks}
+	Minibatched
+\subsection{Regularization}
+\subsection{Automatic Differentiation}
+\subsection{Stochastic Gradient Descent}
+
+\section{Something about Probabilistic things}
+
+\section{Preconditioning}
+Condition number vs Spectral Radius
+
+The PROBLEM:
+
+Up until now, there was no easy way to make use of preconditioning in a noisy setting, such as minibatched deep learning. I present an implementation of Filips Algorithm in an easy-to-use python class and demonstrate the algorithm's strengths and weaknesses.
+
+\section{Benchmarking}
+There are no standard established benchmarking protocols for new optimizers. It isn't even clear what measures to consider, or how they are to be measured. As a result, nobody knows which optimizers are actually good. And some bad optimizers will seem good.
+DeepOBS is a solution to this problem, standardizing a protocol, providing benchmarks and standard test problems.
+
+\section{Related Work}
+\todo{in which other ways has this problem been adressed? (What even is the problem?)}
+
+
 
 
 \chapter{Implementation}
@@ -182,18 +182,29 @@ Computation was distributed over the compute nodes using the workload manager Sl
 \chapter{Conclusion}
 
 
-%  \makeatletter\thesis@blocks@clear\makeatother
-%  \phantomsection %% Print the index and insert it into the
-%  \addcontentsline{toc}{chapter}{\indexname} %% table of contents.
-%  \printindex
-
 \appendix %% Start the appendices.
 \chapter{An appendix}
 Here you can insert the appendices of your thesis.
 
-\makeatletter\thesis@blocks@clear\makeatother
-\phantomsection
 \addcontentsline{toc}{chapter}{References}
 \bibliographystyle{apalike}
 \bibliography{bibliography}
+
+\begin{otherlanguage}{ngerman}
+	\chapter*{Selbstst\"andigkeitserkl\"arung}
+	
+	Hiermit versichere ich, dass ich die vorliegende Bachelorarbeit selbst\"andig und
+	nur mit den angegebenen Hilfsmitteln angefertigt habe und dass alle Stellen,
+	die dem Wortlaut oder dem Sinne nach anderen Werken entnommen sind,
+	durch Angaben von Quellen als Entlehnung kenntlich gemacht worden sind.
+	Diese Bachelorarbeit wurde in gleicher oder \"ahnlicher Form in keinem anderen
+	Studiengang als Pr\"ufungsleistung vorgelegt.
+	
+	\vspace*{8ex}
+	\hrule
+	\vspace*{2ex}
+	\noindent
+	Tübingen, \today \hfill Ludwig Bald
+\end{otherlanguage}
+
 \end{document}
