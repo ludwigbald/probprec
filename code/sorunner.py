@@ -44,10 +44,6 @@ class SORunner(PTRunner):
         global_step = 0
 
         for epoch_count in range(num_epochs + 1):
-            #reset the optimizer in every epoch
-            if (epoch_count > 0):
-                hyperparams["lr"] = None
-                opt = self._optimizer_class(tproblem.net.parameters(), **hyperparams)
 
             # Evaluate at beginning of epoch.
             print("********************************")
@@ -67,6 +63,10 @@ class SORunner(PTRunner):
             test_accuracies.append(acc_)
 
             print("********************************")
+
+            # estimate a new Hessian, drop the learning rate
+            if epoch_count > 0:
+                opt.start_estimate(lr = None)
 
             # Break from train loop after the last round of evaluation
             if epoch_count == num_epochs:
