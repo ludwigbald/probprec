@@ -8,23 +8,36 @@ from probprec import Preconditioner
 # DeepOBS setup
 
 
+class PreconditionedSGD(Preconditioner):
+    """docstring for PreconditionedSGD"""
+    def __init__(self, *args, **kwargs):
+        super(PreconditionedSGD, self).__init__(*args, optim_class = optim.SGD, **kwargs)
+
+class PreconditionedAdam(Preconditioner):
+    """docstring for PreconditionedAdam"""
+    def __init__(self, *args, **kwargs):
+        super(PreconditionedAdam, self).__init__(*args, optim_class = optim.Adam, **kwargs)
+
+
+
+
 # specify the optimizer class
-#optimizer_class = optim.SGD
+optimizer_class = optim.Adam
 
 # and its hyperparameters
-#hyperparams = {'lr': {'type': float}}
+hyperparams = {'lr': {'type': float, 'default': 0.01}}
 
 
 # specify the Preconditioned Optimizer class
-poptimizer_class = Preconditioner
+poptimizer_class = PreconditionedSGD
 
 # and its hyperparameters
-phyperparams = {} #'lr': {"type": float, 'default': None}}
+phyperparams = {'lr': {"type": float, 'default': 0.01}}
 
 # create the runner instance
 runner = SORunner(poptimizer_class, phyperparams)
 
-runner.run(testproblem='mnist_2c2d', num_epochs=2)
+runner.run(testproblem='quadratic_deep', batch_size = 32, num_epochs=20)
 
 # run the optimizer on a testproblem
 #runner.run()

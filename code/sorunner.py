@@ -1,5 +1,6 @@
 from deepobs.pytorch.runners import PTRunner
 import numpy as np
+import inspect
 
 
 class SORunner(PTRunner):
@@ -132,3 +133,43 @@ class SORunner(PTRunner):
         }
 
         return output
+
+    # def _add_hyperparams_to_output_dir_name(self, optimizer_hyperparams, run_folder_name):
+    #     """Overwrite this method to specify how your
+    #     runner should format optimizer hyper_parameters in the run folder name.
+    #     Args:
+    #         optimizer_hyperparams (dict): The optimizer hyperparameters.
+    #         run_folder_name (str): The current name of the run folder that the hyperparameters are added to.
+    #     Returns:
+    #         str: The new run folder name.
+    #     """
+    #
+    #     for hp_name, hp_value in sorted(optimizer_hyperparams.items()):
+    #         run_folder_name += "__{0:s}".format(hp_name)
+    #         run_folder_name += "__{0:s}".format(
+    #             float2str(hp_value) if isinstance(hp_value, float) else str(hp_value))
+    #     return run_folder_name
+
+
+    # def _add_hyperparams_to_output_dir_name(self, optimizer_hyperparams, run_folder_name):
+    #     """Have Overwritten this method to specify how the
+    #     runner should format optimizer hyper_parameters in the run folder name.
+    #     Args:
+    #         optimizer_hyperparams (dict): The optimizer hyperparameters.
+    #         run_folder_name (str): The current name of the run folder that the hyperparameters are added to.
+    #     Returns:
+    #         str: The new run folder name.
+    #     """
+    #
+    #     for hp_name, hp_value in sorted(optimizer_hyperparams.items()):
+    #         if isinstance(hp_value, float):
+    #             str_value = float2str(hp_value)
+    #         elif inspect.isclass(hp_value):
+    #             str_value = hp_value.__name__
+    #         else:
+    #             str_value = str(hp_value)
+    #
+    #         run_folder_name += "__{0:s}".format(hp_name)
+    #         run_folder_name += "__{0:s}".format(str_value)
+    #         print(run_folder_name)
+    #     return run_folder_name

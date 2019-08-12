@@ -7,7 +7,7 @@ dtype = torch.float
 class Preconditioner(torch.optim.Optimizer):
 
     def __init__(self, params, est_rank=2, num_observations=5, prior_iterations=10, weight_decay=0, lr=None,
-                 optim_class=torch.optim.SGD, optim_hyperparams={}):
+                 optim_class=torch.optim.SGD, **optim_hyperparams):
 
         if not 0 <= weight_decay:
             raise ValueError(
@@ -27,6 +27,7 @@ class Preconditioner(torch.optim.Optimizer):
         self.optim_class = optim_class
         optim_hyperparams.update(weight_decay=weight_decay)
         self.optim_hyperparams = optim_hyperparams
+
         self.start_estimate(lr, est_rank, num_observations, prior_iterations)
 
     # An initialization function, called in start_estimate()
@@ -60,18 +61,18 @@ class Preconditioner(torch.optim.Optimizer):
             self.inner_product = list(torch.zeros(
                 (self.num_observations, self.num_observations), device=self.device) for p in group['params'])
 
-    # initialize the_optimizer
 
+    # initialize the_optimizer
     def init_the_optimizer(self):
         if self.lr is None:
             self.lr = self.alpha.item()
         self.optim_hyperparams.update(lr=self.lr)
-        print(self.optim_hyperparams)
+        print("Initializing ", self.optim_class.__name__, " with: ", self.optim_hyperparams)
         self.the_optimizer = self.optim_class(
             self.theparams, **self.optim_hyperparams)
 
     # start_estimate() resets internal state and starts a new estimation process
-    # Called in the init, but can also be used externally
+    # Called in the init, but can/should also be used externally
     # by default, discards lr and keeps the other hyperparams.
 
     def start_estimate(self, lr=None,
