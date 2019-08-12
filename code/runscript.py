@@ -4,6 +4,8 @@ import torch.optim as optim
 import deepobs.pytorch as pyt
 from sorunner import SORunner
 from probprec import Preconditioner
+import numpy
+import math
 
 # DeepOBS setup
 
@@ -35,9 +37,16 @@ poptimizer_class = PreconditionedSGD
 phyperparams = {'lr': {"type": float, 'default': 0.01}}
 
 # create the runner instance
-runner = SORunner(poptimizer_class, phyperparams)
+prunner = SORunner(poptimizer_class, phyperparams)
+
+prunner.run(testproblem='mnist_vae', num_epochs = 1)
 
 runner.run(testproblem='quadratic_deep', batch_size = 32, num_epochs=20)
+#
+# for lr in numpy.arange(-210.0, -320.0, -10.0):
+#     for i in range(43, 44):
+#         runner.run(testproblem='quadratic_deep', random_seed = i, batch_size = 32, hyperparams= {'lr': 10**lr})
+#         prunner.run(testproblem='quadratic_deep', random_seed = i, batch_size = 32, hyperparams= {'lr': 10**lr})
 
 # run the optimizer on a testproblem
 #runner.run()

@@ -1,0 +1,27 @@
+{
+    "testproblem": "quadratic_deep",
+    "batch_size": 128,
+    "num_epochs": 1,
+    "random_seed": 42,
+    "weight_decay": null,
+    "optimizer_name": "Preconditioner",
+    "optimizer_hyperparams": {
+        "lr": 0.01
+    },
+    "training_params": {},
+    "train_losses": [
+        225.91871207101005,
+        224.1644025530134
+    ],
+    "valid_losses": [
+        230.8928985595703,
+        230.8928985595703
+    ],
+    "test_losses": [
+        228.88948277064733,
+        228.88948277064733
+    ],
+    "minibatch_train_losses": [
+        232.62852478027344
+    ]
+}
