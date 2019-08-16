@@ -31,7 +31,7 @@ class Preconditioner(torch.optim.Optimizer):
         self.start_estimate(lr, est_rank, num_observations, prior_iterations)
 
     # An initialization function, called in start_estimate()
-    def _InitializeLists(self):
+    def _initialize_lists(self):
         for group in self.param_groups:
             self.accumulated_hess_vec = list(
                 torch.zeros_like(p) for p in group['params'])
@@ -63,7 +63,7 @@ class Preconditioner(torch.optim.Optimizer):
 
 
     # initialize the_optimizer
-    def init_the_optimizer(self):
+    def _init_the_optimizer(self):
         if self.lr is None:
             self.lr = self.alpha.item()
         self.optim_hyperparams.update(lr=self.lr)
@@ -103,8 +103,19 @@ class Preconditioner(torch.optim.Optimizer):
         self.prior_counter = 0
         self.update_counter = 0
 
-        self._InitializeLists()
+        self._initialize_lists()
 
+    # logs a norm of the gradient and alpha
+    def get_log(self):
+        #log alpha
+        #log gradnorm
+        gradnorm = 0
+        for group in self.param_groups:
+            for p in group['params']:
+                gradnorm += torch.sum(torch.pow(p.grad.data, 2))
+        gradnorm = torch.sqrt(gradnorm)
+        #return for deepOBS to write
+        return gradnorm.item()
 ################################################################################
 ##                                                                            ##
 ##                MATH FUNCTIONS                                              ##
@@ -112,7 +123,7 @@ class Preconditioner(torch.optim.Optimizer):
 ################################################################################
 
     # This runs first and collects information about the parameter's curvature.
-    def GatherCurvatureInformation(self):
+    def _gather_curvature_information(self):
         df_sum = torch.zeros(1, device=self.device)  # tensor([0.0])
 
         for group in self.param_groups:
@@ -142,9 +153,9 @@ class Preconditioner(torch.optim.Optimizer):
 
         self.prior_counter += 1
 
-    # A function that uses the data from GatherCurvatureInformation to construct
+    # A function that uses the data from _gather_curvature_information to construct
     # a Prior Estimate for the Hessian
-    def EstimatePrior(self):
+    def _estimate_prior(self):
 
         sts = sum(self.STS)
         stas = sum(self.STAS)
@@ -171,7 +182,7 @@ class Preconditioner(torch.optim.Optimizer):
         print('[Estimate prior] alpha: {:.2e} w: {:.2e} lambda: {:.2e}'.format(
             self.alpha.item(), self.W_var.item(), self.lam.item()))
 
-    def setup_estimated_hessian(self):
+    def _setup_estimated_hessian(self):
         w_var = self.W_var.to(self.device)
         lam = self.lam.to(self.device)
         alph = self.alpha.to(self.device)
@@ -192,7 +203,7 @@ class Preconditioner(torch.optim.Optimizer):
         self.update_counter += 1  # set to 1
 
     # Some math function
-    def ApplyEstimatedInverse(self):
+    def _apply_estimated_inverse(self):
         m = self.update_counter
         w_var = self.W_var.to(self.device)
         alph = self.alpha.to(self.device)
@@ -213,7 +224,7 @@ class Preconditioner(torch.optim.Optimizer):
     # Computes the Hessian-vector products of the true Hessian of the params and
     # the vectors self.vec
     # Result is saved in hv
-    def HessianVectorProduct(self):
+    def _hessian_vector_product(self):
         df_sum = torch.zeros(1, device=self.device)
 
         for group in self.param_groups:
@@ -232,10 +243,10 @@ class Preconditioner(torch.optim.Optimizer):
     # The magic happens here. Runs a couple of times after a prior is constructed.
     # It updates the estimate for the Hessian.
     # TODO: refactor
-    def UpdateEstimatedHessian(self):
+    def _update_estimated_hessian(self):
         m = self.update_counter
 
-        print("(UpdateEstimatedHessian) m: ", m)
+        print("(_update_estimated_hessian) m: ", m)
         w_var = self.W_var.to(self.device)
         lam = self.lam.to(self.device)
         alph = self.alpha.to(self.device)
@@ -275,7 +286,7 @@ class Preconditioner(torch.optim.Optimizer):
     # The numpy calculations are done on the CPU
     # TODO: maybe get rid of numpy?
 
-    def CreateLowRank(self):
+    def _create_low_rank(self):
         w_var = self.W_var.cpu()
         alph = self.alpha.cpu()
 
@@ -314,7 +325,7 @@ class Preconditioner(torch.optim.Optimizer):
                     np.sqrt(sing_val[:effective_rank]).astype(np.float32)).to(self.device)
 
     # Applies the Preconditioner to the gradient
-    def apply_preconditioner(self):
+    def _apply_preconditioner(self):
         for group in self.param_groups:
             for p in group['params']:
                 if p.grad is None:
@@ -357,21 +368,22 @@ class Preconditioner(torch.optim.Optimizer):
 
         # Make prior estimate
         if self.stepnumber < self.prior_iterations:
-            self.GatherCurvatureInformation()  # uses new data
+            self._gather_curvature_information()  # uses new data
             if self.stepnumber == self.prior_iterations - 1:
-                self.EstimatePrior()            # does not use new data
-                self.setup_estimated_hessian()  # does not use new data
+                self._estimate_prior()            # does not use new data
+                self._setup_estimated_hessian()  # does not use new data
         # Make posterier estimate
         elif self.stepnumber < self.prior_iterations + self.num_observations - 1:
-            self.ApplyEstimatedInverse()        # uses new data
-            self.HessianVectorProduct()         # uses new data
-            self.UpdateEstimatedHessian()       # does not directly use new data
+            self._apply_estimated_inverse()        # uses new data
+            self._hessian_vector_product()         # uses new data
+            self._update_estimated_hessian()       # does not directly use new data
         elif self.stepnumber == self.prior_iterations + self.num_observations - 1:
-            self.CreateLowRank()                # uses new data
-            self.init_the_optimizer()           # does not use new data
+            self._create_low_rank()                # uses new data
+            self._init_the_optimizer()           # does not use new data
         else:
-            self.apply_preconditioner()
+            self._apply_preconditioner()
             self.the_optimizer.step()
+
 
         self.stepnumber += 1
 

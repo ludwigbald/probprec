@@ -10,10 +10,10 @@ import math
 # DeepOBS setup
 
 
-class PreconditionedSGD(Preconditioner):
+class PreconditionedSGDlog(Preconditioner):
     """docstring for PreconditionedSGD"""
     def __init__(self, *args, **kwargs):
-        super(PreconditionedSGD, self).__init__(*args, optim_class = optim.SGD, **kwargs)
+        super(PreconditionedSGDlog, self).__init__(*args, optim_class = optim.SGD, **kwargs)
 
 class PreconditionedAdam(Preconditioner):
     """docstring for PreconditionedAdam"""
@@ -31,17 +31,17 @@ hyperparams = {'lr': {'type': float, 'default': 0.01}}
 
 
 # specify the Preconditioned Optimizer class
-poptimizer_class = PreconditionedSGD
+poptimizer_class = PreconditionedSGDlog
 
 # and its hyperparameters
-phyperparams = {'lr': {"type": float, 'default': 0.01}}
+phyperparams = {'lr': {"type": float, 'default': None}}
 
 # create the runner instance
 prunner = SORunner(poptimizer_class, phyperparams)
 
-prunner.run(testproblem='mnist_vae', num_epochs = 1)
+# prunner.run(testproblem='mnist_vae', num_epochs = 1)
 
-runner.run(testproblem='quadratic_deep', batch_size = 32, num_epochs=20)
+prunner.run(testproblem='quadratic_deep', num_epochs=20, batch_size = 32)
 #
 # for lr in numpy.arange(-210.0, -320.0, -10.0):
 #     for i in range(43, 44):
