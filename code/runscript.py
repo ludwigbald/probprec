@@ -41,7 +41,8 @@ prunner = SORunner(poptimizer_class, phyperparams)
 
 # prunner.run(testproblem='mnist_vae', num_epochs = 1)
 
-prunner.run(testproblem='quadratic_deep', num_epochs=20, batch_size = 32)
+
+prunner.run(testproblem='quadratic_deep', num_epochs=20, batch_size=32, random_seed = 45)
 #
 # for lr in numpy.arange(-210.0, -320.0, -10.0):
 #     for i in range(43, 44):

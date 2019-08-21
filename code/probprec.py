@@ -12,10 +12,14 @@ class Preconditioner(torch.optim.Optimizer):
         if not 0 <= weight_decay:
             raise ValueError(
                 "Invalid weight_decay value: {}".format(weight_decay))
+        print(optim_hyperparams)
+        defaults = dict(est_rank=est_rank, num_observations=num_observations,
+                        prior_iterations=prior_iterations,
+                        weight_decay=weight_decay,
+                        optim_class=optim_class)
+        defaults.update(optim_hyperparams)
 
-        defaults = dict(weight_decay=weight_decay)
-        self.theparams = list(params)
-        super(Preconditioner, self).__init__(self.theparams, defaults)
+        super(Preconditioner, self).__init__(list(params), defaults)
 
         self.device = torch.device(
             "cuda:0" if torch.cuda.is_available() else "cpu")
@@ -69,11 +73,11 @@ class Preconditioner(torch.optim.Optimizer):
         self.optim_hyperparams.update(lr=self.lr)
         print("Initializing ", self.optim_class.__name__, " with: ", self.optim_hyperparams)
         self.the_optimizer = self.optim_class(
-            self.theparams, **self.optim_hyperparams)
+            self.param_groups, **self.optim_hyperparams)
 
     # start_estimate() resets internal state and starts a new estimation process
-    # Called in the init, but can/should also be used externally
-    # by default, discards lr and keeps the other hyperparams.
+    # Called in the init, but can/should also be used externally.
+    # by default, discards the saved lr and keeps the other hyperparams.
 
     def start_estimate(self, lr=None,
                        est_rank=None,
@@ -144,7 +148,9 @@ class Preconditioner(torch.optim.Optimizer):
 
                 STS = torch.norm(v)**2
                 STAS = torch.sum(v * hv_temp)
-                STAAS = torch.norm(hv_temp)**2
+                STAAS = torch.norm(hv_temp)**2 # see eq. 11, "A" means Lambda
+
+                print('_gatherobs: STAS =', STAS)
                 self.STS[i] += STS
                 self.STAS[i] += STAS
                 self.STAAS[i] += STAAS
@@ -179,6 +185,7 @@ class Preconditioner(torch.optim.Optimizer):
         self.W_var.data = torch.tensor([stas / sts], dtype=dtype)
         self.lam.data = torch.abs(torch.tensor([sts]) - g_temp.data).div_(n)
 
+        print("sts:", sts, "stas", stas, "staas", staas)
         print('[Estimate prior] alpha: {:.2e} w: {:.2e} lambda: {:.2e}'.format(
             self.alpha.item(), self.W_var.item(), self.lam.item()))
 
@@ -372,7 +379,7 @@ class Preconditioner(torch.optim.Optimizer):
             if self.stepnumber == self.prior_iterations - 1:
                 self._estimate_prior()            # does not use new data
                 self._setup_estimated_hessian()  # does not use new data
-        # Make posterier estimate
+        # Make posterier estimate (pseudocode in the paper)
         elif self.stepnumber < self.prior_iterations + self.num_observations - 1:
             self._apply_estimated_inverse()        # uses new data
             self._hessian_vector_product()         # uses new data
