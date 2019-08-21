@@ -12,7 +12,8 @@ class Preconditioner(torch.optim.Optimizer):
         if not 0 <= weight_decay:
             raise ValueError(
                 "Invalid weight_decay value: {}".format(weight_decay))
-        print(optim_hyperparams)
+
+        # init the statedict and default values.
         defaults = dict(est_rank=est_rank, num_observations=num_observations,
                         prior_iterations=prior_iterations,
                         weight_decay=weight_decay,
@@ -21,8 +22,8 @@ class Preconditioner(torch.optim.Optimizer):
 
         super(Preconditioner, self).__init__(list(params), defaults)
 
-        self.device = torch.device(
-            "cuda:0" if torch.cuda.is_available() else "cpu")
+        #this is a hack, but needed
+        self.device = self.param_groups[0]['params'][0].device
 
         self.lam = torch.zeros(1, device=self.device)
         self.W_var = torch.zeros(1, device=self.device)
@@ -71,7 +72,7 @@ class Preconditioner(torch.optim.Optimizer):
         if self.lr is None:
             self.lr = self.alpha.item()
         self.optim_hyperparams.update(lr=self.lr)
-        print("Initializing ", self.optim_class.__name__, " with: ", self.optim_hyperparams)
+        print("[_init_the_optimizer] Initializing ", self.optim_class.__name__, " with: ", self.optim_hyperparams)
         self.the_optimizer = self.optim_class(
             self.param_groups, **self.optim_hyperparams)
 
@@ -101,7 +102,7 @@ class Preconditioner(torch.optim.Optimizer):
         if est_rank is not None:
             if not 0 <= est_rank:
                 raise ValueError("Invalid Hessian rank: {}".format(est_rank))
-            self.rank = int(est_rank)
+            self.est_rank = int(est_rank)
 
         self.stepnumber = 0
         self.prior_counter = 0
@@ -150,7 +151,7 @@ class Preconditioner(torch.optim.Optimizer):
                 STAS = torch.sum(v * hv_temp)
                 STAAS = torch.norm(hv_temp)**2 # see eq. 11, "A" means Lambda
 
-                print('_gatherobs: STAS =', STAS)
+                print('[_gather_curvature_information] STAS =', STAS)
                 self.STS[i] += STS
                 self.STAS[i] += STAS
                 self.STAAS[i] += STAAS
@@ -167,26 +168,21 @@ class Preconditioner(torch.optim.Optimizer):
         stas = sum(self.STAS)
         staas = sum(self.STAAS)
 
-        self.alpha = torch.tensor([stas / staas], dtype=dtype)
-
-        hv2_temp = torch.zeros(1)  # tensor([0.0])
-        ghv_temp = torch.zeros(1)  # tensor([0.0])
-        g_temp = torch.zeros(1)  # tensor([0.0])
+        g_temp = torch.zeros(1)
 
         n = self.prior_counter
-        for g, hv in zip(self.accumulated_gradient, self.accumulated_hess_vec):
 
-            hv2_temp.data += (torch.norm(hv)**2)
-            ghv_temp.data += torch.sum(g * hv)
+        for g, hv in zip(self.accumulated_gradient, self.accumulated_hess_vec):
             g_temp.data += (torch.norm(g)**2)
             g.div_(n)
             hv.div_(n)
 
+        self.alpha = torch.tensor([stas / staas], dtype=dtype)
         self.W_var.data = torch.tensor([stas / sts], dtype=dtype)
         self.lam.data = torch.abs(torch.tensor([sts]) - g_temp.data).div_(n)
 
-        print("sts:", sts, "stas", stas, "staas", staas)
-        print('[Estimate prior] alpha: {:.2e} w: {:.2e} lambda: {:.2e}'.format(
+        print("[_estimate_prior] (sums) sts:", sts, "stas", stas, "staas", staas)
+        print('[_estimate_prior] alpha: {:.2e} w: {:.2e} lambda: {:.2e}'.format(
             self.alpha.item(), self.W_var.item(), self.lam.item()))
 
     def _setup_estimated_hessian(self):
@@ -253,7 +249,7 @@ class Preconditioner(torch.optim.Optimizer):
     def _update_estimated_hessian(self):
         m = self.update_counter
 
-        print("(_update_estimated_hessian) m: ", m)
+        #print("[_update_estimated_hessian] m: ", m)
         w_var = self.W_var.to(self.device)
         lam = self.lam.to(self.device)
         alph = self.alpha.to(self.device)
@@ -291,7 +287,7 @@ class Preconditioner(torch.optim.Optimizer):
     # Runs after an estimate for the Hessian is constructed.
     # Creates the parts needed to construct the Preconditioner
     # The numpy calculations are done on the CPU
-    # TODO: maybe get rid of numpy?
+    # TODO: maybe get rid of numpy? Nah.
 
     def _create_low_rank(self):
         w_var = self.W_var.cpu()
@@ -309,19 +305,15 @@ class Preconditioner(torch.optim.Optimizer):
                 def rMatv(v):
                     return w_var.numpy() ** 2 * S_[..., :self.update_counter].view(-1, self.update_counter).numpy().dot(X_.numpy().T.dot(v)) + v / alph.numpy()
 
-                effective_rank = np.min([self.rank, X_.shape[0] - 1])
+                effective_rank = np.min([self.est_rank, X_.shape[0] - 1])
                 LinOp = splinalg.LinearOperator((X_.shape[0], X_.shape[0]),
                                                 matvec=Matv,
                                                 rmatvec=rMatv)
                 sing_vec, sing_val, _ = splinalg.svds(LinOp,
                                                       k=effective_rank)  # ,tol=1e-2)
-                print(' 1/a: {:.2e} w: {:.2e} sigma: {}'.format(1.0 / alph.item(),
-                                                                w_var.item(),
-                                                                np.sqrt(sing_val)))
+                print('[_create_low_rank] sigma: {}'.format(np.sqrt(sing_val)) )
 
-                nnz = np.count_nonzero(sing_val)
-                if nnz < effective_rank:
-                    effective_rank = nnz
+                effective_rank = min(effective_rank, np.count_nonzero(sing_val))
 
                 shape = list(p.shape)
                 shape.append(effective_rank)
