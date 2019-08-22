@@ -25,9 +25,7 @@ class Preconditioner(torch.optim.Optimizer):
         #this is a hack, but needed
         self.device = self.param_groups[0]['params'][0].device
 
-        self.lam = torch.zeros(1, device=self.device)
-        self.W_var = torch.zeros(1, device=self.device)
-        self.alpha = torch.zeros(1, device=self.device)
+
 
         self.optim_class = optim_class
         optim_hyperparams.update(weight_decay=weight_decay)
@@ -37,6 +35,10 @@ class Preconditioner(torch.optim.Optimizer):
 
     # An initialization function, called in start_estimate()
     def _initialize_lists(self):
+        self.lam = torch.zeros(1, device=self.device)
+        self.W_var = torch.zeros(1, device=self.device)
+        self.alpha = torch.zeros(1, device=self.device)
+
         for group in self.param_groups:
             self.accumulated_hess_vec = list(
                 torch.zeros_like(p) for p in group['params'])
@@ -68,6 +70,7 @@ class Preconditioner(torch.optim.Optimizer):
 
 
     # initialize the_optimizer
+    # No Problem: Param Groups don't already have a set learning rate.
     def _init_the_optimizer(self):
         if self.lr is None:
             self.lr = self.alpha.item()
@@ -190,9 +193,9 @@ class Preconditioner(torch.optim.Optimizer):
         lam = self.lam.to(self.device)
         alph = self.alpha.to(self.device)
 
-        for S, Y, g, hv, STWS, STLS, vec, ip, X in zip(self.S, self.Y, self.accumulated_gradient,
-                                                       self.accumulated_hess_vec, self.STWS, self.STLS,
-                                                       self.vec, self.inner_product, self.X):
+        for S, Y, g, hv, STWS, STLS, ip, X in zip(self.S, self.Y, self.accumulated_gradient,
+                                                  self.accumulated_hess_vec, self.STWS,
+                                                  self.STLS,self.inner_product, self.X):
             S_norm = torch.norm(g.mul(-alph)) ** 2
             S.data[..., 0] = g.mul(-alph) / torch.sqrt(S_norm)
             Y.data[..., 0] = hv.mul(-alph) / torch.sqrt(S_norm)
@@ -205,7 +208,7 @@ class Preconditioner(torch.optim.Optimizer):
 
         self.update_counter += 1  # set to 1
 
-    # Some math function
+
     def _apply_estimated_inverse(self):
         m = self.update_counter
         w_var = self.W_var.to(self.device)
@@ -231,17 +234,17 @@ class Preconditioner(torch.optim.Optimizer):
         df_sum = torch.zeros(1, device=self.device)
 
         for group in self.param_groups:
-            for v, g, p in zip(self.vec, self.gradient, group['params']):
+            for vec, g, p in zip(self.vec, self.gradient, group['params']):
                 g.data = p.grad.clone()
-                df_sum += torch.sum(v * p.grad)
+                df_sum += torch.sum(vec * p.grad)
 
         df_sum.backward()
 
         for group in self.param_groups:
             weight_decay = group['weight_decay']
 
-            for hv, g, p, v in zip(self.accumulated_hess_vec, self.gradient, group['params'], self.vec):
-                hv.data = p.grad.data - g.data + (weight_decay * v.data)
+            for hv, g, p, vec in zip(self.accumulated_hess_vec, self.gradient, group['params'], self.vec):
+                hv.data = p.grad.data - g.data + (weight_decay * vec.data)
 
     # The magic happens here. Runs a couple of times after a prior is constructed.
     # It updates the estimate for the Hessian.
@@ -335,7 +338,6 @@ class Preconditioner(torch.optim.Optimizer):
                     raise RuntimeError(
                         'Method does not support sparse gradients')
                 state = self.state[p]
-
                 # get the preconditioning results and transform the gradient.
                 U = state['preconditioned_vectors']
                 D = state['preconditioned_scaling']
@@ -379,6 +381,7 @@ class Preconditioner(torch.optim.Optimizer):
         elif self.stepnumber == self.prior_iterations + self.num_observations - 1:
             self._create_low_rank()                # uses new data
             self._init_the_optimizer()           # does not use new data
+            print("[step] self.state", self.state)
         else:
             self._apply_preconditioner()
             self.the_optimizer.step()
