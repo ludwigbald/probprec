@@ -14,10 +14,8 @@ class Preconditioner(torch.optim.Optimizer):
                 "Invalid weight_decay value: {}".format(weight_decay))
 
         # init the statedict and default values.
-        defaults = dict(est_rank=est_rank, num_observations=num_observations,
-                        prior_iterations=prior_iterations,
-                        weight_decay=weight_decay,
-                        optim_class=optim_class)
+        defaults = dict(weight_decay=weight_decay,
+                         optim_class=optim_class)
         defaults.update(optim_hyperparams)
 
         super(Preconditioner, self).__init__(list(params), defaults)
@@ -40,37 +38,32 @@ class Preconditioner(torch.optim.Optimizer):
         self.alpha = torch.zeros(1, device=self.device)
 
         for group in self.param_groups:
-            self.accumulated_hess_vec = list(
-                torch.zeros_like(p) for p in group['params'])
+            for p in group['params']:
+                state = self.state[p]
+                state['accumulated_hess_vec'] = torch.zeros_like(p)
+                state['gradient'] = torch.zeros_like(p)
+                state['accumulated_gradient'] = torch.zeros_like(p)
+                state['vec'] = torch.ones_like(p)
 
-            self.gradient = list(torch.zeros_like(p) for p in group['params'])
-            self.accumulated_gradient = list(
-                torch.zeros_like(p) for p in group['params'])
-            self.vec = list(torch.ones_like(p) for p in group['params'])
-            self.STAS = list(torch.zeros(1, device=self.device)
-                             for p in group['params'])
-            self.STAAS = list(torch.zeros(1, device=self.device)
-                              for p in group['params'])
-            self.STS = list(torch.zeros(1, device=self.device)
-                            for p in group['params'])
+                state['STAS'] = torch.zeros(1, device=self.device)
+                state['STAAS'] = torch.zeros(1, device=self.device)
+                state['STS'] = torch.zeros(1, device=self.device)
 
-            self.S = list(torch.zeros((tuple(p.size()) + (self.num_observations,)),
-                                      device=self.device) for p in group['params'])
-            self.X = list(torch.zeros((p.numel(), self.num_observations),
-                                      device=self.device) for p in group['params'])
-            self.Y = list(torch.zeros((tuple(p.size()) + (self.num_observations,)),
-                                      device=self.device) for p in group['params'])
+                state['S'] = torch.zeros((tuple(p.size()) + (self.num_observations,)),
+                                          device=self.device)
+                state['X'] = torch.zeros((p.numel(), self.num_observations),
+                                          device=self.device)
+                state['Y'] = torch.zeros((tuple(p.size()) + (self.num_observations,)),
+                                          device=self.device)
 
-            self.STWS = list(torch.zeros(
-                (self.num_observations, self.num_observations), device=self.device) for p in group['params'])
-            self.STLS = list(torch.zeros((self.num_observations,),
-                                         device=self.device) for p in group['params'])
-            self.inner_product = list(torch.zeros(
-                (self.num_observations, self.num_observations), device=self.device) for p in group['params'])
-
+                state['STWS'] = torch.zeros(
+                    (self.num_observations, self.num_observations), device=self.device)
+                state['STLS'] = torch.zeros((self.num_observations,), device=self.device)
+                state['inner_product'] = torch.zeros(
+                    (self.num_observations, self.num_observations), device=self.device)
 
     # initialize the_optimizer
-    # No Problem: Param Groups don't already have a set learning rate.
+    # No Problem: Param Groups don't already have a set learning rate. #ACC feed lr's to groups
     def _init_the_optimizer(self):
         if self.lr is None:
             self.lr = self.alpha.item()
@@ -136,18 +129,29 @@ class Preconditioner(torch.optim.Optimizer):
 
         for group in self.param_groups:
             weight_decay = group['weight_decay']
-            for g, v, ag, p in zip(self.gradient, self.vec, self.accumulated_gradient, group['params']):
+
+            for p in group['params']:
+                state = self.state[p]
+                g  = state['gradient']
+                v  = state['vec']
+                ag = state['accumulated_gradient']
+
                 g.data = p.grad.clone()
                 v.data = g.data + weight_decay * p.data
                 ag.data += v.data
                 df_sum += torch.sum(v * p.grad)
 
-        df_sum.backward()
+        df_sum.backward() #ACC df_sum, should be fine though
 
-        i = 0
         for group in self.param_groups:
             weight_decay = group['weight_decay']
-            for g, hv, v, p in zip(self.gradient, self.accumulated_hess_vec, self.vec, group['params']):
+
+            for p in group['params']:
+                state = self.state[p]
+                g  = state['gradient']
+                hv = state['accumulated_hess_vec']
+                v  = state['vec']
+
                 hv_temp = p.grad.data - g.data + (weight_decay * v)
 
                 STS = torch.norm(v)**2
@@ -155,10 +159,9 @@ class Preconditioner(torch.optim.Optimizer):
                 STAAS = torch.norm(hv_temp)**2 # see eq. 11, "A" means Lambda
 
                 print('[_gather_curvature_information] STAS =', STAS)
-                self.STS[i] += STS
-                self.STAS[i] += STAS
-                self.STAAS[i] += STAAS
-                i += 1
+                state['STS'] += STS
+                state['STAS'] += STAS
+                state['STAAS'] += STAAS
                 hv.data += hv_temp.data
 
         self.prior_counter += 1
@@ -167,55 +170,79 @@ class Preconditioner(torch.optim.Optimizer):
     # a Prior Estimate for the Hessian
     def _estimate_prior(self):
 
-        sts = sum(self.STS)
-        stas = sum(self.STAS)
-        staas = sum(self.STAAS)
+        sts = 0      #ACC sts, stas, staas
+        stas = 0
+        staas = 0
 
-        g_temp = torch.zeros(1)
+        g_temp = torch.zeros(1) #ACC g_temp
 
         n = self.prior_counter
 
-        for g, hv in zip(self.accumulated_gradient, self.accumulated_hess_vec):
-            g_temp.data += (torch.norm(g)**2)
-            g.div_(n)
-            hv.div_(n)
+        for group in self.param_groups:
+            for p in group['params']:
+                state = self.state[p]
+                g  = state['accumulated_gradient']
+                hv = state['accumulated_hess_vec']
 
-        self.alpha = torch.tensor([stas / staas], dtype=dtype)
-        self.W_var.data = torch.tensor([stas / sts], dtype=dtype)
-        self.lam.data = torch.abs(torch.tensor([sts]) - g_temp.data).div_(n)
+                g_temp.data += (torch.norm(g)**2) #ACC g_temp
+                g.div_(n)
+                hv.div_(n)
+
+                sts   += state['STS']
+                stas  += state['STAS']
+                staas += state['STAAS']
+
+        self.alpha = torch.tensor([stas / staas], dtype=dtype)              #ACC alpha, stas, staas
+        self.W_var.data = torch.tensor([stas / sts], dtype=dtype)           #ACC W_var, stas, sts
+        self.lam.data = torch.abs(torch.tensor([sts]) - g_temp.data).div_(n) #ACC lam, sts, g_temp
 
         print("[_estimate_prior] (sums) sts:", sts, "stas", stas, "staas", staas)
         print('[_estimate_prior] alpha: {:.2e} w: {:.2e} lambda: {:.2e}'.format(
             self.alpha.item(), self.W_var.item(), self.lam.item()))
 
-    def _setup_estimated_hessian(self):
+    def _setup_estimated_hessian(self): #ACC w_var, lam, alpha
         w_var = self.W_var.to(self.device)
         lam = self.lam.to(self.device)
         alph = self.alpha.to(self.device)
 
-        for S, Y, g, hv, STWS, STLS, ip, X in zip(self.S, self.Y, self.accumulated_gradient,
-                                                  self.accumulated_hess_vec, self.STWS,
-                                                  self.STLS,self.inner_product, self.X):
-            S_norm = torch.norm(g.mul(-alph)) ** 2
-            S.data[..., 0] = g.mul(-alph) / torch.sqrt(S_norm)
-            Y.data[..., 0] = hv.mul(-alph) / torch.sqrt(S_norm)
-            delta = (Y[..., 0] - S[..., 0]).view(-1)
-            STWS.data[0, 0] = w_var * S_norm
-            STLS.data[0] = lam * S_norm
-            X.data[:, 0] = delta / (w_var * STWS[0, 0] + lam * STLS[0])
-            ip[0, 0] = alph * w_var**2 * \
-                torch.sum(X[:, 0] * S[..., 0].view(-1))
+        for group in self.param_groups:
+            for p in group['params']:
+                state = self.state[p]
+                S = state['S']
+                X = state['X']
+                Y = state['Y']
+                g  = state['accumulated_gradient']
+                hv = state['accumulated_hess_vec']
+                STWS = state['STWS']
+                STLS = state['STLS']
+                ip = state['inner_product']
+                ag = state['accumulated_gradient']
 
-        self.update_counter += 1  # set to 1
+                S_norm = torch.norm(g.mul(-alph)) ** 2
+                S.data[..., 0] = g.mul(-alph) / torch.sqrt(S_norm)
+                Y.data[..., 0] = hv.mul(-alph) / torch.sqrt(S_norm)
+                delta = (Y[..., 0] - S[..., 0]).view(-1)
+                STWS.data[0, 0] = w_var * S_norm
+                STLS.data[0] = lam * S_norm
+                X.data[:, 0] = delta / (w_var * STWS[0, 0] + lam * STLS[0])
+                ip[0, 0] = alph * w_var**2 * \
+                    torch.sum(X[:, 0] * S[..., 0].view(-1))
+
+        self.update_counter += 1  # set to 1 #ACC that's shared, but should not matter
 
 
     def _apply_estimated_inverse(self):
         m = self.update_counter
-        w_var = self.W_var.to(self.device)
-        alph = self.alpha.to(self.device)
+        w_var = self.W_var.to(self.device) # ACC
+        alph = self.alpha.to(self.device)  # ACC
 
         for group in self.param_groups:
-            for S, vec, X, p, ip in zip(self.S, self.vec, self.X, group['params'], self.inner_product):
+            for p in group['params']:
+                state = self.state[p]
+                S   = state['S']
+                vec = state['vec']
+                X   = state['X']
+                ip  = state['inner_product']
                 # B's dimensionality needs to be adjusted for torch.solve
                 B = torch.mv(S[..., :m].view(-1, m).t(),
                              p.grad.view(-1)).view(m, -1)
@@ -231,10 +258,14 @@ class Preconditioner(torch.optim.Optimizer):
     # the vectors self.vec
     # Result is saved in hv
     def _hessian_vector_product(self):
-        df_sum = torch.zeros(1, device=self.device)
+        df_sum = torch.zeros(1, device=self.device) #ACC df_sum, should be fine though
 
         for group in self.param_groups:
-            for vec, g, p in zip(self.vec, self.gradient, group['params']):
+            for p in group['params']:
+                state = self.state[p]
+                g  = state['gradient']
+                vec  = state['vec']
+
                 g.data = p.grad.clone()
                 df_sum += torch.sum(vec * p.grad)
 
@@ -242,8 +273,12 @@ class Preconditioner(torch.optim.Optimizer):
 
         for group in self.param_groups:
             weight_decay = group['weight_decay']
+            for p in group['params']:
+                state = self.state[p]
+                hv = state['accumulated_hess_vec']
+                g  = state['gradient']
+                vec  = state['vec']
 
-            for hv, g, p, vec in zip(self.accumulated_hess_vec, self.gradient, group['params'], self.vec):
                 hv.data = p.grad.data - g.data + (weight_decay * vec.data)
 
     # The magic happens here. Runs a couple of times after a prior is constructed.
@@ -253,37 +288,46 @@ class Preconditioner(torch.optim.Optimizer):
         m = self.update_counter
 
         #print("[_update_estimated_hessian] m: ", m)
-        w_var = self.W_var.to(self.device)
+        w_var = self.W_var.to(self.device) #ACC
         lam = self.lam.to(self.device)
         alph = self.alpha.to(self.device)
 
-        for S, Y, hv, STWS, STLS, vec, ip, X in zip(self.S, self.Y,
-                                                    self.accumulated_hess_vec, self.STWS,
-                                                    self.STLS, self.vec, self.inner_product, self.X):
-            S_norm = torch.norm(vec)**2
-            S.data[..., m] = (vec / torch.sqrt(S_norm)).data
-            Y.data[..., m] = (hv / torch.sqrt(S_norm)).data
+        for group in self.param_groups:
+            for p in group['params']:
+                state = self.state[p]
+                S = state['S']
+                X = state['X']
+                Y = state['Y']
+                hv = state['accumulated_hess_vec']
+                STWS = state['STWS']
+                STLS = state['STLS']
+                ip = state['inner_product']
+                vec = state['vec']
 
-            delta = (Y[..., :m + 1] - alph *
-                     S[..., :m + 1]).view(-1, m + 1)
+                S_norm = torch.norm(vec)**2
+                S.data[..., m] = (vec / torch.sqrt(S_norm)).data
+                Y.data[..., m] = (hv / torch.sqrt(S_norm)).data
 
-            STWS.data[:m, m] = w_var * \
-                torch.mv(S[..., :m].view(-1, m).t(), S[..., m].view(-1))
-            STWS.data[m, :m] = STWS[:m, m]
-            STWS.data[m, m] = w_var * S_norm
-            STLS.data[m] = lam * S_norm
+                delta = (Y[..., :m + 1] - alph *
+                         S[..., :m + 1]).view(-1, m + 1)
 
-            stls = torch.sqrt(STLS[:m + 1])
+                STWS.data[:m, m] = w_var * \
+                    torch.mv(S[..., :m].view(-1, m).t(), S[..., m].view(-1))
+                STWS.data[m, :m] = STWS[:m, m]
+                STWS.data[m, m] = w_var * S_norm
+                STLS.data[m] = lam * S_norm
 
-            D, V = torch.symeig( #D: eigenvalues, V: eigenvectors
-                (STWS[:m + 1, :m + 1] / stls) / stls.unsqueeze(1), eigenvectors=True)
-            F_V = V / stls.unsqueeze(1)
+                stls = torch.sqrt(STLS[:m + 1])
 
-            X.data[:, :m + 1] = torch.mm((torch.mm(delta, F_V) / torch.sqrt(lam)) / (
-                w_var / lam * D + 1.0), F_V.t()) / torch.sqrt(lam)
+                D, V = torch.symeig( #D: eigenvalues, V: eigenvectors
+                    (STWS[:m + 1, :m + 1] / stls) / stls.unsqueeze(1), eigenvectors=True)
+                F_V = V / stls.unsqueeze(1)
 
-            ip[:m + 1, :m + 1] = alph * w_var**2 * \
-                torch.mm(X[:, :m + 1].t(), S[..., :m + 1].view(-1, m + 1))
+                X.data[:, :m + 1] = torch.mm((torch.mm(delta, F_V) / torch.sqrt(lam)) / (
+                    w_var / lam * D + 1.0), F_V.t()) / torch.sqrt(lam)
+
+                ip[:m + 1, :m + 1] = alph * w_var**2 * \
+                    torch.mm(X[:, :m + 1].t(), S[..., :m + 1].view(-1, m + 1))
 
         self.update_counter += 1
 
@@ -297,8 +341,12 @@ class Preconditioner(torch.optim.Optimizer):
         alph = self.alpha.cpu()
 
         for group in self.param_groups:
-            for p, S, X in zip(group['params'], self.S, self.X):
-                V = S.view(-1, self.update_counter)
+            for p in group['params']:
+                state = self.state[p]
+                S = state['S']
+                X = state['X']
+
+                # V = S.view(-1, self.update_counter)
                 S_ = S.cpu()
                 X_ = X.cpu()
 
@@ -320,9 +368,9 @@ class Preconditioner(torch.optim.Optimizer):
 
                 shape = list(p.shape)
                 shape.append(effective_rank)
-                state = self.state[p]
+
                 state['preconditioned_vectors'] = torch.from_numpy(sing_vec[:, :effective_rank].astype(
-                    np.float32)).view(shape).to(self.device)  # .view_as()
+                    np.float32)).view(shape).to(self.device)  # .view_as() #ACC actually per-parameter!
                 state['preconditioned_scaling'] = torch.from_numpy(
                     np.sqrt(sing_val[:effective_rank]).astype(np.float32)).to(self.device)
 
@@ -381,7 +429,6 @@ class Preconditioner(torch.optim.Optimizer):
         elif self.stepnumber == self.prior_iterations + self.num_observations - 1:
             self._create_low_rank()                # uses new data
             self._init_the_optimizer()           # does not use new data
-            print("[step] self.state", self.state)
         else:
             self._apply_preconditioner()
             self.the_optimizer.step()

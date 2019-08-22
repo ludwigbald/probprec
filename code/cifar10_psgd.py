@@ -77,12 +77,12 @@ if __name__ == '__main__':
         [transforms.ToTensor(),
          transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-    trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
+    trainset = torchvision.datasets.CIFAR10(root='./data_deepobs/pytorch', train=True,
                                             download=False, transform=transform)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE,
                                               shuffle=True, num_workers=NUM_WORKERS)
 
-    testset = torchvision.datasets.CIFAR10(root='./data', train=False,
+    testset = torchvision.datasets.CIFAR10(root='./data_deepobs/pytorch', train=False,
                                            download=False, transform=transform)
     testloader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE,
                                              shuffle=False, num_workers=NUM_WORKERS)
@@ -139,14 +139,23 @@ if __name__ == '__main__':
                 nn.ReLU(inplace=True),
                 nn.Linear(256, num_classes),
             )
+            # init the layers
+            for module in self.modules():
+                if isinstance(module, nn.Conv2d):
+                    nn.init.constant_(module.bias, 0.0)
+                    nn.init.xavier_normal_(module.weight)
+
+                if isinstance(module, nn.Linear):
+                    nn.init.constant_(module.bias, 0.0)
+                    nn.init.xavier_uniform_(module.weight)
 
         def forward(self, x):
             x = self.features(x)
     #         print(x.size())
             x = x.view(x.size(0), 128 * 3 * 3)
             x = self.classifier(x)
-            return x    
-        
+            return x
+
         def name(self):
             return "3conv_3dense"
 
@@ -166,34 +175,30 @@ if __name__ == '__main__':
     test_loss=[]
     test_acc=[]
     alphas.append(LEARNING_RATE)
-    
+
     # specify the optimizer class
     optimizer_class = optim.SGD
 
     # and its hyperparameters
-    hyperparams = {'lr': LEARNING_RATE,
-                   'momentum': 0.99}
+    hyperparams = {} #'lr': 0.1} #'momentum': 0.99}
+    Poptimizer = Preconditioner([{"params": model.features.parameters()},
+                                 {"params": model.classifier.parameters()}],
+                                est_rank=est_rank, num_observations=gather_obs, prior_iterations=est_prior,
+                                optim_class=optimizer_class, **hyperparams)
+
+    # Optimizer = optim.SGD([{"params": model.features.parameters()},
+    #                        {"params": model.classifier.parameters()}],
+    #                       lr=0.01)
 
     for epoch in range(NUM_EPOCHS):  # loop over the dataset multiple times
-        
-        if epoch == 0:
-            Poptimizer = Preconditioner(model.parameters(),
-                                        est_rank=est_rank, num_observations=gather_obs, prior_iterations=est_prior,
-                                        weight_decay = 0.9999, lr = 0.01,
-                                        optim_class=optimizer_class, optim_hyperparams=hyperparams)
-        else:    #epoch > 0
-            Poptimizer = Preconditioner(model.parameters(),
-                                        est_rank=est_rank, num_observations=gather_obs, prior_iterations=est_prior,
-                                        weight_decay = 0.9999, lr = None,
-                                        optim_class=optimizer_class, optim_hyperparams=hyperparams)
-        
+
+        if epoch > 0:
+            Poptimizer.start_estimate(lr = None)
 
         start_time_epoch=time.perf_counter()
         running_loss = 0.0
-        
-        
-        
-        for i, data in enumerate(trainloader, 0):
+
+        for i, data in enumerate(trainloader):
             # get the inputs
             inputs, labels = data
             inputs, labels = inputs.to(device), labels.to(device)
@@ -203,30 +208,9 @@ if __name__ == '__main__':
             # forward + backward + optimize
             outputs = model(inputs)
             loss = criterion(outputs, labels)
-            
 
-
-            # if i< est_prior:
-               # # start_time_estimate=time.perf_counter()
-                # loss.backward(create_graph=True)
-                # Poptimizer.GatherCurvatureInformation()
-            # elif i==est_prior:
-                # Poptimizer.EstimatePrior() 
-                # alphas.append(Poptimizer.alpha.item())
-                # Poptimizer.UpdateEstimatedHessian()
-            # elif i>est_prior and i<est_prior+gather_obs+1:
-                # loss.backward(create_graph=True)
-                # Poptimizer.UpdateEstimatedHessian()
-            # elif i==est_prior+gather_obs+1:
-                # Poptimizer.CreateLowRank()
-                # # stop_time_estimate=time.perf_counter()
-                # # est_time=time.perf_counter()-start_time_estimate
-            # else:
-            
             loss.backward(create_graph = True)
             Poptimizer.step()
-
-
 
             # print statistics
             running_loss += loss.item()
@@ -237,7 +221,7 @@ if __name__ == '__main__':
                 train_loss.append(running_loss / EVALUATION_ITERATION)
                 running_loss = 0.0
 
-        
+
         epoch_time=time.perf_counter()-start_time_epoch
         #Evaluate on test set
         running_test_loss=0.0
@@ -259,7 +243,7 @@ if __name__ == '__main__':
         test_acc.append(100.0*correct/total)
         test_loss.append(running_test_loss/j)
         print('epoch %d:  testloss %1.4e testacc %1.3e'%(epoch, test_loss[-1],test_acc[-1]))
-       
+
 
     print('Finished Training')
     # print(train_loss)
@@ -276,4 +260,3 @@ if __name__ == '__main__':
 # np.savetxt(save_name+'_train.txt', save_data_train, fmt='%1.5e', delimiter=' ')
 # np.savetxt(save_name+'_test.txt', save_data_test, fmt='%1.5e', delimiter=' ')
 # np.savetxt(save_name+'_alphas.txt',alphas, fmt='%1.5e', delimiter=' ')
-
