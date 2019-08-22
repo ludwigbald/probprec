@@ -33,11 +33,12 @@ class Preconditioner(torch.optim.Optimizer):
 
     # An initialization function, called in start_estimate()
     def _initialize_lists(self):
-        self.lam = torch.zeros(1, device=self.device)
-        self.W_var = torch.zeros(1, device=self.device)
-        self.alpha = torch.zeros(1, device=self.device)
+
 
         for group in self.param_groups:
+            group['lam'] = torch.zeros(1, device=self.device)
+            group['W_var'] = torch.zeros(1, device=self.device)
+            group['alpha'] = torch.zeros(1, device=self.device)
             for p in group['params']:
                 state = self.state[p]
                 state['accumulated_hess_vec'] = torch.zeros_like(p)
@@ -65,9 +66,11 @@ class Preconditioner(torch.optim.Optimizer):
     # initialize the_optimizer
     # No Problem: Param Groups don't already have a set learning rate. #ACC feed lr's to groups
     def _init_the_optimizer(self):
-        if self.lr is None:
-            self.lr = self.alpha.item()
-        self.optim_hyperparams.update(lr=self.lr)
+        for group in self.param_groups:
+            group.update(lr=group['alpha'].item())
+            print("[_init_the_optimizer] Group Learning Rate:", group['lr'])
+        self.optim_hyperparams.pop("lr", None)
+
         print("[_init_the_optimizer] Initializing ", self.optim_class.__name__, " with: ", self.optim_hyperparams)
         self.the_optimizer = self.optim_class(
             self.param_groups, **self.optim_hyperparams)
@@ -82,6 +85,8 @@ class Preconditioner(torch.optim.Optimizer):
                        prior_iterations=None):
 
         self.lr = lr
+        # group lr = lr
+        # default lr = lr
 
         if num_observations is not None:
             if not 0 <= num_observations:
@@ -170,15 +175,16 @@ class Preconditioner(torch.optim.Optimizer):
     # a Prior Estimate for the Hessian
     def _estimate_prior(self):
 
-        sts = 0      #ACC sts, stas, staas
-        stas = 0
-        staas = 0
 
-        g_temp = torch.zeros(1) #ACC g_temp
 
         n = self.prior_counter
 
         for group in self.param_groups:
+            sts = 0      #ACC sts, stas, staas
+            stas = 0
+            staas = 0
+
+            g_temp = torch.zeros(1) #ACC g_temp
             for p in group['params']:
                 state = self.state[p]
                 g  = state['accumulated_gradient']
@@ -192,20 +198,21 @@ class Preconditioner(torch.optim.Optimizer):
                 stas  += state['STAS']
                 staas += state['STAAS']
 
-        self.alpha = torch.tensor([stas / staas], dtype=dtype)              #ACC alpha, stas, staas
-        self.W_var.data = torch.tensor([stas / sts], dtype=dtype)           #ACC W_var, stas, sts
-        self.lam.data = torch.abs(torch.tensor([sts]) - g_temp.data).div_(n) #ACC lam, sts, g_temp
+            group['alpha'] = torch.tensor([stas / staas], dtype=dtype)
+            group['W_var'].data = torch.tensor([stas / sts], dtype=dtype)
+            group['lam'].data = torch.abs(torch.tensor([sts]) - g_temp.data).div_(n)
 
-        print("[_estimate_prior] (sums) sts:", sts, "stas", stas, "staas", staas)
-        print('[_estimate_prior] alpha: {:.2e} w: {:.2e} lambda: {:.2e}'.format(
-            self.alpha.item(), self.W_var.item(), self.lam.item()))
+            print("[_estimate_prior] (sums) sts:", sts, "stas", stas, "staas", staas)
+            print('[_estimate_prior] alpha: {:.2e} w: {:.2e} lambda: {:.2e}'.format(
+                group['alpha'].item(), group['W_var'].item(), group['lam'].item()))
 
-    def _setup_estimated_hessian(self): #ACC w_var, lam, alpha
-        w_var = self.W_var.to(self.device)
-        lam = self.lam.to(self.device)
-        alph = self.alpha.to(self.device)
+    def _setup_estimated_hessian(self):
 
         for group in self.param_groups:
+            w_var = group['W_var'].to(self.device)
+            lam = group['lam'].to(self.device)
+            alph = group['alpha'].to(self.device)
+
             for p in group['params']:
                 state = self.state[p]
                 S = state['S']
@@ -233,10 +240,10 @@ class Preconditioner(torch.optim.Optimizer):
 
     def _apply_estimated_inverse(self):
         m = self.update_counter
-        w_var = self.W_var.to(self.device) # ACC
-        alph = self.alpha.to(self.device)  # ACC
 
         for group in self.param_groups:
+            w_var = group['W_var'].to(self.device)
+            alph = group['alpha'].to(self.device)
             for p in group['params']:
                 state = self.state[p]
                 S   = state['S']
@@ -287,12 +294,12 @@ class Preconditioner(torch.optim.Optimizer):
     def _update_estimated_hessian(self):
         m = self.update_counter
 
-        #print("[_update_estimated_hessian] m: ", m)
-        w_var = self.W_var.to(self.device) #ACC
-        lam = self.lam.to(self.device)
-        alph = self.alpha.to(self.device)
 
         for group in self.param_groups:
+            w_var = group['W_var'].to(self.device)
+            lam = group['lam'].to(self.device)
+            alph = group['alpha'].to(self.device)
+
             for p in group['params']:
                 state = self.state[p]
                 S = state['S']
@@ -337,10 +344,11 @@ class Preconditioner(torch.optim.Optimizer):
     # TODO: maybe get rid of numpy? Nah.
 
     def _create_low_rank(self):
-        w_var = self.W_var.cpu()
-        alph = self.alpha.cpu()
 
         for group in self.param_groups:
+            w_var = group['W_var'].cpu()
+            alph = group['alpha'].cpu()
+
             for p in group['params']:
                 state = self.state[p]
                 S = state['S']
