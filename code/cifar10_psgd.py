@@ -66,6 +66,8 @@ gather_obs=args.nl
 # device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 device=torch.device('cpu')
 torch.set_default_dtype(torch.float)
+
+torch.manual_seed(42)
 # device=torch.device('cpu')
 # Assume that we are on a CUDA machine, then this should print a CUDA device:
 
@@ -193,7 +195,7 @@ if __name__ == '__main__':
     for epoch in range(NUM_EPOCHS):  # loop over the dataset multiple times
 
         if epoch > 0:
-            Poptimizer.start_estimate(lr = None)
+            Poptimizer.start_estimate()
 
         start_time_epoch=time.perf_counter()
         running_loss = 0.0

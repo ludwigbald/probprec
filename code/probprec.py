@@ -29,7 +29,7 @@ class Preconditioner(torch.optim.Optimizer):
         optim_hyperparams.update(weight_decay=weight_decay)
         self.optim_hyperparams = optim_hyperparams
 
-        self.start_estimate(lr, est_rank, num_observations, prior_iterations)
+        self.start_estimate(est_rank, num_observations, prior_iterations)
 
     # An initialization function, called in start_estimate()
     def _initialize_lists(self):
@@ -79,12 +79,12 @@ class Preconditioner(torch.optim.Optimizer):
     # Called in the init, but can/should also be used externally.
     # by default, discards the saved lr and keeps the other hyperparams.
 
-    def start_estimate(self, lr=None,
+    def start_estimate(self,
                        est_rank=None,
                        num_observations=None,
                        prior_iterations=None):
 
-        self.lr = lr
+        # self.lr = lr
         # group lr = lr
         # default lr = lr
 
@@ -118,7 +118,7 @@ class Preconditioner(torch.optim.Optimizer):
         gradnorm = 0
         for group in self.param_groups:
             for p in group['params']:
-                gradnorm += torch.sum(torch.pow(p.grad.data, 2))
+                gradnorm += torch.sum(torch.pow(p.grad, 2))
         gradnorm = torch.sqrt(gradnorm)
         #return for deepOBS to write
         return gradnorm.item()
@@ -142,9 +142,10 @@ class Preconditioner(torch.optim.Optimizer):
                 ag = state['accumulated_gradient']
 
                 g.data = p.grad.clone()
-                v.data = g.data + weight_decay * p.data
+                v.data = g + weight_decay * p.data
                 ag.data += v.data
                 df_sum += torch.sum(v * p.grad)
+
 
         df_sum.backward() #ACC df_sum, should be fine though
 
