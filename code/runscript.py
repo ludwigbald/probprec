@@ -39,11 +39,11 @@ phyperparams = {'lr': {"type": float, 'default': None}}
 # create the runner instance
 prunner = SORunner(poptimizer_class, phyperparams)
 
-#prunner.run(testproblem='mnist_2c2d', num_epochs = 1)
+# prunner.run(testproblem='fmnist_2c2d', num_epochs = 1)
 
-# prunner.run(testproblem='quadratic_deep', batch_size = 32, num_epochs = 20)
+prunner.run(testproblem='quadratic_deep', batch_size = 32, num_epochs = 20)
 
-prunner.run(testproblem='mnist_vae', num_epochs=20, random_seed = 45)
+# prunner.run(testproblem='mnist_vae', num_epochs=20, random_seed = 45)
 #
 # for lr in numpy.arange(-210.0, -320.0, -10.0):
 #     for i in range(43, 44):

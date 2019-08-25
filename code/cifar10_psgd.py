@@ -185,6 +185,7 @@ if __name__ == '__main__':
     hyperparams = {} #'lr': 0.1} #'momentum': 0.99}
     Poptimizer = Preconditioner([{"params": model.features.parameters()},
                                  {"params": model.classifier.parameters()}],
+                                 lr = 10,
                                 est_rank=est_rank, num_observations=gather_obs, prior_iterations=est_prior,
                                 optim_class=optimizer_class, **hyperparams)
 
@@ -213,6 +214,7 @@ if __name__ == '__main__':
 
             loss.backward(create_graph = True)
             Poptimizer.step()
+            Poptimizer.get_log()
 
             # print statistics
             running_loss += loss.item()

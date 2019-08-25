@@ -62,6 +62,8 @@ class Preconditioner(torch.optim.Optimizer):
                 state['STLS'] = torch.zeros((self.num_observations,), device=self.device)
                 state['inner_product'] = torch.zeros(
                     (self.num_observations, self.num_observations), device=self.device)
+                state['last_p'] = torch.clone(p)
+                state['last_p'].grad = torch.zeros_like(p)
 
     # initialize the_optimizer
     # No Problem: Param Groups don't already have a set learning rate. #ACC feed lr's to groups
@@ -108,12 +110,12 @@ class Preconditioner(torch.optim.Optimizer):
         self.stepnumber = 0
         self.prior_counter = 0
         self.update_counter = 0
-
+        self.state['last_pred_err'] = 0
+        self.zero_grad()
         self._initialize_lists()
 
     # logs a norm of the gradient and alpha
     def get_log(self):
-        #log alpha
         #log gradnorm
         gradnorm = 0
         for group in self.param_groups:
@@ -155,7 +157,7 @@ class Preconditioner(torch.optim.Optimizer):
             for p in group['params']:
                 state = self.state[p]
                 g  = state['gradient']
-                hv = state['accumulated_hess_vec']
+                hv = state['accumulated_hess_vec'] # eq. (11): BS
                 v  = state['vec']
 
                 hv_temp = p.grad.data - g.data + (weight_decay * v)
@@ -164,7 +166,10 @@ class Preconditioner(torch.optim.Optimizer):
                 STAS = torch.sum(v * hv_temp)
                 STAAS = torch.norm(hv_temp)**2 # see eq. 11, "A" means Lambda
 
-                print('[_gather_curvature_information] STAS =', STAS)
+                # print('[_gather_curvature_information]       norm(v) =', torch.sum(v))
+                # print('[_gather_curvature_information] norm(hv_temp) =', torch.sum(hv_temp))
+                # print('[_gather_curvature_information]          STAS =', STAS)
+                # print('[_gather_curvature_information] p =', p)
                 state['STS'] += STS
                 state['STAS'] += STAS
                 state['STAAS'] += STAAS
@@ -176,8 +181,6 @@ class Preconditioner(torch.optim.Optimizer):
     # a Prior Estimate for the Hessian
     def _estimate_prior(self):
 
-
-
         n = self.prior_counter
 
         for group in self.param_groups:
@@ -185,13 +188,13 @@ class Preconditioner(torch.optim.Optimizer):
             stas = 0
             staas = 0
 
-            g_temp = torch.zeros(1) #ACC g_temp
+            g_temp = torch.zeros(1)
             for p in group['params']:
                 state = self.state[p]
                 g  = state['accumulated_gradient']
                 hv = state['accumulated_hess_vec']
 
-                g_temp.data += (torch.norm(g)**2) #ACC g_temp
+                g_temp.data += torch.norm(g) ** 2
                 g.div_(n)
                 hv.div_(n)
 
@@ -238,7 +241,7 @@ class Preconditioner(torch.optim.Optimizer):
 
         self.update_counter += 1  # set to 1 #ACC that's shared, but should not matter
 
-
+    # Compute the new search directions and save the in vec
     def _apply_estimated_inverse(self):
         m = self.update_counter
 
@@ -387,6 +390,7 @@ class Preconditioner(torch.optim.Optimizer):
     def _apply_preconditioner(self):
         for group in self.param_groups:
             for p in group['params']:
+
                 if p.grad is None:
                     continue
                 grad = p.grad.data
@@ -395,6 +399,7 @@ class Preconditioner(torch.optim.Optimizer):
                     raise RuntimeError(
                         'Method does not support sparse gradients')
                 state = self.state[p]
+
                 # get the preconditioning results and transform the gradient.
                 U = state['preconditioned_vectors']
                 D = state['preconditioned_scaling']
@@ -403,6 +408,32 @@ class Preconditioner(torch.optim.Optimizer):
                 buf = torch.sum(U * (1.0 / D - 1.0) * torch.mv(
                     U.view(-1, effective_rank).t(), grad.view(-1)), dim=-1)  # conditioned gradient
                 p.grad.data = buf.add(grad)
+
+    #TODO: This method needs to be made adaptive for different problems:
+    # It needs the correct notion of the Hessian and a probabilistic notion of the error.
+    # For this, we need to know the distributions of predicted_grad and true_grad
+    def maybe_start_estimate(self):
+        pred_err = 0
+        last_pred_err = self.state['last_pred_err']
+        for group in self.param_groups:
+            for p in group['params']:
+                state = self.state[p]
+                true_grad = p.grad
+                last_p = state['last_p']
+                predicted_grad = last_p.grad + 1.0 * (p - last_p) #TODO: replace 1.0 with Hessian estimate B(last_p)
+                pred_err += (torch.sum(true_grad - predicted_grad) / np.prod(p.size())).item()
+
+                state['last_p'] = torch.clone(p)
+                state['last_p'].grad = torch.clone(p.grad)
+        print("[maybe_start_estimate] (const Hessian:) gradient prediction error =", pred_err)
+        if pred_err > 10.0 * abs(last_pred_err): #TODO: replace magic number with a probabilistic formulation
+            for group in self.param_groups:
+                for p in group['params']:
+                    state = self.state[p]
+                    p = state['last_p']
+            self.start_estimate()
+        self.state['last_pred_err'] = 0.5 * pred_err + self.state['last_pred_err']
+
 
 ################################################################################
 ##                                                                            ##
@@ -423,7 +454,6 @@ class Preconditioner(torch.optim.Optimizer):
         loss = None
         if closure is not None:
             loss = closure()
-
         # Make prior estimate
         if self.stepnumber < self.prior_iterations:
             self._gather_curvature_information()  # uses new data
@@ -440,6 +470,7 @@ class Preconditioner(torch.optim.Optimizer):
             self._init_the_optimizer()           # does not use new data
         else:
             self._apply_preconditioner()
+            self.maybe_start_estimate()
             self.the_optimizer.step()
 
 

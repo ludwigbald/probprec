@@ -70,8 +70,8 @@ class SORunner(PTRunner):
             print("********************************")
 
             # estimate a new Hessian, drop the learning rate
-            if epoch_count > 0:
-                opt.start_estimate()
+            # if epoch_count > 0:
+            #     opt.start_estimate()
 
             # Break from train loop after the last round of evaluation
             if epoch_count == num_epochs:
