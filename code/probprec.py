@@ -39,6 +39,8 @@ class Preconditioner(torch.optim.Optimizer):
             group['lam'] = torch.zeros(1, device=self.device)
             group['W_var'] = torch.zeros(1, device=self.device)
             group['alpha'] = torch.zeros(1, device=self.device)
+            group['acc_pred_err'] = 0
+            group['acc_sq_pred_err'] = 0
             for p in group['params']:
                 state = self.state[p]
                 state['accumulated_hess_vec'] = torch.zeros_like(p)
@@ -110,7 +112,6 @@ class Preconditioner(torch.optim.Optimizer):
         self.stepnumber = 0
         self.prior_counter = 0
         self.update_counter = 0
-        self.state['last_pred_err'] = 0
         self.zero_grad()
         self._initialize_lists()
 
@@ -124,6 +125,10 @@ class Preconditioner(torch.optim.Optimizer):
         gradnorm = torch.sqrt(gradnorm)
         #return for deepOBS to write
         return gradnorm.item()
+
+    def add_param_group(self, param_group):
+        super(Preconditioner, self).add_param_group(param_group)
+        self.start_estimate()
 ################################################################################
 ##                                                                            ##
 ##                MATH FUNCTIONS                                              ##
@@ -345,7 +350,6 @@ class Preconditioner(torch.optim.Optimizer):
     # Runs after an estimate for the Hessian is constructed.
     # Creates the parts needed to construct the Preconditioner
     # The numpy calculations are done on the CPU
-    # TODO: maybe get rid of numpy? Nah.
 
     def _create_low_rank(self):
 
@@ -413,9 +417,9 @@ class Preconditioner(torch.optim.Optimizer):
     # It needs the correct notion of the Hessian and a probabilistic notion of the error.
     # For this, we need to know the distributions of predicted_grad and true_grad
     def maybe_start_estimate(self):
-        pred_err = 0
-        last_pred_err = self.state['last_pred_err']
         for group in self.param_groups:
+            pred_err = 0
+            acc_pred_err = group['acc_pred_err']
             for p in group['params']:
                 state = self.state[p]
                 true_grad = p.grad
@@ -425,14 +429,18 @@ class Preconditioner(torch.optim.Optimizer):
 
                 state['last_p'] = torch.clone(p)
                 state['last_p'].grad = torch.clone(p.grad)
-        print("[maybe_start_estimate] (const Hessian:) gradient prediction error =", pred_err)
-        if pred_err > 10.0 * abs(last_pred_err): #TODO: replace magic number with a probabilistic formulation
-            for group in self.param_groups:
-                for p in group['params']:
-                    state = self.state[p]
-                    p = state['last_p']
-            self.start_estimate()
-        self.state['last_pred_err'] = 0.5 * pred_err + self.state['last_pred_err']
+            n = self.stepnumber - self.num_observations - self.prior_iterations + 1
+            group['acc_sq_pred_err'] += (pred_err - (acc_pred_err / n)) ** 2
+            group['acc_pred_err'] = pred_err + acc_pred_err
+
+            print("[maybe_start_estimate] Group mean prediction error =", acc_pred_err / n)
+            print("[maybe_start_estimate] Group prediction error variance =", group['acc_sq_pred_err'] / n)
+            if n > 30 and group['acc_sq_pred_err'] / n < group['alpha'] * abs(acc_pred_err / n): #TODO: replace magic number with a probabilistic formulation
+                for group in self.param_groups:
+                    for p in group['params']:
+                        state = self.state[p]
+                        p = state['last_p']
+                self.start_estimate()
 
 
 ################################################################################
