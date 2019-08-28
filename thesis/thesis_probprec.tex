@@ -89,7 +89,8 @@
 \section*{Abstract}
 \todo[inline]{Note to the reader: This thesis is unfinished and I put zero confidence in its correctness, quality of citations or completeness.}
 \todo{theabstract, citing!}
-In machine learning, stochastic gradient descent is a widely used optimizsation algorithm, used to update the parameters of a model after a minibatch of data has been observed, in order to improve the model's predictions. It has been shown to converge much faster when the condition number (i.e. the ratio between the largest and the smallest eigenvalue) of ... is closer to 1. A preconditioner reduces the condition value 
+In machine learning, stochastic gradient descent is a widely used optimizsation algorithm, used to update the parameters of a model after a minibatch of data has been observed, in order to improve the model's predictions. It has been shown to converge much faster when the condition number (i.e. the ratio between the largest and the smallest eigenvalue) of ... is closer to 1. A preconditioner reduces the condition value.
+Tho goal of this thesis was to reimplement the algorithm as an easy-to-use-class in python and take part in the development of DeepOBS, by being able to give feedback as a naive user of the benchmarking suite's features.
 In this thesis I present my implementation of the probabilistic preconditioning algorithm proposed in \cite{de2019active}. I use DeepOBS \todo{cite} as a benchmarking toolbox, examining the effect of this kind of preconditioning on various optimizers and test problems. 
 The results...
 
@@ -147,7 +148,7 @@ However, there are other values we care about, such as the model's ability to ge
 
 \subsection{Regularization}
 
-\subsection{Optimization}
+\section{Optimization}
 In order to find the optimal values for the parameters of a neural network (usually weights and biases), different methods have been proposed. For small optimization problems (small number of parameters), it is often possible to directly find the optimal values analytically. For large optimization problems, the analytical solution is computationally intractable. As a result, numerical algorithms have emerged. These iterative algorithms use the available limited information in order to gradually infer an approximation for the true best values for the parameters. The number of iterations needed until the algorithm reaches convergence (i.e. the new solution is no longer signigicantly better than the previous one) varies based on the implicit prior assumptions about the data that the algorithm makes. These optimization processes have "hyperparameters" (different from the models "parameters" that we want to optimize). A great deal of research has gone into these numerical optimization processes, both in the general case and more specifically, for deep learining.
 For the most interesting class of optimizers, it is required to know the gradient at the current point in parameter space. In neural networks, this is achieved by Automatic Differentiation.
 
@@ -162,7 +163,15 @@ SGD has only a single hyperparameter, the "learning rate" $\alpha$, which is mul
 Traditional Gradient Descent uses the whole data set to compute the true gradient, which is computationally instractable for large datasets, the usual case in machine learning. Instead, we use a variation called SGD. We compute only an estimate for the true gradient by "minibatching", using only a few, for example 64 data points in the forward pass. This greatly improves convergence speed, as the required computations are much easier to perform. However, especially for smaller batch sizes, this adds noise to the system, meaning that our parameter update step points only roughly in the direction of the steepest actual gradient. It has also been shown to improve generalization of the model.
 Many variants of SGD have been proposed, adding things like a momentum term or otherwise adapting the learning rate dynamically.
 
+\subsection{Adaptive methods (First-Order overview?)}
+-RMSprop
+-Adam
+- Conjugate gradient?
 
+\subsection{Second Order Methods(related Methods)}
+-Newton: Needs access to the Hessian.
+-Quasi-Newton.
+We can keep track of an estimate of the Hessian along the way.
 
 \section{Preconditioning}
 The performance of SGD does not only depend on the choice of the learning rate, but also on the structure of the Loss landscape. The gradient of the loss function is a jacobian matrix of partial derivatives. Imagine an optimization proble with two parameters and a loss landscape that looks like an ellipse. If the random starting point is chosen to be towards the direction of the longer symmetry axis, the gradient will be rather flat and SGD will take a long time to converge. With the same logic, a circular, bowl-shaped loss landscape is optimal.
@@ -182,8 +191,23 @@ Up until now, there was no easy way to make use of preconditioning in a noisy se
 - Probablilty Distribution, normal distribution, multivariate Gaussian distribution
 
 \section{Benchmarking}
+\begin{markdown}
 There are no standard established benchmarking protocols for new optimizers. It isn't even clear what measures to consider, or how they are to be measured. As a result, nobody knows which optimizers are actually good. And some bad optimizers will seem good.
 DeepOBS is a solution to this problem, standardizing a protocol, providing benchmarks and standard test problems.
+
+- Description and examples of previous optimizer plots.
+- Short overview of how deepobs handles stuff:
+    - Test problems:
+      	- DeepOBS includes the most used standard datasets and a variety of neural network models to train. This ensures that everyone is evaluated on the same problem.
+    - Tuning:
+    	- Many optimizers have hyperparameters that greatly affect the optimizer's performance
+ 	    - These need to be tuned by running many settings seperately, for example in a grid search. The actual deepobs protocol isn't ready yet.
+      - DeepOBS generates commands for the grid search.
+    - Running:
+      	- DeepOBS provides a standard way to run your optimizer, taking care of logging parameters and evaluating success measures.
+    - Analyzing:
+      	- DeepOBS provides the analyzer class, which is able to automatically generate matplotlib plots showing the results of your runs.
+\end{markdown}
 
 \section{Related Work}
 \todo{in which other ways has this problem been adressed? (What even is the problem?)}
@@ -192,7 +216,8 @@ DeepOBS is a solution to this problem, standardizing a protocol, providing bench
 \chapter{The algorithm}
 \section{Description of the algorithm}
 The exact inner workings of the algorithm are described in more detail in \cite{de2019active}.
-Here I will give an overview of the algorithm's structure and steps.
+Here I will give an overview of the algorithm's structure and steps:
+part 1: - Gather observations of the curvature in-place
 \section{Modifications of the algorithm}
 - Seperate learning rates for Parameter groups. This was not needed, but theoretically should improve convergence rates.
 - Automatic restart of the estimation process, once the old Hessian is determined to be out of date.
@@ -217,11 +242,15 @@ In the following, I will highlight and explain some key software design decision
 
 
 \section{Realization of the Test problems}
+The test problems used were deep learning models.
+- mnist/fmnist
+- cifar
+- quadratic\_deep
 
 \section{Technical details}
 The experiments were run on the TCML cluster at the University of Tübingen.
 A Singularity container was set up on Ubuntu 16.4 LTS with python 3.5, pytorch (version) and DeepOBS (see Appendix for Singulariy recipe).
-Computation was distributed over the compute nodes using the workload manager Slurm.
+Computation was distributed over multiple GPU compute nodes using the workload manager Slurm.
 
 
 \chapter{Experiment}

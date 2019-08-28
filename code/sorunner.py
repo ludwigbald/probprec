@@ -36,7 +36,7 @@ class SORunner(PTRunner):
 
         # the following are custom, logged at every step.
         #alphas = []
-        grad_norms = []
+        # grad_norms = []
 
         if tb_log:
             try:
@@ -89,7 +89,7 @@ class SORunner(PTRunner):
                     batch_loss.backward(create_graph=True)
                     opt.step()
 
-                    grad_norms.append(opt.get_log()) #log grad_norms
+                    # grad_norms.append(opt.get_log()) #log grad_norms
 
                     if batch_count % train_log_interval == 0:
                         minibatch_train_losses.append(batch_loss.item())
@@ -136,7 +136,7 @@ class SORunner(PTRunner):
             "train_accuracies": train_accuracies,
             'valid_accuracies': valid_accuracies,
             "test_accuracies": test_accuracies,
-            "grad_norms": grad_norms
+            # "grad_norms": grad_norms
         }
 
         return output
