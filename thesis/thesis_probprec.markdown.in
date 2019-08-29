@@ -1,3 +1,4 @@
 
 - The algorithm greatly depends on the initialization used for the model. For some models, incorrect initialization means we can't find anything. (DeepOBS mnist\_vae, Seed 45 failed to provide anything)
+- Preconditioning for the largest two eigenvectors was no better than using only the adaptive step size.
 

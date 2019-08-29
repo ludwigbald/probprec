@@ -146,7 +146,8 @@ How do we recognize the optimal solution, or even tell which of two solutions is
 Depending on the task that the model is meant to perform, we can define different so-called Loss Functions (also called "risk"). These are typically some sort of distance measure between the model's output and the desired, output.
 However, there are other values we care about, such as the model's ability to generalize, i.e. how well it performs on data it has never seen before. If a model performs well on the trainig data set, but fails to generalize, this is called overfitting and means the model is not very useful on new data. The model memorizes the data, but doesn't get the underlying structure. To combat overfitting, people add a regularization term to the Loss function, which penalizes large parameters, which are usually an indicator that the model is overfitting.
 
-\subsection{Regularization}
+\subsection{Regularization vs. weight decay}
+If the model's parameters are too large, that often means it is overfitting. in order to discourage this, a regularization term is sometimes added to the loss function. Usually this is the L2 norm of the parameter vector, but sometimes the L1 norm is also used
 
 \section{Optimization}
 In order to find the optimal values for the parameters of a neural network (usually weights and biases), different methods have been proposed. For small optimization problems (small number of parameters), it is often possible to directly find the optimal values analytically. For large optimization problems, the analytical solution is computationally intractable. As a result, numerical algorithms have emerged. These iterative algorithms use the available limited information in order to gradually infer an approximation for the true best values for the parameters. The number of iterations needed until the algorithm reaches convergence (i.e. the new solution is no longer signigicantly better than the previous one) varies based on the implicit prior assumptions about the data that the algorithm makes. These optimization processes have "hyperparameters" (different from the models "parameters" that we want to optimize). A great deal of research has gone into these numerical optimization processes, both in the general case and more specifically, for deep learining.
@@ -217,10 +218,21 @@ DeepOBS is a solution to this problem, standardizing a protocol, providing bench
 \section{Description of the algorithm}
 The exact inner workings of the algorithm are described in more detail in \cite{de2019active}.
 Here I will give an overview of the algorithm's structure and steps:
-part 1: - Gather observations of the curvature in-place
+part 1: - Gather observations of the curvature in-place:
+part 2: - Estimating the Hessian and construct the preconditioner
+part 3: - Every step, re-scale the gradients by applying the preconditioner
+
 \section{Modifications of the algorithm}
-- Seperate learning rates for Parameter groups. This was not needed, but theoretically should improve convergence rates.
-- Automatic restart of the estimation process, once the old Hessian is determined to be out of date.
+\subsection{Parameter groups}
+Mainly due to technical reasons (see \todo{reference chapter}), support was added for parameter groups, but this also yields an interesting theoretical change. The algorithm already treated every parameter layer as an independent task for inversion (???), but estimated a global step size, which was the same for every parameter. With this modification, the algorithm is able to use larger step sizes for parameters that allow for it. In theory, this would allow for faster learning in the direction of those parameters. However, the time to reach total convergence relies on the slowest parameter, not on the fastest. The benefit of this approach in practice remanins to be tested.
+\subsection{Automatic Assessment of the Hessian's quality}
+In the original algorithm, the Hessian is arbitrarily re-estimated every epoch. Hessian re-estimation is needed, as demonstrated in the original paper, alpha changes over time. The goal of this modification was to expose a measure of how useful/correct the estimated Hessian is, after observing a bit of data. A new estimation proces would be started if the current estimate was worse than a certain threshold. Multiple approaches were tried. A key point of trouble was the variance-less estimate of the Hessian. The original paper mentions that the Hessian is taken as the mean of a multivariate Gaussian distribution, but it fails to take this distribution's variance into account. Instead, it just assumes this Hessian is the optimal choice.
+- Comparing the predicted gradient to the actual observed gradient.
+
+- Maybe: Automatic restart of the estimation process, once the old Hessian is determined to be out of date.
+
+\subsection{Getting rid of preconditioning}
+For experiment x, it was important to
 
 \chapter{Implementation/Methods}
 \todo{High-Level to low-level details}
@@ -234,17 +246,18 @@ In the following, I will highlight and explain some key software design decision
 * Self-contained class with minimal interface, while marking all the internal functions as hidden
  * Being able to restart the estimation process from outside, without having to do a new instance of anything
  - Class inherits from torch.optim.Optimizer, because that makes it easier to use and easier to investigate using DeepOBS.
- - The class functions as a wrapper for other optimizer classes, using the decorator pattern on the `step()` function.
+ - The class functions as a wrapper for other optimizer classes, using the decorator pattern on the `step()` function. This means other optimizers can be used.
  - All the parameter-wise variables and values are stored in the state dict, which means we can save and load backups of the optimizer state.
  - There is support for parameter groups, which all pytorch Optimizers should exhibit.
- - external logging of internal variables can be done using the `get\_log()` method
+ - external logging of internal variables can be done using the `get_log()` method
+ - Create different versions of the class by subclassing. This allows me to reuse code. For example, by knocking out the preconditioning behavior.
 \end{markdown}	
 
 
 \section{Realization of the Test problems}
 The test problems used were deep learning models.
 - mnist/fmnist
-- cifar
+- cifar10
 - quadratic\_deep
 
 \section{Technical details}
@@ -254,18 +267,21 @@ Computation was distributed over multiple GPU compute nodes using the workload m
 
 
 \chapter{Experiment}
+\section{Experiment x: Preconditioning}
+In order to investigate the performance benefit of the Preconditioning behavior, the Preconditioner class was adapted to have two different versions, behaving almost exactly the same. They both compute the Hessian, they both estimate a learning rate. However only in one version the Preconditioner is applied, while in the other one it isn't. This was achieved by subclassing and overwriting the \_apply\_precenditioner() method with an empty method. Hyperparameters: Num\_observations 10, prior\_iterations 5, est\_rank 2, optim\_class torch.SGD
+
+% Redraw \input{images/preconditioning1.pgf}
 
 \section{Results}
 \begin{markdown}
 	
 - The algorithm greatly depends on the initialization used for the model. For some models, incorrect initialization means we can't find anything. (DeepOBS mnist\_vae, Seed 45 failed to provide anything)
+- Preconditioning for the largest two eigenvectors was no better than using only the adaptive step size.
 
 \end{markdown}
-	
-
-\section{Analysis}
 
 \section{Discussion}
+- 
 \section{Further research/development}
 - Make the process more robust using tests and catching exceptions and so on.
 - Formulate a probabilistic version of the auto-restart feature.
