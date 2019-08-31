@@ -38,7 +38,9 @@ hyperparams = {'lr': {'type': float, 'default': 0.01}}
 poptimizer_class = PreconditionedSGD
 
 # and its hyperparameters
-phyperparams = {'lr': {"type": float, 'default': None}}
+phyperparams = {'num_observations': {'type' : int, 'default': 24},
+                'est_rank' : {'type' : int, 'default': 10},
+                'lr': {"type": float, 'default': None}}
 
 # create the runner instance
 prunner = SORunner(poptimizer_class, phyperparams)
@@ -47,9 +49,8 @@ runner = SORunner(optimizer_class, phyperparams)
 
 # prunner.run(testproblem='mnist_2c2d', num_epochs = 1)
 # prunner.run(testproblem='fmnist_2c2d', num_epochs = 1)
-runner.run(testproblem='fmnist_2c2d')
-
-# prunner.run(testproblem='quadratic_deep', batch_size = 32, num_epochs = 20)
+runner.run(testproblem='quadratic_deep', batch_size = 16)
+prunner.run(testproblem='quadratic_deep', batch_size = 16)
 
 # prunner.run(testproblem='mnist_vae', num_epochs=20, random_seed = 45)
 #

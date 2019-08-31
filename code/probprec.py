@@ -34,7 +34,6 @@ class Preconditioner(torch.optim.Optimizer):
     # An initialization function, called in start_estimate()
     def _initialize_lists(self):
 
-
         for group in self.param_groups:
             group['lam'] = torch.zeros(1, device=self.device)
             group['W_var'] = torch.zeros(1, device=self.device)

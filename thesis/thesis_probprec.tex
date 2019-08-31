@@ -238,20 +238,54 @@ For experiment x, it was important to
 \todo{High-Level to low-level details}
 
 \section{Documentation for the class Preconditioner}
+\subsection{Overview}
+\begin{markdown}
+The class `Preconditioner` provides an easy way to use the probabilistic preconditioning algorithm proposed by \cite{de2019active}.
+This is how to use it:
+
+1. Get the source file from the repo and include it in your project
+2. Initialize the preconditioner like any other optimizer. There are reasonable default values for the hyperparameters.
+3. Depending on the version you're using, manually call `start_estimate()_` at the beginning of each epoch.
+
+In the next section there is more detailed documentation for the class, its attributes and functions.
+\end{markdown}
+
 \subsection{Methods}
+\begin{markdown}
+* Public functions
+	* Constructor
+	* `start_estimate()`
+	* `step()`
+	* `get_log()`
+	* (`maybe_start_estimate()`)
+* Internal functions
+	* `_initialize_lists()`
+	* `_init_the_optimizer()`
+	* `_gather_curvature_information()`
+	* `_estimate_prior()`
+	* `_setup_estimated_hessian()`
+	* `_apply_estimated_inverse()`
+	* `_hessian_vector_product()`
+	* `_update_estimated_hessian()`
+	* `_create_low_rank()`
+	* `_apply_preconditioner()`
+	
+\end{markdown}
 \subsection{Implementation Details}
 \begin{markdown}
-In the following, I will highlight and explain some key software design decisions I took while implementing and refactoring the algorithm.
+In the following, I will highlight and explain some key software design decisions I took while implementing and refactoring the algorithm provided by Filip.
+The main goals for the implementation were to make the algorithm as easy to use as possible for a standard usecase, while maintaining the flexibility I needed to research specific variations. The simple, default usecase was a user trying to use the preconditioner as proposed in the original paper, to optimize a neural network model. In this case, the necessary changes to the user's existing code should be minimal, with hyperparameters set to reasonable default values. For development, it is important to understand the algorithm's structure and the code and be able to easily modify the algorithm without disturbing other parts.
 
-* Self-contained class with minimal interface, while marking all the internal functions as hidden
- * Being able to restart the estimation process from outside, without having to do a new instance of anything
- - Class inherits from torch.optim.Optimizer, because that makes it easier to use and easier to investigate using DeepOBS.
- - The class functions as a wrapper for other optimizer classes, using the decorator pattern on the `step()` function. This means other optimizers can be used.
- - All the parameter-wise variables and values are stored in the state dict, which means we can save and load backups of the optimizer state.
- - There is support for parameter groups, which all pytorch Optimizers should exhibit.
- - external logging of internal variables can be done using the `get_log()` method
- - Create different versions of the class by subclassing. This allows me to reuse code. For example, by knocking out the preconditioning behavior.
-\end{markdown}	
+The code in its final form is provided as a self-contained class. According to Python best practices \todo{cite}, all the internal functions that a user should not call are marked as hidden by having names beginning with an `_`. This is an implementation of the design pattern "Low Coupling". All functions have been given descriptive names. For example, in order to start the estimation process, the function `start_estimate()` needs to be called.
+
+The class `Preconditioner` inherits from `torch.optim.Optimizer`. This means it follows all the conventions for how optimizers are expected to behave in pytorch. This makes it intuitive to use for the pytorch user. Features that were added to support this include the `state` dict, which can be used to save and load the state of the optimizer in order to pause or continue training. Another supported feature are parameter groups. This allows to treat different parameters seperately, for example different layers of a neural network. Specifically, each Parameter group will be optimized with a seperate learning rate.
+
+The class `Preconditioner` has a field containing an inner optimizer to be used for the actual parameter updates. In the original paper, only SGD was studied as an option, but this modification allows to use preconditioning and the adaptive learning rate estimation together with other optimizers. The Preconditioner is mostly active when estimating the Hessian. Once the estimate is complete, the class turns into a "decorator" for the provided inner optimizer class. Before the inner optimizer does its optimization step, the previously constructed preconditioner is applied to the parameters' gradient.
+
+Logging data during training should not be a responsibility of the optimizer. In order to expose the data of interest, the class exhibits a method `get_log()`, which returns some values of interest. The user then takes care of logging and writing the data to a file outside the optimizer.
+
+In order to change behavior of the class during development and research, the best way to make different versions is to make use of python's built-in subclassing. For example, I needed a version that skips applying the preconditioner every step, but behaves exactly the same in all other ways. This was solved by using a subclass of `Preconditioner`, which overwrites the function `_apply_preconditioner()` with an empty function.
+\end{markdown}
 
 
 \section{Realization of the Test problems}
@@ -264,6 +298,7 @@ The test problems used were deep learning models.
 The experiments were run on the TCML cluster at the University of Tübingen.
 A Singularity container was set up on Ubuntu 16.4 LTS with python 3.5, pytorch (version) and DeepOBS (see Appendix for Singulariy recipe).
 Computation was distributed over multiple GPU compute nodes using the workload manager Slurm.
+During development, I used git for distributed version control.
 
 
 \chapter{Experiment}
