@@ -28,7 +28,7 @@ class AdaptiveSGD(Preconditioner):
         return;
 
 # specify the optimizer class
-optimizer_class = AdaptiveSGD
+optimizer_class = optim.Adam
 
 # and its hyperparameters
 hyperparams = {'lr': {'type': float, 'default': 0.01}}
@@ -45,12 +45,12 @@ phyperparams = {'num_observations': {'type' : int, 'default': 24},
 # create the runner instance
 prunner = SORunner(poptimizer_class, phyperparams)
 
-runner = SORunner(optimizer_class, phyperparams)
+runner = pyt.runners.StandardRunner(optimizer_class, hyperparams)
 
 # prunner.run(testproblem='mnist_2c2d', num_epochs = 1)
 # prunner.run(testproblem='fmnist_2c2d', num_epochs = 1)
 runner.run(testproblem='quadratic_deep', batch_size = 16)
-prunner.run(testproblem='quadratic_deep', batch_size = 16)
+#prunner.run(testproblem='quadratic_deep', batch_size = 16)
 
 # prunner.run(testproblem='mnist_vae', num_epochs=20, random_seed = 45)
 #
