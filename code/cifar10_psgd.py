@@ -2,6 +2,7 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 
+import json
 
 # import matplotlib.pyplot as plt
 import numpy as np
@@ -28,9 +29,7 @@ parser.add_argument("-wd", "-weight_decay", type=float,default=0.0,
 
 parser.add_argument("-nw", "-number_of_workers", type=int,default=2,
                     help="Number of Workers.")
-# Learning rate, either constant or schedule
-parser.add_argument("-lr","-learning_rate", required=True, type=float,
-                    help="Initial learning rate (positive float) to use. To set a learning rate *schedule*, use '--lr_sched_epochs' and '--lr_sched_values' additionally.")
+
 parser.add_argument("-N", "-num_epochs", required=True, type=int,
                     help="Total number of training epochs.")
 
@@ -43,6 +42,8 @@ parser.add_argument("-nl", "-likelihoods", type=int,default=5,
                     help="Number of observations to estimate posterior.")
 parser.add_argument("-pr", "-preconditioner_rank", type=int,default=2,
                     help="Rank of preconditioner.")
+parser.add_argument("-rs", "-random_seed", type=int, default=42,
+                    help="Rank of preconditioner.")
 
 
 
@@ -54,20 +55,20 @@ print(args)
 
 BATCH_SIZE=args.bs#64
 NUM_WORKERS=args.nw#2
-LEARNING_RATE=args.lr#1e-3
 EVALUATION_ITERATION=args.ei#200
 NUM_EPOCHS=args.N#5
 WEIGHT_DECAY=args.wd#2e-3
 est_rank=args.pr
 est_prior=args.po
 gather_obs=args.nl
+RANDOM_SEED=args.rs
 
 
 # device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 device=torch.device('cpu')
 torch.set_default_dtype(torch.float)
 
-torch.manual_seed(42)
+torch.manual_seed(rs)
 # device=torch.device('cpu')
 # Assume that we are on a CUDA machine, then this should print a CUDA device:
 

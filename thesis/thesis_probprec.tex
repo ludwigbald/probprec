@@ -212,7 +212,7 @@ DeepOBS is a solution to this problem, standardizing a protocol, providing bench
 \todo{in which other ways has this problem been adressed? (What even is the problem?)}
 
 
-\chapter{The algorithm}
+\chapter{Approach (Implementation)}
 \section{Description of the algorithm}
 The exact inner workings of the algorithm are described in more detail in \cite{de2019active}.
 Here I will give an overview of the algorithm's structure and steps:
@@ -220,20 +220,18 @@ part 1: - Gather observations of the curvature in-place:
 part 2: - Estimating the Hessian and construct the preconditioner
 part 3: - Every step, re-scale the gradients by applying the preconditioner
 
-\section{Modifications of the algorithm}
-\subsection{Parameter groups}
+\subsection{Modifications of the algorithm}
+The implementation and theoretical work lead to the following proposed changes to the abstract algorithm.
+\subsubsection{Parameter groups}
 Mainly due to technical reasons (see \todo{reference chapter}), support was added for parameter groups, but this also yields an interesting theoretical change. The algorithm already treated every parameter layer as an independent task for inversion (???), but estimated a global step size, which was the same for every parameter. With this modification, the algorithm is able to use larger step sizes for parameters that allow for it. In theory, this would allow for faster learning in the direction of those parameters. However, the time to reach total convergence relies on the slowest parameter, not on the fastest. The benefit of this approach in practice remanins to be tested.
-\subsection{Automatic Assessment of the Hessian's quality}
+\subsubsection{Automatic Assessment of the Hessian's quality}
 In the original algorithm, the Hessian is arbitrarily re-estimated every epoch. Hessian re-estimation is needed, as demonstrated in the original paper, alpha changes over time. The goal of this modification was to expose a measure of how useful/correct the estimated Hessian is, after observing a bit of data. A new estimation proces would be started if the current estimate was worse than a certain threshold. Multiple approaches were tried. A key point of trouble was the variance-less estimate of the Hessian. The original paper mentions that the Hessian is taken as the mean of a multivariate Gaussian distribution, but it fails to take this distribution's variance into account. Instead, it just assumes this Hessian is the optimal choice.
 - Comparing the predicted gradient to the actual observed gradient.
 
 - Maybe: Automatic restart of the estimation process, once the old Hessian is determined to be out of date.
 
-\subsection{Getting rid of preconditioning}
-For experiment x, it was important to
-
-\chapter{Implementation/Methods}
-\todo{High-Level to low-level details}
+\subsubsection{Focusing on the adaptive learning rate}
+Deep learning problems are very high-dimensional and usually feature many (10\%) large eigenvalues. For performance reasons, the proposed algorithm however estimates only a low-rank preconditioner. When applied, the preconditioner therefore might not reduce the problem's condition number, or might reduce it only by a little bit. It appears likely that the added computational need of constructing and repeatedly applying the preconditioner does not come with a performance benefit. Therefore I propose abandoning the preconditioning part of the algorithm. In experiment x \todo{ref} this assumption is tested.
 
 \section{Documentation for the class Preconditioner}
 \subsection{Overview}
@@ -272,7 +270,7 @@ In the next section there is more detailed documentation for the class, its attr
 \subsection{Implementation Details}
 \begin{markdown}
 In the following, I will highlight and explain some key software design decisions I took while implementing and refactoring the algorithm provided by Filip.
-The main goals for the implementation were to make the algorithm as easy to use as possible for a standard usecase, while maintaining the flexibility I needed to research specific variations. The simple, default usecase was a user trying to use the preconditioner as proposed in the original paper, to optimize a neural network model. In this case, the necessary changes to the user's existing code should be minimal, with hyperparameters set to reasonable default values. For development, it is important to understand the algorithm's structure and the code and be able to easily modify the algorithm without disturbing other parts.
+The main goals for the implementation were to make the algorithm as easy to use as possible for a standard usecase, while maintaining the flexibility I needed to research specific variations. The changes to the abstract algorithm are discussed in detail in \todo{ref} The simple, default usecase was a user trying to use the preconditioner as proposed in the original paper, to optimize a neural network model. In this case, the necessary changes to the user's existing code should be minimal, with hyperparameters set to reasonable default values. For development, it is important to understand the algorithm's structure and the code and be able to easily modify the algorithm without disturbing other parts.
 
 The code in its final form is provided as a self-contained class. According to Python best practices \todo{cite}, all the internal functions that a user should not call are marked as hidden by having names beginning with an `_`. This is an implementation of the design pattern "Low Coupling". All functions have been given descriptive names. For example, in order to start the estimation process, the function `start_estimate()` needs to be called.
 
@@ -283,6 +281,8 @@ The class `Preconditioner` has a field containing an inner optimizer to be used 
 Logging data during training should not be a responsibility of the optimizer. In order to expose the data of interest, the class exhibits a method `get_log()`, which returns some values of interest. The user then takes care of logging and writing the data to a file outside the optimizer.
 
 In order to change behavior of the class during development and research, the best way to make different versions is to make use of python's built-in subclassing. For example, I needed a version that skips applying the preconditioner every step, but behaves exactly the same in all other ways. This was solved by using a subclass of `Preconditioner`, which overwrites the function `_apply_preconditioner()` with an empty function.
+
+Some bugs were also fixed. Previously, the algorithm skipped some minibatches.
 \end{markdown}
 
 
@@ -301,35 +301,66 @@ A Singularity container was set up on Ubuntu 16.4 LTS with python 3.5, pytorch (
 Computation was distributed over multiple GPU compute nodes using the workload manager Slurm.
 During development, I used git for distributed version control.
 
+Other optimizers like Adam and SGD are taken from the current, but unpublished DeepOBS baselines.
+
 
 \chapter{Experiment}
 \section{Experiment x: Preconditioning}
+- Multiple Problems: fmnist\_2c2d, cifar10\_3c3d, maybe run more
+- Plot Adaptive SGD vs Preconditioned SGD vs SGD vs Adam, maybe try other baselines
+\todo[inline]{DONE: run AdaptiveSGD and PreconditionedSGD on 9 more seeds on the problems}
+\todo[inline]{Plot and describe findings}
+
 In order to investigate the performance benefit of the Preconditioning, the Preconditioner class was adapted to have two different versions, behaving almost exactly the same. They both compute the Hessian, they both estimate a learning rate. However only in one version the Preconditioner is applied, while in the other one it isn't. This was achieved by subclassing and overwriting the \_apply\_precenditioner() method with an empty method. Hyperparameters: Num\_observations 10, prior\_iterations 5, est\_rank 2, optim\_class torch.SGD
 
-\section{Experiment y: Initial Learning Rate}
+\subsection{Experiment x1: Performance penalty of Preconditioning}
+- For a few Problems
+- Use the runtime-estimation script from deepOBS
+\todo[inline]{DONE: Run runtime-estimation for AdaptiveSGD and PreconditionedSGD and OnlyAdaptiveSGD for a few problems}
+\todo[inline]{Report results: OnlyAdaptiveSGD=SGD < AdaptiveSGD < PreconditionedSGD}
+
+\section{Experiment y: Initial Learning Rate vs no initial lr, initialization}
+- Run without initialization, without initial lr for multiple seeds
+- Run with initialization, with initial lr for multiple seeds
+\todo[inline]{DONE: monkey patch an uninitialized testproblem into deepobs}
+\todo[inline]{RUNNING: run PreconditionedSGD without lr, with and without initialization, on 10 seeds for 5 epochs, only cifar10}
+\todo[inline]{maybe run DeepOBS mnist\_vae with different seeds, without lr}
 Filip reports needing to set a manual initial learning rate for the first epoch, because the algorithm would set too big of a value when estimating the curvature on an untrained network. During testing with DeepOBS, I could not replicate this result. I believe this is due to the initialization used in DeepOBS, which was not present in Filip's code.
 
 \section{Experiment z: Learning Rate Sensitivity}
+- Preferably multiple problems: quadratic\_deep, fmnist\_2c2d, cifar10\_3c3d, maybe more
+- Hyperparameter Sensitivity of PreconditionedSGD. Still have to run 10 repeats
+- Plot loss over time
+- Also plot NoLearningRate
+\todo[inline]{DONE: run PreconditionedSGD without lr on cifar10 and fmnist, see preconditioning}
+\todo[inline]{rerun best settings 10 times(maybe done, maybe not)}
+
 However, I investigated the effect the initial learning rate has on the algorithm.
 Using DeepOBS, I performed a grid search with 10 evaluations on a logarithmic grid between $10^-5$ and $10^2$ on the Dataset XXX.
 \todo[inline]{plot}
 As is common in deep learning, with the learning rate over a certain threshold the model diverges in the first epoch. However, below this threshold, the initial learning rate has at most a small effect on the network's performance after 100 epochs.
 
 \section{Experiment aa: Automatic Re-Estimation of the Hessian and optimal learning rate}
-here be dragons
+- preferably multiple problems
+- Run different Automatic re-estimation models: every-epoch, every-1000
+- 
+\todo[inline]{come up with different approaches.}
+\todo[inline]{run PreconditionedSGD: every-1000, every 1/alpha, gradnormthing, ... on multiple problems}
+\todo[inline]{here be dragons} 
 
-%\section{Experiment ab:}
+\section{Experiment ab: Do Parameter groups help?}
+\todo[inline]{theyre weird tho}
 
-\section{Results}
+%\section{Results}
+
+
+\section{Discussion}
 \begin{markdown}
-	
 - The algorithm greatly depends on the initialization used for the model. For some models, incorrect initialization means we can't find anything. (DeepOBS mnist\_vae, Seed 45 failed to provide anything)
 - Preconditioning for the largest two eigenvectors was no better than using only the adaptive step size.
 - Interestingly, a low loss doesn't always correspond to a high acccuracy.
-
 \end{markdown}
 
-\section{Discussion}
 I present a usable class for preconditioning in development frameworks 
 \section{Further research/development}
 \begin{markdown}

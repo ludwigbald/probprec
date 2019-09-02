@@ -1,0 +1,7 @@
+** Mean run time SGD: 69.02672696113586
+** Mean run time new optimizer (AdaptiveSGD): 126.7063979625702
+** Overhead per run: [1.49414586 2.18251235 2.12219107 1.74136945 1.80575808]
+** Mean overhead: 1.8691953628606874 Standard deviation: 0.2542440740178504
+** Mean run time new optimizer 2 (PreconditionedSGD): 161.5144332408905
+** Overhead 2 per run: [1.87697424 2.85373601 2.73309405 2.23167897 2.24178113]
+** Mean overhead 2: 2.387452881992991 Standard deviation 2: 0.3585978215624523
