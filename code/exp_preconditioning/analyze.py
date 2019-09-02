@@ -7,7 +7,7 @@ performance_dic = analyzer.get_performance_dictionary('./results/quadratic_deep/
 print(performance_dic)
 
 # plot the training curve for the best performance
-analyzer.plot_optimizer_performance('./results/fmnist_2c2d/')
+analyzer.plot_optimizer_performance('./results/quadratic_deep/')
 
 # plot again, but this time compare to the Adam baseline
 # analyzer.plot_optimizer_performance('./results/quadratic_deep/PreconditionedSGD',

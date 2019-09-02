@@ -136,10 +136,8 @@ What is this all about?
 
 \section{Deep learning}
 \subsection{Artificial Neural Networks}
-- Neural Networks exist. There are a few varieties and key developments, but they all share the underlying neural structure.
-The original idea was to somewhat model biological neurons in order to mimic their capacity for structural memory.
-As a mathematical object, a neuron is an activation function which takes on a certain value based on the weighted activations of the inputs (usually of their sum), which are either neurons themselves, or outside information given as an input to these neurons. Often there is a bias input, which is always 1 and allows for static activation.
-Neurons are usually organized in layers, where each neuron has as input all the previous layers' neurons.
+A popular machine learning paradigma is living through a resurgence: Artificial Neural Networks. The fundamental building block is the single neuron, whcih somewhat resembles a biological neuron. Its activation depends on the sum of the activation of its inputs. A neural network model is a sequence of neuron layers, connected with each other. There is an input layer, which is a direct mapping of the training data point. The input layer' activation are fed forward into the "hidden layers", which in turn feed their activations to the neurons of the output layer. Information about observed data is stored in the model's parameters, the weights and biases of each layer.
+As a mathematical object, a neuron is an activation function which depends on the sum of the weighted activations of the inputs. Often there is a bias, which is a static value added to the input activation.
 
 \subsection{Loss functions}
 How do we recognize the optimal solution, or even tell which of two solutions is better?
@@ -288,11 +286,14 @@ In order to change behavior of the class during development and research, the be
 \end{markdown}
 
 
-\section{Realization of the Test problems}
+\section{Test Problems}
+For most experiments, the standard test problems included in DeepOBS were used, namely
 The test problems used were deep learning models.
 - mnist/fmnist
 - cifar10
 - quadratic\_deep
+
+For some experiments, I used a seperate implementation of a cifar10 test problem.
 
 \section{Technical details}
 The experiments were run on the TCML cluster at the University of Tübingen.
@@ -303,23 +304,40 @@ During development, I used git for distributed version control.
 
 \chapter{Experiment}
 \section{Experiment x: Preconditioning}
-In order to investigate the performance benefit of the Preconditioning behavior, the Preconditioner class was adapted to have two different versions, behaving almost exactly the same. They both compute the Hessian, they both estimate a learning rate. However only in one version the Preconditioner is applied, while in the other one it isn't. This was achieved by subclassing and overwriting the \_apply\_precenditioner() method with an empty method. Hyperparameters: Num\_observations 10, prior\_iterations 5, est\_rank 2, optim\_class torch.SGD
+In order to investigate the performance benefit of the Preconditioning, the Preconditioner class was adapted to have two different versions, behaving almost exactly the same. They both compute the Hessian, they both estimate a learning rate. However only in one version the Preconditioner is applied, while in the other one it isn't. This was achieved by subclassing and overwriting the \_apply\_precenditioner() method with an empty method. Hyperparameters: Num\_observations 10, prior\_iterations 5, est\_rank 2, optim\_class torch.SGD
 
-% Redraw \input{images/preconditioning1.pgf}
+\section{Experiment y: Initial Learning Rate}
+Filip reports needing to set a manual initial learning rate for the first epoch, because the algorithm would set too big of a value when estimating the curvature on an untrained network. During testing with DeepOBS, I could not replicate this result. I believe this is due to the initialization used in DeepOBS, which was not present in Filip's code.
+
+\section{Experiment z: Learning Rate Sensitivity}
+However, I investigated the effect the initial learning rate has on the algorithm.
+Using DeepOBS, I performed a grid search with 10 evaluations on a logarithmic grid between $10^-5$ and $10^2$ on the Dataset XXX.
+\todo[inline]{plot}
+As is common in deep learning, with the learning rate over a certain threshold the model diverges in the first epoch. However, below this threshold, the initial learning rate has at most a small effect on the network's performance after 100 epochs.
+
+\section{Experiment aa: Automatic Re-Estimation of the Hessian and optimal learning rate}
+here be dragons
+
+%\section{Experiment ab:}
 
 \section{Results}
 \begin{markdown}
 	
 - The algorithm greatly depends on the initialization used for the model. For some models, incorrect initialization means we can't find anything. (DeepOBS mnist\_vae, Seed 45 failed to provide anything)
 - Preconditioning for the largest two eigenvectors was no better than using only the adaptive step size.
+- Interestingly, a low loss doesn't always correspond to a high acccuracy.
 
 \end{markdown}
 
 \section{Discussion}
-- 
+I present a usable class for preconditioning in development frameworks 
 \section{Further research/development}
+\begin{markdown}
 - Make the process more robust using tests and catching exceptions and so on.
+- Make a more robust auto-restart feature.
 - Formulate a probabilistic version of the auto-restart feature.
+\end{markdown}
+
 
 
 \chapter{Conclusion}
