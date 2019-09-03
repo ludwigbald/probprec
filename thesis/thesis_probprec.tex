@@ -304,6 +304,7 @@ During development, I used git for distributed version control.
 Other optimizers like Adam and SGD are taken from the current, but unpublished DeepOBS baselines.
 
 
+
 \chapter{Experiment}
 \section{Experiment x: Preconditioning}
 - Multiple Problems: fmnist\_2c2d, cifar10\_3c3d, maybe run more
@@ -319,15 +320,17 @@ In order to investigate the performance benefit of the Preconditioning, the Prec
 \todo[inline]{DONE: Run runtime-estimation for AdaptiveSGD and PreconditionedSGD and OnlyAdaptiveSGD for a few problems}
 \todo[inline]{Report results: OnlyAdaptiveSGD=SGD < AdaptiveSGD < PreconditionedSGD}
 
-\section{Experiment y: Initial Learning Rate vs no initial lr, initialization}
+\section{Experiment y: Initialization}
 - Run without initialization, without initial lr for multiple seeds
-- Run with initialization, with initial lr for multiple seeds
+- Run with initialization, without initial lr for multiple seeds
 \todo[inline]{DONE: monkey patch an uninitialized testproblem into deepobs}
-\todo[inline]{RUNNING: run PreconditionedSGD without lr, with and without initialization, on 10 seeds for 5 epochs, only cifar10}
+\todo[inline]{DONE: run PreconditionedSGD without lr, with and without initialization, on 10 seeds for 5 epochs, only cifar10}
+\todo[inline]{RUNNING: Batch size 64}
 \todo[inline]{maybe run DeepOBS mnist\_vae with different seeds, without lr}
+NOT using DeepOBS built-in Testproblem!
 Filip reports needing to set a manual initial learning rate for the first epoch, because the algorithm would set too big of a value when estimating the curvature on an untrained network. During testing with DeepOBS, I could not replicate this result. I believe this is due to the initialization used in DeepOBS, which was not present in Filip's code.
 
-\section{Experiment z: Learning Rate Sensitivity}
+\section{Experiment z: Learning Rate Sensitivity,  Initial Learning Rate vs no initial lr}
 - Preferably multiple problems: quadratic\_deep, fmnist\_2c2d, cifar10\_3c3d, maybe more
 - Hyperparameter Sensitivity of PreconditionedSGD. Still have to run 10 repeats
 - Plot loss over time
@@ -349,7 +352,7 @@ As is common in deep learning, with the learning rate over a certain threshold t
 \todo[inline]{here be dragons} 
 
 \section{Experiment ab: Do Parameter groups help?}
-\todo[inline]{theyre weird tho}
+\todo[inline]{probably not i guess}
 
 %\section{Results}
 
@@ -359,6 +362,8 @@ As is common in deep learning, with the learning rate over a certain threshold t
 - The algorithm greatly depends on the initialization used for the model. For some models, incorrect initialization means we can't find anything. (DeepOBS mnist\_vae, Seed 45 failed to provide anything)
 - Preconditioning for the largest two eigenvectors was no better than using only the adaptive step size.
 - Interestingly, a low loss doesn't always correspond to a high acccuracy.
+
+
 \end{markdown}
 
 I present a usable class for preconditioning in development frameworks 
@@ -367,6 +372,8 @@ I present a usable class for preconditioning in development frameworks
 - Make the process more robust using tests and catching exceptions and so on.
 - Make a more robust auto-restart feature.
 - Formulate a probabilistic version of the auto-restart feature.
+
+#### Heading
 \end{markdown}
 
 
