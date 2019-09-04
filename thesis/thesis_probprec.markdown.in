@@ -1,5 +1,3 @@
 - Make the process more robust using tests and catching exceptions and so on.
 - Make a more robust auto-restart feature.
 - Formulate a probabilistic version of the auto-restart feature.
-
-#### Heading

@@ -18,6 +18,11 @@
 \usepackage{markdown}
 \usepackage[ngerman, english]{babel}
 
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest}
+\usepgfplotslibrary{groupplots}
+\usepgfplotslibrary{dateplot}
+
 \textwidth 14cm
 \textheight 22cm
 \topmargin 0.0cm
@@ -31,6 +36,7 @@
 
 \sloppy
 
+
 \begin{document}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -43,7 +49,7 @@
 		{\large Mathematisch-Naturwissenschaftliche Fakult\"at \\
 			Wilhelm-Schickard-Institut f\"ur Informatik\\[4cm]}
 		{\huge Bachelor Thesis Cognitive Science\\[2cm]}
-		{\Large\bf  Title of thesis\\[1.5cm]}
+		{\Large\bf  Investigating Probabilistic Preconditioning on Artificial Neural Networks \\[1.5cm]}
 		{\large Ludwig Bald}\\[0.5cm]
 		\today \\[4cm]
 		\parbox{7cm}{\begin{center}{{\small\bf Gutachter}\\
@@ -70,7 +76,7 @@
 \vspace*{\fill}
 \begin{minipage}{11.2cm}
 	\textbf{Bald, Ludwig:}\\
-	\emph{Title of thesis}\\ Bachelor Thesis Cognitive Science\\
+	\emph{Investigating Probabilistic Preconditioning on Artificial Neural Networks}\\ Bachelor Thesis Cognitive Science\\
 	Eberhard Karls Universit\"at T\"ubingen\\
 	Thesis period: von-bis
 \end{minipage}
@@ -101,7 +107,7 @@ The results...
 \newpage
 \section*{Acknowledgments}
 If you have someone to Acknowledge ;)
-\todo{Aaron, Filip}
+\todo{Aaron, Filip, Frank, Felix}
 \cleardoublepage
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -254,7 +260,7 @@ In the next section there is more detailed documentation for the class, its attr
 	* `step()`
 	* `get_log()`
 	* (`maybe_start_estimate()`)
-* Internal functions
+* Private functions
 	* `_initialize_lists()`
 	* `_init_the_optimizer()`
 	* `_gather_curvature_information()`
@@ -330,6 +336,8 @@ In order to investigate the performance benefit of the Preconditioning, the Prec
 NOT using DeepOBS built-in Testproblem!
 Filip reports needing to set a manual initial learning rate for the first epoch, because the algorithm would set too big of a value when estimating the curvature on an untrained network. During testing with DeepOBS, I could not replicate this result. I believe this is due to the initialization used in DeepOBS, which was not present in Filip's code.
 
+\input{images/exp_init.pgf}
+
 \section{Experiment z: Learning Rate Sensitivity,  Initial Learning Rate vs no initial lr}
 - Preferably multiple problems: quadratic\_deep, fmnist\_2c2d, cifar10\_3c3d, maybe more
 - Hyperparameter Sensitivity of PreconditionedSGD. Still have to run 10 repeats
@@ -372,8 +380,6 @@ I present a usable class for preconditioning in development frameworks
 - Make the process more robust using tests and catching exceptions and so on.
 - Make a more robust auto-restart feature.
 - Formulate a probabilistic version of the auto-restart feature.
-
-#### Heading
 \end{markdown}
 
 
