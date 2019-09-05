@@ -1,0 +1,61 @@
+% This file was created by tikzplotlib v0.8.2.
+\begin{tikzpicture}
+
+\definecolor{color0}{rgb}{0.12156862745098,0.466666666666667,0.705882352941177}
+
+\begin{axis}[
+tick align=outside,
+tick pos=left,
+tick pos=left,
+x grid style={white!69.01960784313725!black},
+xmin=-1.25, xmax=4.25,
+xtick style={color=black},
+xtick={0,1,2,3},
+xticklabel style = {anchor = north east},
+xticklabel style = {rotate=25.0},
+xticklabels={SGD,Only Adaptive SGD,Adaptive SGD,Preconditioned SGD},
+y grid style={white!69.01960784313725!black},
+ymin=0, ymax=2.88335323873322,
+ytick style={color=black}
+]
+\draw[fill=color0,draw opacity=0,fill opacity=0.7] (axis cs:-0.4,0) rectangle (axis cs:0.4,1);
+\draw[fill=color0,draw opacity=0,fill opacity=0.7] (axis cs:0.6,0) rectangle (axis cs:1.4,0.998138761408857);
+\draw[fill=color0,draw opacity=0,fill opacity=0.7] (axis cs:1.6,0) rectangle (axis cs:2.4,1.86919536286069);
+\draw[fill=color0,draw opacity=0,fill opacity=0.7] (axis cs:2.6,0) rectangle (axis cs:3.4,2.38745288199299);
+\path [draw=black, semithick]
+(axis cs:0,1)
+--(axis cs:0,1);
+
+\path [draw=black, semithick]
+(axis cs:1,0.925706236676787)
+--(axis cs:1,1.07057128614093);
+
+\path [draw=black, semithick]
+(axis cs:2,1.61495128884284)
+--(axis cs:2,2.12343943687854);
+
+\path [draw=black, semithick]
+(axis cs:3,2.02885506043054)
+--(axis cs:3,2.74605070355544);
+
+\path [draw=black, draw opacity=0.7, semithick, dash pattern=on 5.550000000000001pt off 2.4000000000000004pt]
+(axis cs:-1,1)
+--(axis cs:4,1);
+
+\addplot [semithick, black, mark=-, mark size=7, mark options={solid}, only marks]
+table {%
+0 1
+1 0.925706236676787
+2 1.61495128884284
+3 2.02885506043054
+};
+\addplot [semithick, black, mark=-, mark size=7, mark options={solid}, only marks]
+table {%
+0 1
+1 1.07057128614093
+2 2.12343943687854
+3 2.74605070355544
+};
+\end{axis}
+
+\end{tikzpicture}

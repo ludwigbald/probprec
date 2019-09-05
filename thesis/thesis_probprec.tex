@@ -17,11 +17,13 @@
 \usepackage{todonotes}
 \usepackage{markdown}
 \usepackage[ngerman, english]{babel}
+\usepackage[hidelinks]{hyperref}
 
 \usepackage{pgfplots}
 \pgfplotsset{compat=newest}
 \usepgfplotslibrary{groupplots}
 \usepgfplotslibrary{dateplot}
+
 
 \textwidth 14cm
 \textheight 22cm
@@ -30,6 +32,9 @@
 \oddsidemargin 1cm
 %\footskip 2cm
 \parskip0.5explus0.1exminus0.1ex
+
+\newcommand{\figurewidth}{\linewidth / 2}
+\newcommand{\done}[2][]{\todo[color=green!40, #1]{\textbf{Done:} #2}}
 
 % Kann von Student auch nach pers\"onlichem Geschmack ver\"andert werden.
 \pagestyle{headings}
@@ -315,41 +320,73 @@ Other optimizers like Adam and SGD are taken from the current, but unpublished D
 \section{Experiment x: Preconditioning}
 - Multiple Problems: fmnist\_2c2d, cifar10\_3c3d, maybe run more
 - Plot Adaptive SGD vs Preconditioned SGD vs SGD vs Adam, maybe try other baselines
-\todo[inline]{DONE: run AdaptiveSGD and PreconditionedSGD on 9 more seeds on the problems}
-\todo[inline]{Plot and describe findings}
+\done[inline]{run AdaptiveSGD and PreconditionedSGD on 9 more seeds on the problems}
+\todo[inline]{Describe findings and discuss}
 
 In order to investigate the performance benefit of the Preconditioning, the Preconditioner class was adapted to have two different versions, behaving almost exactly the same. They both compute the Hessian, they both estimate a learning rate. However only in one version the Preconditioner is applied, while in the other one it isn't. This was achieved by subclassing and overwriting the \_apply\_precenditioner() method with an empty method. Hyperparameters: Num\_observations 10, prior\_iterations 5, est\_rank 2, optim\_class torch.SGD
+Results see figure \ref{fig:exp_preconditioning}. nice one right?
 
-\subsection{Experiment x1: Performance penalty of Preconditioning}
+\begin{figure}
+	\input{images/exp_preconditioning.pgf}
+	%\missingfigure[figheight=23cm]{Excluded for performance reasons. Many optimizers on fmnist and cifar10}
+	\caption{Both variants of the algorithm perform significantly worse than established alternatives. AdaptiveSGD is better than PreconditionedSGD}
+	\label{fig:exp_preconditioning}
+\end{figure}
+
+\section{Experiment x1: Performance penalty of Preconditioning}
 - For a few Problems
 - Use the runtime-estimation script from deepOBS
-\todo[inline]{DONE: Run runtime-estimation for AdaptiveSGD and PreconditionedSGD and OnlyAdaptiveSGD for a few problems}
-\todo[inline]{Report results: OnlyAdaptiveSGD=SGD < AdaptiveSGD < PreconditionedSGD}
+\done[inline]{Run runtime-estimation for AdaptiveSGD and PreconditionedSGD and OnlyAdaptiveSGD for a few problems}
+\done[inline]{Report results: OnlyAdaptiveSGD=SGD < AdaptiveSGD < PreconditionedSGD}
+
+\begin{figure}
+	\centering \hspace{-1,5cm}
+	\input{images/exp_perf_prec.pgf}
+	\caption{Wallclock time per epoch in relation to SGD. The original algorithm is the slowest, followed by the version that does everything but apply the preconditioner. Finally, the version that only computes the Prior and uses the adaptive step size is as fast as the baseline SGD.}
+	\label{fig:exp_perf_prec}
+	
+\end{figure}
+
 
 \section{Experiment y: Initialization}
 - Run without initialization, without initial lr for multiple seeds
 - Run with initialization, without initial lr for multiple seeds
-\todo[inline]{DONE: monkey patch an uninitialized testproblem into deepobs}
-\todo[inline]{DONE: run PreconditionedSGD without lr, with and without initialization, on 10 seeds for 5 epochs, only cifar10}
-\todo[inline]{RUNNING: Batch size 64}
+\done[inline]{monkey patch an uninitialized testproblem into deepobs}
+\done[inline]{run PreconditionedSGD without lr, with and without initialization, on 10 seeds for 5 epochs, only cifar10}
+\done[inline]{Batch size 64}
 \todo[inline]{maybe run DeepOBS mnist\_vae with different seeds, without lr}
 NOT using DeepOBS built-in Testproblem!
 Filip reports needing to set a manual initial learning rate for the first epoch, because the algorithm would set too big of a value when estimating the curvature on an untrained network. During testing with DeepOBS, I could not replicate this result. I believe this is due to the initialization used in DeepOBS, which was not present in Filip's code.
+Results see Figure \ref{fig:exp_init}. Here?
 
-\input{images/exp_init.pgf}
+\begin{figure}
+	\centering \hspace{-1,5cm}
+	\input{images/exp_init.pgf}
+	\caption{PreconditionedSGD on a cifar10 net. For both batch size 64 and 128, the preconditioner converges. The initialization method has an effect, but the optimizer handles them fine (on this testproblem.)}
+	\label{fig:exp_init}
+	
+\end{figure}
+
 
 \section{Experiment z: Learning Rate Sensitivity,  Initial Learning Rate vs no initial lr}
 - Preferably multiple problems: quadratic\_deep, fmnist\_2c2d, cifar10\_3c3d, maybe more
 - Hyperparameter Sensitivity of PreconditionedSGD. Still have to run 10 repeats
 - Plot loss over time
 - Also plot NoLearningRate
-\todo[inline]{DONE: run PreconditionedSGD without lr on cifar10 and fmnist, see preconditioning}
+\done[inline]{run PreconditionedSGD without lr on cifar10 and fmnist, see preconditioning}
 \todo[inline]{rerun best settings 10 times(maybe done, maybe not)}
 
 However, I investigated the effect the initial learning rate has on the algorithm.
 Using DeepOBS, I performed a grid search with 10 evaluations on a logarithmic grid between $10^-5$ and $10^2$ on the Dataset XXX.
-\todo[inline]{plot}
+\done[inline]{plot} see fig \ref{fig:exp_lr_sens}.
 As is common in deep learning, with the learning rate over a certain threshold the model diverges in the first epoch. However, below this threshold, the initial learning rate has at most a small effect on the network's performance after 100 epochs.
+
+\begin{figure}
+	\centering \hspace{-1,5cm}
+	\input{images/exp_lr_sens.pgf}
+	\caption{The originally proposed algorithm has an optional hyperparameter "learning rate", which is used as SGD's learning rate in the first epoch. Below a certain model-specific threshold, it performs just as well as the constructed learning rate. Over that threshold, it diverges in the first epoch.}
+	\label{fig:exp_lr_sens}
+\end{figure}
 
 \section{Experiment aa: Automatic Re-Estimation of the Hessian and optimal learning rate}
 - preferably multiple problems
@@ -360,7 +397,7 @@ As is common in deep learning, with the learning rate over a certain threshold t
 \todo[inline]{here be dragons} 
 
 \section{Experiment ab: Do Parameter groups help?}
-\todo[inline]{probably not i guess}
+probably not i guess
 
 %\section{Results}
 

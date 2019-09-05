@@ -1,20 +1,45 @@
 from deepobs import analyzer
 import json
 import matplotlib.pyplot as plt
+import tikzplotlib
+import codecs
 
-# get the overall best performance of the MomentumOptimizer on the quadratic_deep testproblem
-performance_dic = analyzer.get_performance_dictionary('./results/quadratic_deep/PreconditionedSGD')
-print(performance_dic)
+fig, axess = analyzer.plot_testset_performances("./results", reference_path = "../baselines/", mode = 'final')
 
-# plot the training curve for the best performance
-analyzer.plot_optimizer_performance('./results/cifar10_3c3d/',
-                                    reference_path = '../baselines/cifar10_3c3d')
+axess[0][0].get_legend().remove()
+axess[3][1].legend()
 
-analyzer.plot_optimizer_performance('./results/fmnist_2c2d/',
-                                    reference_path = '../baselines/fmnist_2c2d')
 
-analyzer.plot_optimizer_performance('./results/quadratic_deep/')                                    
 
-# plot again, but this time compare to the Adam baseline
-# analyzer.plot_optimizer_performance('./results/quadratic_deep/PreconditionedSGD',
-#                                     reference_path='./results/quadratic_deep/PreconditionedAdam')
+
+
+# modify the plot
+for axes in axess:
+    for ax in axes:
+        lines = ax.get_lines()
+        for line in lines:
+            line.set_linewidth(3)
+#
+#
+# mpl.use("pgf")
+#
+# mpl.rcParams["pgf.rcfonts"] = False
+# fig.set_figwidth(4)
+# fig.set_figheight(6)
+# fig.savefig("../../thesis/images/exp_init.pgf")
+
+
+# General settings
+code = tikzplotlib.get_tikz_code(figure = fig,
+                                 figurewidth = "\\figurewidth",
+                                 figureheight = "5cm",
+                                 extra_axis_parameters = ["tick pos=left",
+             "legend style={font=\\footnotesize, at={(0 ,0)},xshift=-0.4cm, yshift=-1.5cm,anchor=north,nodes=right}",],
+                                 extra_tikzpicture_parameters = ["every axis plot post./append style={line width = 1pt}"],
+                                 )#strict = True)
+
+#catch missed underscores & save
+code = code.replace("\_", "_").replace("_", "\_")
+file = codecs.open("../../thesis/images/exp_preconditioning.pgf", "w", 'utf-8')
+file.write(code)
+file.close()
