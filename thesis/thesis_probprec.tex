@@ -143,6 +143,28 @@ What is this all about?
 
 
 \chapter{Fundamentals and Related Work}
+\section{Probability Basics}
+One important concept in probability theory is the Gaussian distribution.
+The real-valued \textit{normal} or \textit{Gaussian} distribution is defined as:
+$$N(x | \mu, \sigma^2) = \frac{1}{(2\pi \sigma^2)^{1/2}} \exp\left(- \frac{1}{2\sigma^2} (x-\mu)^2 \right)$$
+It has the parameters \textit{mean} $\mu$ and \textit{variance} $\sigma ^2$.
+
+Extending this to a \textit{multivariate} Gaussian distribution with $n$ dimensions, the definition needs to be adapted:
+$$N(\vec{x} | \vec{\mu}, \Sigma) = \frac{1}{(2\pi)^{n/2}} \frac{1}{det(\Sigma)^{1/2}} \exp\left(-\frac{1}{2} (\vec{x} - \vec{\mu})^T \Sigma ^{-1} (\vec{x} - \vec{\mu})\right)$$
+where $\vec{x}$ or simply $x$ is the $n$-dimensional vector of random variables. The parameters are similar to the one-dimensional case. The $n$-dimensional vector $\vec{\mu}$ or simply $\mu$ denotes the mean. The symmetric $n \times n$ matrix $\Sigma$ is the \textit{covariance matrix}, where
+$$ \Sigma_{ij} =  cov(x_i, x_j) = \Sigma_{ji}$$
+For the diagonal entries it follows that:
+$$\Sigma_{ii} = cov(x_i,x_i) = var(x_i)$$
+If the variables $x_i$ are independent,$\Sigma$ is a diagonal matrix.
+
+Matrix-valued Normal distributions can be written as vector-valued normal distributions by flattening the matrix to a vector.
+\todo{cite the book}
+
+\begin{markdown}
+- Point estimates
+- Bayes' Rule
+\end{markdown}
+
 \section{Machine Learning}
 \todo[inline]{Machine Learning intro}
 \begin{markdown}
@@ -157,28 +179,25 @@ What is this all about?
 	- **Training the model**
 	- Application
 	
-
+\subsection{Loss functions}
+How do we recognize the optimal solution, or even tell which of two solutions is better?
+Depending on the task that the model is meant to perform, we can define different so-called Loss Functions (also called "risk"). These are typically some sort of distance measure between the model's output and the desired, output.
+However, there are other values we care about, such as the model's ability to generalize, i.e. how well it performs on data it has never seen before. If a model performs well on the trainig data set, but fails to generalize, this is called overfitting and means the model is not very useful on new data. The model memorizes the data, but doesn't get the underlying structure. To combat overfitting, people add a regularization term to the Loss function, which penalizes large parameters, which are usually an indicator that the model is overfitting.
+\todo[inline]{formula}
+\todo[inline]{split data}
 
 \end{markdown}
 
 \section{Optimization}
-In order to find the optimal values for the parameters of a model, different methods have been proposed. For small optimization problems (small number of parameters), it is often possible to directly find the optimal values analytically. For large optimization problems, the analytical solution is computationally intractable. As a result, numerical algorithms have emerged. These iterative algorithms use the available limited information in order to gradually infer an approximation for the true best values for the parameters. The number of iterations needed until the algorithm reaches convergence (i.e. the new solution is no longer signigicantly better than the previous one) varies based on the implicit prior assumptions about the data that the algorithm makes. These optimization processes have "hyperparameters" (different from the models "parameters" that we want to optimize). A great deal of research has gone into these numerical optimization processes, both in the general case and more specifically, for deep learining.
-For the most interesting class of optimizers, it is required to know the gradient at the current point in parameter space. In neural networks, this is achieved by Automatic Differentiation.
-
-\subsection{Gradient Descent}
-If the gradient of the Loss function at a certain point in parameter space is known, we can use this information to update the parameters in a way that takes us closer to the solution. A popular family of algorithms is derived from SGD. SGD means: Just take a step in the direction of steepest gradient. Scale the step size by the steepness of the gradient. If the gradient is very steep, take a larger step. If it is small, take a smaller step, like a drunk student rolling down a hill and ending up on a local minimum.
-SGD has only a single hyperparameter, the "learning rate" $\alpha$, which is multiplied with the step. Its optimal choice depends on the data, the model and is generally not obvious.
-\todo{formula: Update Rule}
-
-\subsection{Stochastic Gradient Descent}
-Traditional Gradient Descent uses the whole data set to compute the true gradient, which is computationally instractable for large datasets, the usual case in machine learning. Instead, we use a variation called SGD. We compute only an estimate for the true gradient by "minibatching", using only a few, for example 64 data points in the forward pass. This greatly improves convergence speed, as the required computations are much easier to perform. However, especially for smaller batch sizes, this adds noise to the system, meaning that our parameter update step points only roughly in the direction of the steepest actual gradient. It has also been shown to improve generalization of the model.
-Many variants of SGD have been proposed, adding things like a momentum term or otherwise adapting the learning rate dynamically.
-\todo{formula: Noisy update rule}
+In order to find the optimal values for the parameters of a model, different methods have been proposed. For low-dimensional optimization problems with a small number of parameters, it is often possible to find the optimal parametrization analytically. For high-dimensional optimization problems, the analytical solution often is computationally intractable. As a result, numerical optimization algorithms have emerged.
+These algorithms use the available limited information in order to iteratively approximate the optimal parametrization. The number of iterations needed until the algorithm converges varies based on the implicit prior assumptions about the model.
 
 \subsection{First-Order and Second-Order Methods}
-Depending on our problem, we can use more available information in order to take an even better optimization step. Different optimizers have been proposed that use varying amounts of information.
-There are zeroth-order methods that don't directly take the gradient into account at all.
-The group to which SGD belongs is the group of First-Order Methods, named because these methods use the first derivative of the loss function. Adaptive Modifications of SGD like Adam and Momentum keep track of past gradients in order to take better steps. This implicitly assumes that past gradients contain information about future gradients, which is often the case. For example, if there is little change in the last gradients, we can assume that we are far away from the minimum, where gradients should converge to zero. Therefore, we are able to take larger steps.
+For many models, it is possible to obtain information about the derivatives of the loss function \todo{symbol} at a given point in parameter-space. Optimization algorithms can be grouped by the order of the highest-order derivative they use.
+
+There are zeroth-order methods that only require the value of the loss function itself. 
+
+First-order methods use the first derivative, or the gradient. Adaptive Modifications of SGD like Adam and Momentum keep track of past gradients in order to take better steps. This implicitly assumes that past gradients contain information about future gradients, which is often the case. For example, if there is little change in the last gradients, we can assume that we are far away from the minimum, where gradients should converge to zero. Therefore, we are able to take larger steps.
 
 Second-Order-Methods are methods that explicitly use the Hessian $B$ of the Loss function, or the second derivative. This means they can use the explicit representation of curvature to directly compute where the gradient will hit zero.
 
@@ -190,11 +209,32 @@ s.o.:
 -Quasi-Newton.
 We can keep track of an estimate of the Hessian along the way.
 
+
+Some of these optimization processes have "hyperparameters" (different from the models "parameters" that we want to optimize).
+
+\subsection{Gradient Descent}
+If the gradient of the Loss function at a certain point in parameter space is known, we can use this information to update the parameters in a way that takes us closer to the solution. A popular family of algorithms is derived from SGD. SGD means: Just take a step in the direction of steepest gradient. Scale the step size by the steepness of the gradient. If the gradient is very steep, take a larger step. If it is small, take a smaller step, like a drunk student tumbling down a hill and ending up on a local minimum.
+SGD has only a single hyperparameter, the "learning rate" $\alpha$, which is multiplied with the step. Its optimal choice depends on the data, the model and is generally not obvious.
+\done{formula: Update Rule}
+$$w_{i+1} = w_i - \alpha \cdot \nabla L(w_i) $$
+
+\subsection{Stochastic Gradient Descent}
+Traditional Gradient Descent uses the whole data set to compute the true gradient, which is computationally instractable for large datasets, the usual case in machine learning. Instead, we use a variation called SGD. We compute only an estimate for the true gradient by "minibatching", using only a few, for example 64 data points in the forward pass. This greatly improves convergence speed, as the required computations are much easier to perform. However, especially for smaller batch sizes, this adds noise to the system, meaning that our parameter update step points only roughly in the direction of the steepest actual gradient. It has also been shown to improve generalization of the model.
+Many variants of SGD have been proposed, adding things like a momentum term or otherwise adapting the learning rate dynamically.
+\done{formula: Noisy update rule}
+
+$$w_{i+1} = w_i - \alpha \cdot \nabla \hat{L}(w_i) $$
+
+
 \section{Preconditioning}
+Convergence speed depends on the \textit{condition number} $\kappa = \frac{\lambda_n}{\lambda_1}$ of the Hessian.
+
+
 The performance of SGD does not only depend on the choice of the learning rate, but also on the structure of the Loss landscape. The gradient of the loss function is a jacobian matrix of partial derivatives. Imagine an optimization proble with two parameters and a loss landscape that looks like an ellipse. If the random starting point is chosen to be towards the direction of the longer symmetry axis, the gradient will be rather flat and SGD will take a long time to converge. With the same logic, a circular, bowl-shaped loss landscape is optimal.
 If we start at the steep wall, SGD will converge quite quickly. If you know the explicit form of the Hessian matrix, you can see this problem by comparing its eigenvalues. A circular, bowl-shaped loss function will have only eigenvalues that are the same size. In the elliptical case, which has previously been reported to be the standard case in machine learning, at least one eigenvalue is much larger than the others.
 The mathematical measure for this phenomenon is called the "condition number" and is defined as the ratio between the largest and the smallest eigenvalues. SGD converges much faster when the condition number is closer to 1. The largest eigenvalue is sometimes referred to as the "spectral radius".
-\todo[inline]{derivation of why the condition number is importand (Nocedal...)}
+\todo[inline]{derivation of why the condition number is important, Limit on convergence}
+$$ \frac{\kappa - 1}{\kappa + 1}$$
 
 Preconditioning is a way to reduce the condition number. A preconditioner is a matrix that rescales the other matrix in such a way that the ratio of eigenvalues approaches 1.
 If the eigenvalues are known, this is quite easy. However, in deep learning, they are not known. In this thesis I present my implementation of an algorithm which aims to efficiently estimate the eigenvalues and construct a Preconditioner, while taking into account the noise caused by minibatching.
@@ -204,7 +244,7 @@ Condition number vs Spectral Radius
 The PROBLEM:
 
 Up until now, there was no easy way to make use of preconditioning in a noisy setting, such as minibatched deep learning. I present an implementation of Filips Algorithm in an easy-to-use python class and demonstrate its strengths and weaknesses.
-- The convergence of optimizers depends on the condition number of the Hessian \todo{formula}, which describes the whole loss landscape.
+- The convergence of optimizers depends on the condition number of the Hessian done{formula}, which describes the whole loss landscape.
 \todo{Image}
 \todo{Formula of how an optimal preconditioner works}
 \missingfigure{This figure illustrates the condition number. It shows what SGD does on an illconditioned two-dimensional problem. And what preconditioning can do to change this problem.}
@@ -216,12 +256,7 @@ As a mathematical object, a neuron is an activation function which depends on th
 \todo{nonlinear (affine) activation functions}
 \todo[inline]{architectures per task. ANN: CNN (visual/spatial), RNN (temporal)}
 
-\subsection{Loss functions}
-How do we recognize the optimal solution, or even tell which of two solutions is better?
-Depending on the task that the model is meant to perform, we can define different so-called Loss Functions (also called "risk"). These are typically some sort of distance measure between the model's output and the desired, output.
-However, there are other values we care about, such as the model's ability to generalize, i.e. how well it performs on data it has never seen before. If a model performs well on the trainig data set, but fails to generalize, this is called overfitting and means the model is not very useful on new data. The model memorizes the data, but doesn't get the underlying structure. To combat overfitting, people add a regularization term to the Loss function, which penalizes large parameters, which are usually an indicator that the model is overfitting.
-\todo[inline]{formula}
-\todo[inline]{split data}
+
 
 \subsection{Regularization vs. weight decay}
 We minimize a different parameter than what we actually care about. (Loss on the training set vs accuracy on the test set). This can lead to problems, so there are some solutions.
@@ -234,16 +269,14 @@ If the model's parameters are too large, that often means it is overfitting. in 
 \subsection{Automatic Differentiation}
 \todo{Forward pass}
 \todo{Derivation}
+For the most interesting class of optimizers, it is required to know the gradient at the current point in parameter space. In neural networks, this is achieved by Automatic Differentiation.
 Loss functions in neural networks have an interesting structure, in that they are a composition of all the layerwise activation functions. This structure leads to the algorithm of backpropagation:
 During training, the model (using its current value for its parameters) is fed with data from the data set. The loss function of this minibatch is computed. While this happens, the computations that take place are tracked and built into a graph structure. This is necessary, because the loss function in practice isn't defined in a closed-form way directly on the parameters, but as a composition of layerwise activation functions. This means that for every parameter tracked by the graph, we can infer its influence on the loss. The parameters need to be leaves of the tree, which means they don't themselves depend on something else. (provide example graph image here).
 The gradient in the direction of an individual leaf (partial derivative) is then computed by applying the chain rule, starting from the output of the loss function. This is called the backward pass.
 
 
 
-\section{Probablilty Basics}
-- Probability Distribution of a random variable, normal distribution, multivariate Gaussian distribution
-- Point estimates
-- Bayes' Rule
+
 
 \section{Benchmarking}
 using deepobs \cite{deepobs}
@@ -372,8 +405,8 @@ In order to investigate the performance benefit of the Preconditioning, the Prec
 Results see figure \ref{fig:exp_preconditioning}. nice one right?
 
 \begin{figure}
-	\input{images/exp_preconditioning.pgf}
-	%\missingfigure[figheight=23cm]{Excluded for performance reasons. Many optimizers on fmnist and cifar10}
+	%\input{images/exp_preconditioning.pgf}
+	\missingfigure[figheight=23cm]{Excluded for performance reasons. Many optimizers on fmnist and cifar10}
 	\caption{Both variants of the algorithm perform significantly worse than established alternatives. AdaptiveSGD is better than PreconditionedSGD. On the fmnist model, the baseline optimizers quickly reach a minimum, but then continue to overfit. AdaptiveSGD and PreconditionedSGD arrive at the mimimum much slower, but don't diverge.}
 	\label{fig:exp_preconditioning}
 \end{figure}
