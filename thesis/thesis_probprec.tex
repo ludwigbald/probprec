@@ -102,7 +102,7 @@
 \todo{theabstract, citing!}
 In machine learning, stochastic gradient descent is a widely used optimizsation algorithm, used to update the parameters of a model after a minibatch of data has been observed, in order to improve the model's predictions. It has been shown to converge much faster when the condition number (i.e. the ratio between the largest and the smallest eigenvalue) of ... is closer to 1. A preconditioner reduces the condition value.
 Tho goal of this thesis was to reimplement the algorithm as an easy-to-use-class in python and take part in the development of DeepOBS, by being able to give feedback as a naive user of the benchmarking suite's features.
-In this thesis I present my implementation of the probabilistic preconditioning algorithm proposed in \cite{de2019active}. I use DeepOBS \todo{cite} as a benchmarking toolbox, examining the effect of this kind of preconditioning on various optimizers and test problems. 
+In this thesis I present my implementation of the probabilistic preconditioning algorithm proposed in \cite{roos2019active}. I use DeepOBS \cite{deepobs} as a benchmarking toolbox, examining the effect of this kind of preconditioning on various optimizers and test problems. 
 The results...
 
 \newpage
@@ -140,45 +140,52 @@ If you have someone to Acknowledge ;)
 
 \chapter{Introduction}
 What is this all about?
-%Cite like this: \cite{agarwal2011}
 
 
 \chapter{Fundamentals and Related Work}
+\section{Machine Learning}
+\todo[inline]{Machine Learning intro}
+\begin{markdown}
+- recent changes: big data, specialized hardware
+- Machine Learning is used everywhere and really important
+	- key factor in automatization.
+- The process of machine learning
+	- Gathering data
+		- Splitting the data (Train, Test, validation)
+	- Designing a model
+		- Hyperparameter tuning
+	- **Training the model**
+	- Application
+	
 
-\section{Deep learning}
-\subsection{Artificial Neural Networks}
-A popular machine learning paradigma is living through a resurgence: Artificial Neural Networks. The fundamental building block is the single neuron, whcih somewhat resembles a biological neuron. Its activation depends on the sum of the activation of its inputs. A neural network model is a sequence of neuron layers, connected with each other. There is an input layer, which is a direct mapping of the training data point. The input layer' activation are fed forward into the "hidden layers", which in turn feed their activations to the neurons of the output layer. Information about observed data is stored in the model's parameters, the weights and biases of each layer.
-As a mathematical object, a neuron is an activation function which depends on the sum of the weighted activations of the inputs. Often there is a bias, which is a static value added to the input activation.
 
-\subsection{Loss functions}
-How do we recognize the optimal solution, or even tell which of two solutions is better?
-Depending on the task that the model is meant to perform, we can define different so-called Loss Functions (also called "risk"). These are typically some sort of distance measure between the model's output and the desired, output.
-However, there are other values we care about, such as the model's ability to generalize, i.e. how well it performs on data it has never seen before. If a model performs well on the trainig data set, but fails to generalize, this is called overfitting and means the model is not very useful on new data. The model memorizes the data, but doesn't get the underlying structure. To combat overfitting, people add a regularization term to the Loss function, which penalizes large parameters, which are usually an indicator that the model is overfitting.
-
-\subsection{Regularization vs. weight decay}
-If the model's parameters are too large, that often means it is overfitting. in order to discourage this, a regularization term is sometimes added to the loss function. Usually this is the L2 norm of the parameter vector, but sometimes the L1 norm is also used
+\end{markdown}
 
 \section{Optimization}
-In order to find the optimal values for the parameters of a neural network (usually weights and biases), different methods have been proposed. For small optimization problems (small number of parameters), it is often possible to directly find the optimal values analytically. For large optimization problems, the analytical solution is computationally intractable. As a result, numerical algorithms have emerged. These iterative algorithms use the available limited information in order to gradually infer an approximation for the true best values for the parameters. The number of iterations needed until the algorithm reaches convergence (i.e. the new solution is no longer signigicantly better than the previous one) varies based on the implicit prior assumptions about the data that the algorithm makes. These optimization processes have "hyperparameters" (different from the models "parameters" that we want to optimize). A great deal of research has gone into these numerical optimization processes, both in the general case and more specifically, for deep learining.
+In order to find the optimal values for the parameters of a model, different methods have been proposed. For small optimization problems (small number of parameters), it is often possible to directly find the optimal values analytically. For large optimization problems, the analytical solution is computationally intractable. As a result, numerical algorithms have emerged. These iterative algorithms use the available limited information in order to gradually infer an approximation for the true best values for the parameters. The number of iterations needed until the algorithm reaches convergence (i.e. the new solution is no longer signigicantly better than the previous one) varies based on the implicit prior assumptions about the data that the algorithm makes. These optimization processes have "hyperparameters" (different from the models "parameters" that we want to optimize). A great deal of research has gone into these numerical optimization processes, both in the general case and more specifically, for deep learining.
 For the most interesting class of optimizers, it is required to know the gradient at the current point in parameter space. In neural networks, this is achieved by Automatic Differentiation.
 
-\subsection{Automatic Differentiation}
-Loss functions in neural networks have an interesting structure, in that they are a composition of all the layerwise activation functions. This structure leads to the algorithm of automatic differentiation:
-During training, the model (using its current value for its parameters) is fed with data from the data set. The loss function of this minibatch is computed. While this happens, the computations that take place are tracked and built into a graph structure. This is necessary, because the loss function in practice isn't defined in a closed-form way directly on the parameters, but as a composition of layerwise activation functions. This means that for every parameter tracked by the graph, we can infer its influence on the loss. The parameters need to be leaves of the tree, which means they don't themselves depend on something else. (provide example graph image here).
-The gradient in the direction of an individual leaf (partial derivative) is then computed by applying the chain rule, starting from the output of the loss function. This is called the backward pass.
+\subsection{Gradient Descent}
+If the gradient of the Loss function at a certain point in parameter space is known, we can use this information to update the parameters in a way that takes us closer to the solution. A popular family of algorithms is derived from SGD. SGD means: Just take a step in the direction of steepest gradient. Scale the step size by the steepness of the gradient. If the gradient is very steep, take a larger step. If it is small, take a smaller step, like a drunk student rolling down a hill and ending up on a local minimum.
+SGD has only a single hyperparameter, the "learning rate" $\alpha$, which is multiplied with the step. Its optimal choice depends on the data, the model and is generally not obvious.
+\todo{formula: Update Rule}
 
 \subsection{Stochastic Gradient Descent}
-Once the gradient at a certain point is known, we can use this information to update the parameters in a way that takes us closer to the solution. A popular family of algorithms is derived from SGD. SGD means: Just take a step in the direction of steepest gradient. Scale the step size by the steepness of the gradient. If the gradient is very steep, take a larger step. If it is small, take a smaller step, like a drunk student rolling down a hill and ending up on a local minimum.
-SGD has only a single hyperparameter, the "learning rate" $\alpha$, which is multiplied with the step. Its optimal choice depends on the data, the model and is generally not obvious.
 Traditional Gradient Descent uses the whole data set to compute the true gradient, which is computationally instractable for large datasets, the usual case in machine learning. Instead, we use a variation called SGD. We compute only an estimate for the true gradient by "minibatching", using only a few, for example 64 data points in the forward pass. This greatly improves convergence speed, as the required computations are much easier to perform. However, especially for smaller batch sizes, this adds noise to the system, meaning that our parameter update step points only roughly in the direction of the steepest actual gradient. It has also been shown to improve generalization of the model.
 Many variants of SGD have been proposed, adding things like a momentum term or otherwise adapting the learning rate dynamically.
+\todo{formula: Noisy update rule}
 
-\subsection{Adaptive methods (First-Order overview?)}
+\subsection{First-Order and Second-Order Methods}
+Depending on our problem, we can use more available information in order to take an even better optimization step. Different optimizers have been proposed that use varying amounts of information.
+There are zeroth-order methods that don't directly take the gradient into account at all.
+The group to which SGD belongs is the group of First-Order Methods, named because these methods use the first derivative of the loss function. Adaptive Modifications of SGD like Adam and Momentum keep track of past gradients in order to take better steps. This implicitly assumes that past gradients contain information about future gradients, which is often the case. For example, if there is little change in the last gradients, we can assume that we are far away from the minimum, where gradients should converge to zero. Therefore, we are able to take larger steps.
+
+Second-Order-Methods are methods that explicitly use the Hessian $B$ of the Loss function, or the second derivative. This means they can use the explicit representation of curvature to directly compute where the gradient will hit zero.
+
 -RMSprop
 -Adam
 - Conjugate gradient?
-
-\subsection{Second Order Methods(related Methods)}
+s.o.:
 -Newton: Needs access to the Hessian.
 -Quasi-Newton.
 We can keep track of an estimate of the Hessian along the way.
@@ -187,6 +194,7 @@ We can keep track of an estimate of the Hessian along the way.
 The performance of SGD does not only depend on the choice of the learning rate, but also on the structure of the Loss landscape. The gradient of the loss function is a jacobian matrix of partial derivatives. Imagine an optimization proble with two parameters and a loss landscape that looks like an ellipse. If the random starting point is chosen to be towards the direction of the longer symmetry axis, the gradient will be rather flat and SGD will take a long time to converge. With the same logic, a circular, bowl-shaped loss landscape is optimal.
 If we start at the steep wall, SGD will converge quite quickly. If you know the explicit form of the Hessian matrix, you can see this problem by comparing its eigenvalues. A circular, bowl-shaped loss function will have only eigenvalues that are the same size. In the elliptical case, which has previously been reported to be the standard case in machine learning, at least one eigenvalue is much larger than the others.
 The mathematical measure for this phenomenon is called the "condition number" and is defined as the ratio between the largest and the smallest eigenvalues. SGD converges much faster when the condition number is closer to 1. The largest eigenvalue is sometimes referred to as the "spectral radius".
+\todo[inline]{derivation of why the condition number is importand (Nocedal...)}
 
 Preconditioning is a way to reduce the condition number. A preconditioner is a matrix that rescales the other matrix in such a way that the ratio of eigenvalues approaches 1.
 If the eigenvalues are known, this is quite easy. However, in deep learning, they are not known. In this thesis I present my implementation of an algorithm which aims to efficiently estimate the eigenvalues and construct a Preconditioner, while taking into account the noise caused by minibatching.
@@ -196,11 +204,49 @@ Condition number vs Spectral Radius
 The PROBLEM:
 
 Up until now, there was no easy way to make use of preconditioning in a noisy setting, such as minibatched deep learning. I present an implementation of Filips Algorithm in an easy-to-use python class and demonstrate its strengths and weaknesses.
+- The convergence of optimizers depends on the condition number of the Hessian \todo{formula}, which describes the whole loss landscape.
+\todo{Image}
+\todo{Formula of how an optimal preconditioner works}
+\missingfigure{This figure illustrates the condition number. It shows what SGD does on an illconditioned two-dimensional problem. And what preconditioning can do to change this problem.}
 
-\section{Something about Probabilistic things}
-- Probablilty Distribution, normal distribution, multivariate Gaussian distribution
+\section{Deep learning}
+\subsection{Artificial Neural Networks}
+A popular machine learning paradigma is living through a resurgence: Artificial Neural Networks. The fundamental building block is the single neuron, whcih somewhat resembles a biological neuron. Its activation depends on the sum of the activation of its inputs. A neural network model is a sequence of neuron layers, connected with each other. There is an input layer, which is a direct mapping of the training data point. The input layer' activation are fed forward into the "hidden layers", which in turn feed their activations to the neurons of the output layer. Information about observed data is stored in the model's parameters, the weights and biases of each layer.
+As a mathematical object, a neuron is an activation function which depends on the sum of the weighted activations of the inputs. Often there is a bias, which is a static value added to the input activation.
+\todo{nonlinear (affine) activation functions}
+\todo[inline]{architectures per task. ANN: CNN (visual/spatial), RNN (temporal)}
+
+\subsection{Loss functions}
+How do we recognize the optimal solution, or even tell which of two solutions is better?
+Depending on the task that the model is meant to perform, we can define different so-called Loss Functions (also called "risk"). These are typically some sort of distance measure between the model's output and the desired, output.
+However, there are other values we care about, such as the model's ability to generalize, i.e. how well it performs on data it has never seen before. If a model performs well on the trainig data set, but fails to generalize, this is called overfitting and means the model is not very useful on new data. The model memorizes the data, but doesn't get the underlying structure. To combat overfitting, people add a regularization term to the Loss function, which penalizes large parameters, which are usually an indicator that the model is overfitting.
+\todo[inline]{formula}
+\todo[inline]{split data}
+
+\subsection{Regularization vs. weight decay}
+We minimize a different parameter than what we actually care about. (Loss on the training set vs accuracy on the test set). This can lead to problems, so there are some solutions.
+If the model's parameters are too large, that often means it is overfitting. in order to discourage this, a regularization term is sometimes added to the loss function. Usually this is the L2 norm of the parameter vector, but sometimes the L1 norm is also used.
+- But there are differences (see \cite{DBLP:conf/iclr/ChaudhariCSLBBC17})
+\todo{Bayesian?}
+\todo{Formula}
+\todo{Maybe illustrative plot}
+
+\subsection{Automatic Differentiation}
+\todo{Forward pass}
+\todo{Derivation}
+Loss functions in neural networks have an interesting structure, in that they are a composition of all the layerwise activation functions. This structure leads to the algorithm of backpropagation:
+During training, the model (using its current value for its parameters) is fed with data from the data set. The loss function of this minibatch is computed. While this happens, the computations that take place are tracked and built into a graph structure. This is necessary, because the loss function in practice isn't defined in a closed-form way directly on the parameters, but as a composition of layerwise activation functions. This means that for every parameter tracked by the graph, we can infer its influence on the loss. The parameters need to be leaves of the tree, which means they don't themselves depend on something else. (provide example graph image here).
+The gradient in the direction of an individual leaf (partial derivative) is then computed by applying the chain rule, starting from the output of the loss function. This is called the backward pass.
+
+
+
+\section{Probablilty Basics}
+- Probability Distribution of a random variable, normal distribution, multivariate Gaussian distribution
+- Point estimates
+- Bayes' Rule
 
 \section{Benchmarking}
+using deepobs \cite{deepobs}
 \begin{markdown}
 There are no standard established benchmarking protocols for new optimizers. It isn't even clear what measures to consider, or how they are to be measured. As a result, nobody knows which optimizers are actually good. And some bad optimizers will seem good.
 DeepOBS is a solution to this problem, standardizing a protocol, providing benchmarks and standard test problems.
@@ -225,7 +271,7 @@ DeepOBS is a solution to this problem, standardizing a protocol, providing bench
 
 \chapter{Approach (Implementation)}
 \section{Description of the algorithm}
-The exact inner workings of the algorithm are described in more detail in \cite{de2019active}.
+The exact inner workings of the algorithm are described in more detail in \cite{roos2019active}.
 Here I will give an overview of the algorithm's structure and steps:
 part 1: - Gather observations of the curvature in-place:
 part 2: - Estimating the Hessian and construct the preconditioner
@@ -247,7 +293,7 @@ Deep learning problems are very high-dimensional and usually feature many (10\%)
 \section{Documentation for the class Preconditioner}
 \subsection{Overview}
 \begin{markdown}
-The class `Preconditioner` provides an easy way to use the probabilistic preconditioning algorithm proposed by \cite{de2019active}.
+The class `Preconditioner` provides an easy way to use the probabilistic preconditioning algorithm proposed by \cite{roos2019active}.
 This is how to use it:
 
 1. Get the source file from the repo and include it in your project
@@ -320,7 +366,6 @@ Other optimizers like Adam and SGD are taken from the current, but unpublished D
 \section{Experiment x: Preconditioning}
 - Multiple Problems: fmnist\_2c2d, cifar10\_3c3d, maybe run more
 - Plot Adaptive SGD vs Preconditioned SGD vs SGD vs Adam, maybe try other baselines
-\done[inline]{run AdaptiveSGD and PreconditionedSGD on 9 more seeds on the problems}
 \todo[inline]{Describe findings and discuss}
 
 In order to investigate the performance benefit of the Preconditioning, the Preconditioner class was adapted to have two different versions, behaving almost exactly the same. They both compute the Hessian, they both estimate a learning rate. However only in one version the Preconditioner is applied, while in the other one it isn't. This was achieved by subclassing and overwriting the \_apply\_precenditioner() method with an empty method. Hyperparameters: Num\_observations 10, prior\_iterations 5, est\_rank 2, optim\_class torch.SGD
@@ -329,15 +374,14 @@ Results see figure \ref{fig:exp_preconditioning}. nice one right?
 \begin{figure}
 	\input{images/exp_preconditioning.pgf}
 	%\missingfigure[figheight=23cm]{Excluded for performance reasons. Many optimizers on fmnist and cifar10}
-	\caption{Both variants of the algorithm perform significantly worse than established alternatives. AdaptiveSGD is better than PreconditionedSGD}
+	\caption{Both variants of the algorithm perform significantly worse than established alternatives. AdaptiveSGD is better than PreconditionedSGD. On the fmnist model, the baseline optimizers quickly reach a minimum, but then continue to overfit. AdaptiveSGD and PreconditionedSGD arrive at the mimimum much slower, but don't diverge.}
 	\label{fig:exp_preconditioning}
 \end{figure}
 
 \section{Experiment x1: Performance penalty of Preconditioning}
 - For a few Problems
 - Use the runtime-estimation script from deepOBS
-\done[inline]{Run runtime-estimation for AdaptiveSGD and PreconditionedSGD and OnlyAdaptiveSGD for a few problems}
-\done[inline]{Report results: OnlyAdaptiveSGD=SGD < AdaptiveSGD < PreconditionedSGD}
+
 
 \begin{figure}
 	\centering \hspace{-1,5cm}
@@ -351,9 +395,6 @@ Results see figure \ref{fig:exp_preconditioning}. nice one right?
 \section{Experiment y: Initialization}
 - Run without initialization, without initial lr for multiple seeds
 - Run with initialization, without initial lr for multiple seeds
-\done[inline]{monkey patch an uninitialized testproblem into deepobs}
-\done[inline]{run PreconditionedSGD without lr, with and without initialization, on 10 seeds for 5 epochs, only cifar10}
-\done[inline]{Batch size 64}
 \todo[inline]{maybe run DeepOBS mnist\_vae with different seeds, without lr}
 NOT using DeepOBS built-in Testproblem!
 Filip reports needing to set a manual initial learning rate for the first epoch, because the algorithm would set too big of a value when estimating the curvature on an untrained network. During testing with DeepOBS, I could not replicate this result. I believe this is due to the initialization used in DeepOBS, which was not present in Filip's code.
@@ -373,12 +414,10 @@ Results see Figure \ref{fig:exp_init}. Here?
 - Hyperparameter Sensitivity of PreconditionedSGD. Still have to run 10 repeats
 - Plot loss over time
 - Also plot NoLearningRate
-\done[inline]{run PreconditionedSGD without lr on cifar10 and fmnist, see preconditioning}
-\todo[inline]{rerun best settings 10 times(maybe done, maybe not)}
 
 However, I investigated the effect the initial learning rate has on the algorithm.
 Using DeepOBS, I performed a grid search with 10 evaluations on a logarithmic grid between $10^-5$ and $10^2$ on the Dataset XXX.
-\done[inline]{plot} see fig \ref{fig:exp_lr_sens}.
+see fig \ref{fig:exp_lr_sens}.
 As is common in deep learning, with the learning rate over a certain threshold the model diverges in the first epoch. However, below this threshold, the initial learning rate has at most a small effect on the network's performance after 100 epochs.
 
 \begin{figure}

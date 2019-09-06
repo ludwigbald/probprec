@@ -3789,7 +3789,7 @@ xmin=0, xmax=100,
 xtick style={color=black},
 y grid style={white!69.01960784313725!black},
 ylabel={train\_losses},
-ymin=0.0736436077823433, ymax=0.246256649294534,
+ymin=0.05, ymax=0.25,
 ytick style={color=black},
 ytick={0.05,0.1,0.15,0.2,0.25},
 yticklabels={0.05,0.10,0.15,0.20,0.25}
@@ -7554,8 +7554,10 @@ xmin=0, xmax=100,
 xtick style={color=black},
 y grid style={white!69.01960784313725!black},
 ylabel={test\_accuracies},
-ymin=0.808413461538461, ymax=1.01472355769231,
-ytick style={color=black}
+ymin=0.85, ymax=0.93,
+ytick style={color=black},
+ytick={0.85,0.875,0.9,0.925,0.95},
+yticklabels={0.850,0.875,0.900,0.925,0.950}
 ]
 \path [fill=color0, fill opacity=0.3]
 (axis cs:0,0.111007682638274)
@@ -11320,8 +11322,10 @@ xmin=0, xmax=100,
 xtick style={color=black},
 y grid style={white!69.01960784313725!black},
 ylabel={train\_accuracies},
-ymin=0.828416466346154, ymax=1.08611778846154,
-ytick style={color=black}
+ymin=0.85, ymax=1,
+ytick style={color=black},
+ytick={0.85,0.9,0.95,1},
+yticklabels={0.85,0.90,0.95,1.00}
 ]
 \path [fill=color0, fill opacity=0.3]
 (axis cs:0,0.111297659144413)

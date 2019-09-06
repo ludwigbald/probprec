@@ -9,7 +9,9 @@ fig, axess = analyzer.plot_testset_performances("./results", reference_path = ".
 axess[0][0].get_legend().remove()
 axess[3][1].legend()
 
-
+axess[1][0].set_ylim(0.05, 0.25)
+axess[2][0].set_ylim(0.85, 0.93)
+axess[3][0].set_ylim(0.85, 1,0)
 
 
 
@@ -19,6 +21,8 @@ for axes in axess:
         lines = ax.get_lines()
         for line in lines:
             line.set_linewidth(3)
+
+fig.canvas.draw()
 #
 #
 # mpl.use("pgf")
