@@ -12,7 +12,8 @@ std = setting.aggregate["valid_accuracies"]['std'][-1]
 
 
 # analyzer.plot_hyperparameter_sensitivity("./results/cifar10_3c3d/Preconditioner", hyperparam = 'lr')
-fig, axes = analyzer.plot_hyperparameter_sensitivity("./results/fmnist_2c2d/Preconditioner",
+fig, axes = analyzer.plot_hyperparameter_sensitivity("./results/mnist_vae/Preconditioner",
+                                    reference_path = "../baselines/mnist_vae/SGD",
                                                     hyperparam = 'lr',
                                                     plot_std = False)
 
@@ -22,10 +23,13 @@ axes.set_xscale("log")
 axes.set_ylabel("Accuracy")
 axes.set_xlabel("Learning Rate")
 axes.get_lines()[0].set_marker("x")
+axes.get_lines()[1].set_marker("x")
+axes.get_lines()[1].set_alpha(0.5)
 
-axes.plot( [1e-5, 100], [mean, mean], linewidth = 3, linestyle = "dashed")
 
-axes.legend(["Given Learning Rate", "Constructed Learning Rate"])
+axes.plot( [1e-5, 100], [mean, mean], linewidth = 3, linestyle = "dashed", color = "grey")
+
+axes.legend(["PreconditionedSGD", "SGD", "Constructed Learning Rate"])
 fig.canvas.draw()
 
 

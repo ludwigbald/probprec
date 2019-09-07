@@ -372,7 +372,7 @@ Logging data during training should not be a responsibility of the optimizer. In
 
 In order to change behavior of the class during development and research, the best way to make different versions is to make use of python's built-in subclassing. For example, I needed a version that skips applying the preconditioner every step, but behaves exactly the same in all other ways. This was solved by using a subclass of `Preconditioner`, which overwrites the function `_apply_preconditioner()` with an empty function.
 
-Some bugs were also fixed. Previously, the algorithm skipped some minibatches.
+Some bugs were also fixed. Previously, the algorithm skipped some minibatches, which was a problem in the small `quadratic_deep` dataset.
 \end{markdown}
 
 
@@ -383,7 +383,11 @@ The test problems used were deep learning models.
 - cifar10
 - quadratic\_deep
 
+
 For some experiments, I used a seperate implementation of a cifar10 test problem.
+
+\section{DeepOBS baselines}
+Baselines are taken from XXX, well-tuned hyperparameters, but no schedule or such things.
 
 \section{Technical details}
 The experiments were run on the TCML cluster at the University of Tübingen.
@@ -396,42 +400,51 @@ Other optimizers like Adam and SGD are taken from the current, but unpublished D
 
 
 \chapter{Experiment}
-\section{Experiment x: Preconditioning}
+\section{Experiment 1: Preconditioning}
+\begin{markdown}
 - Multiple Problems: fmnist\_2c2d, cifar10\_3c3d, maybe run more
 - Plot Adaptive SGD vs Preconditioned SGD vs SGD vs Adam, maybe try other baselines
-\todo[inline]{Describe findings and discuss}
 
-In order to investigate the performance benefit of the Preconditioning, the Preconditioner class was adapted to have two different versions, behaving almost exactly the same. They both compute the Hessian, they both estimate a learning rate. However only in one version the Preconditioner is applied, while in the other one it isn't. This was achieved by subclassing and overwriting the \_apply\_precenditioner() method with an empty method. Hyperparameters: Num\_observations 10, prior\_iterations 5, est\_rank 2, optim\_class torch.SGD
-Results see figure \ref{fig:exp_preconditioning}. nice one right?
+In order to investigate the effect on training performance of the proposed preconditioning algorithm, two similar, but distinct versions were used. The full algorithm as described in section \todo{cite} as `PreconditionedSGD` and the same algorithm, which does everything in the same way except for applying the preconditioner at every SGD step, called `AdaptiveSGD`. This was achieved by subclassing and overwriting the `_apply_precenditioner()` method with an empty method. Those two optimizers were tested on the DeepOBS testproblems `cifar10_3c3d` and `fmnist_2c2d`, using the standard settings. 
+The hyperparameters used for the experiment were the same for both optimizers: `num_observations = 10`, `prior_iterations = 5`, `est_rank = 2`, `optim_class = torch.SGD`, `lr = None`
 
+The results are presented in figure \ref{fig:exp_preconditioning}, together with the DeepOBS baselines on the same problems. In almost every metric, both tested optimizers were outperformed by all widely used standards like simple SGD and Adam. Interesingly, the `fmnist_2c2d` problem seems prone to some kind of overfitting: All the standard optimizers perform start to increase test loss after reaching a local minimum. However, the test accuracy does not seem to suffer from this same problem. `PreconditionedSGD` and `AdaptiveSGD` don't show this behavior, but also don't reach convergence after 100 epochs, as they still continue to improve. Note however that the difference in accuracy is quite a bit smaller on `fmnist_2c2d` than on `cifar10_3c3d`.
+
+\todo{fix metric labels}
+\end{markdown}
 \begin{figure}
-	%\input{images/exp_preconditioning.pgf}
-	\missingfigure[figheight=23cm]{Excluded for performance reasons. Many optimizers on fmnist and cifar10}
+	\input{images/exp_preconditioning.pgf}
+	%\missingfigure[figheight=23cm]{Excluded for performance reasons. Many optimizers on fmnist and cifar10}
 	\caption{Both variants of the algorithm perform significantly worse than established alternatives. AdaptiveSGD is better than PreconditionedSGD. On the fmnist model, the baseline optimizers quickly reach a minimum, but then continue to overfit. AdaptiveSGD and PreconditionedSGD arrive at the mimimum much slower, but don't diverge.}
 	\label{fig:exp_preconditioning}
 \end{figure}
 
-\section{Experiment x1: Performance penalty of Preconditioning}
-- For a few Problems
-- Use the runtime-estimation script from deepOBS
+\section{Experiment 2: Computational Complexity}
+\begin{markdown}
+Wallclock time is an important metric for practitioners. To the practicioner it is important how much time, energy and money the training of a model costs. It is however difficult to interpret in experiment, because it depends on outside factors like hardware configuration, system load and other sources of statistical noise. DeepOBS provides a script that allows to compare the runtime of an optimizer against the runtime of SGD, run as a baseline on the same problem and the same hardware.
+
+The three investigated optimizers were `PreconditionedSGD` and `AdaptiveSGD`, as defined in the previous experiment, and `OnlyAdaptiveSGD`, which only estimates the prior and constructs a step size. `OnlyAdaptiveSGD` is a more efficient version of `AdaptiveSGD`, which also constructs the estimate for the Hessian and the precondiotioner itself, but does not use this information. Once again, `OnlyAdaptiveSGD` is a subclass of `PreconditionedSGD`, but with some knocked-out functions.
+
+The testproblem used was the default value set by DeepOBS, `mnist_mlp`. Every optimizer was run 5 times for 5 epochs each, on a GPU node of the TCML cluster.
+\end{markdown}
+
+The results are presented in figure \ref{fig:exp_perf_prec}. As expected, the more computations an optimizer does, the more time it takes to run.
+\verb|PreconditionedSGD| was the slowest optimizer, taking an average of 2.39 ($SD = 0.36$) times as long as SGD, followed by \verb|AdaptiveSGD|, which required 1.87 ($SD = 0.25$) times the runtime of SGD. \verb|OnlyAdaptiveSGD| took about as much time as SGD, with a mean time of 1.00 ($SD = 0.07$) the time of SGD. A standard deviation for SGD is not given in the current version DeepOBS.
 
 
 \begin{figure}
 	\centering \hspace{-1,5cm}
 	\input{images/exp_perf_prec.pgf}
-	\caption{Wallclock time per epoch in relation to SGD. The original algorithm is the slowest, followed by the version that does everything but apply the preconditioner. Finally, the version that only computes the Prior and uses the adaptive step size is as fast as the baseline SGD.}
+	\caption{Wallclock time per epoch in relation to SGD. The original algorithm is the slowest, followed by the version that does everything but apply the preconditioner. Finally, the version that only computes the prior and uses the adaptive step size is as fast as the baseline SGD.}
 	\label{fig:exp_perf_prec}
 	
 \end{figure}
 
 
-\section{Experiment y: Initialization}
-- Run without initialization, without initial lr for multiple seeds
-- Run with initialization, without initial lr for multiple seeds
-\todo[inline]{maybe run DeepOBS mnist\_vae with different seeds, without lr}
-NOT using DeepOBS built-in Testproblem!
-Filip reports needing to set a manual initial learning rate for the first epoch, because the algorithm would set too big of a value when estimating the curvature on an untrained network. During testing with DeepOBS, I could not replicate this result. I believe this is due to the initialization used in DeepOBS, which was not present in Filip's code.
-Results see Figure \ref{fig:exp_init}. Here?
+\section{Experiment 3: Initialization}
+\cite{roos2019active} report that their implementation of the algorithm includes a hyperparameter for the manual first-epoch learning rate, because the learning rate constructed by the algorithm would be so high that the model diverges in the first epochs. Using the proposed implementation, I was not able to replicate this finding. On all tested problems included in DeepOBS, using the constructed learning rate for the first epoch lead the algorithm to eventual convergence. The authors used a model very similar to the one used in DeepOBS' testproblem \verb|cifar10_3c3d|. Upon closer inspection, the main difference was that DeepOBS initializes the weights explicitly, while the authors used the built-in pytorch initialization functions.
+In order to investigate the effect of initialization, DeepOBS was modied to include the original net, either with explicit DeepOBS or implicit pytorch initialization. This model was then trained for both variations, with a batch size of 64 and 128, for five epochs, for each of 10 random seed values.
+As is presented in figure \ref{fig:exp_init}, while the initialization method certainly plays a big role in training performance, neither initialization method and neither batch size lead to a diverging run.
 
 \begin{figure}
 	\centering \hspace{-1,5cm}
@@ -442,16 +455,12 @@ Results see Figure \ref{fig:exp_init}. Here?
 \end{figure}
 
 
-\section{Experiment z: Learning Rate Sensitivity,  Initial Learning Rate vs no initial lr}
-- Preferably multiple problems: quadratic\_deep, fmnist\_2c2d, cifar10\_3c3d, maybe more
-- Hyperparameter Sensitivity of PreconditionedSGD. Still have to run 10 repeats
-- Plot loss over time
-- Also plot NoLearningRate
+\section{Experiment 4: Learning Rate Sensitivity}
+\todo{Maybe multiple problems: quadratic\_deep, fmnist\_2c2d, cifar10\_3c3d, maybe more}
 
-However, I investigated the effect the initial learning rate has on the algorithm.
-Using DeepOBS, I performed a grid search with 10 evaluations on a logarithmic grid between $10^-5$ and $10^2$ on the Dataset XXX.
-see fig \ref{fig:exp_lr_sens}.
-As is common in deep learning, with the learning rate over a certain threshold the model diverges in the first epoch. However, below this threshold, the initial learning rate has at most a small effect on the network's performance after 100 epochs.
+After establishing that it's safe to use the automatically constructed learning rate, it is still unclear whether there is an effect on training success of manually setting a first-epoch learning rate versus using the constructed learning rate.
+A DeepOBS-aided grid search with 10 evaluations on a logarithmic grid between $10^-5$ and $10^2$ on the \verb|fmnist_2c2d| testproblem. The results are demonstrated in \ref{fig:exp_lr_sens}, together with the baseline SGD reference.
+Like SGD, the model diverges in the first epoch if the learning rate is set over a certain threshold. Below this threshold, the first-epoch learning rate has next to no effect on the model's final accuracy after training for 100 epochs. For SGD, which uses the same learning rate for all 100 epochs, there is a significant dropoff in training success for smaler learning rates.
 
 \begin{figure}
 	\centering \hspace{-1,5cm}
@@ -460,7 +469,7 @@ As is common in deep learning, with the learning rate over a certain threshold t
 	\label{fig:exp_lr_sens}
 \end{figure}
 
-\section{Experiment aa: Automatic Re-Estimation of the Hessian and optimal learning rate}
+\section{Experiment aa: Auto-Restart}
 - preferably multiple problems
 - Run different Automatic re-estimation models: every-epoch, every-1000
 - 
@@ -476,10 +485,17 @@ probably not i guess
 
 \section{Discussion}
 \begin{markdown}
-- The algorithm greatly depends on the initialization used for the model. For some models, incorrect initialization means we can't find anything. (DeepOBS mnist\_vae, Seed 45 failed to provide anything)
+- Preconditioning: Why does it not help or even make things worse? 
+	- It can compress at most 2 of the eigenvalues!
+	- It uses less data to train
+	- due to the noisyness the Preconditioner might actually worsen the problem
+	- the constructed learning rate might be more conservative (smaller) than the empirical optimum, leading to slower convergence
+- Performance: Why is the algorithm so slow, could we improve speed?
+	- All the computation-intensive linear Algebra happens in `_create_low_rank()` on the CPU in numpy. It could be ported to GPU-ready code.
+- Initialization:
+	- There might be some problem/initializations that make the algorithm fail. One would need to do a much more exhaustive search or analytical analysis on this.
 - Preconditioning for the largest two eigenvectors was no better than using only the adaptive step size.
 - Interestingly, a low loss doesn't always correspond to a high acccuracy.
-
 
 \end{markdown}
 
