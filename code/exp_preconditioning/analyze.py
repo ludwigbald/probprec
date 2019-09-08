@@ -13,6 +13,11 @@ axess[1][0].set_ylim(0.05, 0.25)
 axess[2][0].set_ylim(0.85, 0.93)
 axess[3][0].set_ylim(0.85, 1,0)
 
+axess[0][0].set_ylabel("test loss")
+axess[1][0].set_ylabel("train loss")
+axess[2][0].set_ylabel("test acc")
+axess[3][0].set_ylabel("train acc")
+
 
 
 # modify the plot

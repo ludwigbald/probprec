@@ -9,6 +9,11 @@ Based on these projects:
 * A NeurIPS paper by my supervisor Filip De Roos and our PI Philipp Hennig.
 (a related project: https://github.com/fderoos/probabilistic_hessian)
 
+## Structure of this repository
+I tried to create a comprehensive structure. In `code`, find all the code, most notably the `Precoditioner` class in `code/probprec.py`. Also find the experiment folders, which contain all files necessary to replicate an experiment and generate the corresponding figure.
+
+Thesis sources are in `thesis`, presentation sources are in `presentation`.
+
 
 ## Technical description
 Most of the technical parts are decribed in detail in the thesis, but here's a quick overview:
@@ -17,5 +22,4 @@ Most of the technical parts are decribed in detail in the thesis, but here's a q
 provided by the University of Tübingen.
 2. The presentation is based on the fibeamer theme for the beamer class, though I modified its
 source code to get rid of the included logo.
-3. The thesis is based on the fithesis theme. Find out more about both here:
-(https://www.fi.muni.cz/lemma/projekty/fithesis/)
+3. The thesis is based on the english language template provided by Kay Nieselt here: https://uni-tuebingen.de/fakultaeten/mathematisch-naturwissenschaftliche-fakultaet/fachbereiche/informatik/lehrstuehle/integrative-transkriptomik/theses/

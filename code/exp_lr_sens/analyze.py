@@ -12,8 +12,8 @@ std = setting.aggregate["valid_accuracies"]['std'][-1]
 
 
 # analyzer.plot_hyperparameter_sensitivity("./results/cifar10_3c3d/Preconditioner", hyperparam = 'lr')
-fig, axes = analyzer.plot_hyperparameter_sensitivity("./results/mnist_vae/Preconditioner",
-                                    reference_path = "../baselines/mnist_vae/SGD",
+fig, axes = analyzer.plot_hyperparameter_sensitivity("./results/fmnist_2c2d/Preconditioner",
+                                    reference_path = "../baselines/fmnist_2c2d/SGD",
                                                     hyperparam = 'lr',
                                                     plot_std = False)
 
