@@ -1,0 +1,79 @@
+% This file was created by tikzplotlib v0.8.2.
+\begin{tikzpicture}
+
+\definecolor{color0}{rgb}{0.12156862745098,0.466666666666667,0.705882352941177}
+\definecolor{color1}{rgb}{1,0.498039215686275,0.0549019607843137}
+
+\begin{axis}[
+height=6cm,
+legend cell align={left},
+legend style={at={(0.03,0.03)}, anchor=south west, draw=white!80.0!black},
+legend style={font=\footnotesize, at={(1 ,0.5)}, xshift=0.5cm,anchor=west,nodes=right},
+log basis x={10},
+tick align=outside,
+tick pos=left,
+tick pos=left,
+title={fmnist\_2c2d},
+width=\figurewidth + 1cm,
+x grid style={white!69.01960784313725!black},
+xlabel={Learning Rate},
+xmin=4.46683592150963e-06, xmax=223.872113856834,
+xmode=log,
+xtick style={color=black},
+xtick={1e-07,1e-06,1e-05,0.0001,0.001,0.01,0.1,1,10,100,1000,10000},
+xticklabels={\(\displaystyle {10^{-7}}\),\(\displaystyle {10^{-6}}\),\(\displaystyle {10^{-5}}\),\(\displaystyle {10^{-4}}\),\(\displaystyle {10^{-3}}\),\(\displaystyle {10^{-2}}\),\(\displaystyle {10^{-1}}\),\(\displaystyle {10^{0}}\),\(\displaystyle {10^{1}}\),\(\displaystyle {10^{2}}\),\(\displaystyle {10^{3}}\),\(\displaystyle {10^{4}}\)},
+y grid style={white!69.01960784313725!black},
+ylabel={Accuracy},
+ymin=0.052128405448718, ymax=0.965599959935897,
+ytick style={color=black},
+ytick={0,0.2,0.4,0.6,0.8,1},
+yticklabels={0.0,0.2,0.4,0.6,0.8,1.0}
+]
+\addplot [very thick, color0, mark=x, mark size=3, mark options={solid}]
+table {%
+0 0.906850961538462
+1e-05 0.908653846153846
+5.99484250318941e-05 0.908553685897436
+0.000359381366380463 0.909154647435897
+0.00215443469003188 0.888221153846154
+0.0129154966501488 0.893729967948718
+0.0774263682681127 0.916466346153846
+0.464158883361278 0.0936498397435897
+2.78255940220713 0.0936498397435897
+16.6810053720006 0.0936498397435897
+100 0.0936498397435897
+};
+\addlegendentry{PreconditionedSGD}
+\addplot [very thick, color1, opacity=0.5, mark=x, mark size=3, mark options={solid}]
+table {%
+1e-05 0.654947916666667
+2.33572146909012e-05 0.732071314102564
+5.45559478116851e-05 0.776141826923077
+0.000127427498570313 0.81620592948718
+0.000297635144163132 0.852163461538462
+0.00069519279617756 0.872195512820513
+0.00162377673918872 0.889723557692308
+0.00379269019073225 0.909755608974359
+0.00885866790410082 0.916466346153846
+0.0206913808111479 0.919471153846154
+0.0483293023857175 0.918569711538462
+0.112883789168469 0.924078525641026
+0.263665089873036 0.919971955128205
+0.615848211066025 0.0986578525641026
+1.43844988828766 0.0986578525641026
+3.35981828628378 0.0986578525641026
+7.84759970351461 0.103665865384615
+18.3298071083243 0.102463942307692
+42.8133239871939 0.094551282051282
+100 0.101963141025641
+};
+\addlegendentry{SGD}
+\addplot [very thick, white!50.19607843137255!black, dashed]
+table {%
+1e-05 0.908844150641026
+100 0.908844150641026
+};
+\addlegendentry{Constructed Learning Rate}
+\end{axis}
+
+\end{tikzpicture}

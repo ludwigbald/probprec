@@ -47,3 +47,19 @@ code = code.replace("\_", "_").replace("_", "\_")
 file = codecs.open("../../thesis/images/exp_lr_sens.pgf", "w", 'utf-8')
 file.write(code)
 file.close()
+
+###### Presentation
+code = tikzplotlib.get_tikz_code(figure = fig,
+                                 figurewidth = "\\figurewidth + 1cm",
+                                 figureheight = "6cm",
+                                 extra_axis_parameters = ["tick pos=left",
+             "legend style={font=\\footnotesize, at={(1 ,0.5)}, xshift=0.5cm,anchor=west,nodes=right}"],
+                                 extra_tikzpicture_parameters = [],
+                                 )#strict = True)
+
+#catch missed underscores & save
+code = code.replace("\_", "_").replace("_", "\_")
+
+file = codecs.open("../../presentation/images/exp_lr_sens.pgf", "w", 'utf-8')
+file.write(code)
+file.close()

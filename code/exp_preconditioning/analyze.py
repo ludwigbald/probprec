@@ -52,3 +52,45 @@ code = code.replace("\_", "_").replace("_", "\_")
 file = codecs.open("../../thesis/images/exp_preconditioning.pgf", "w", 'utf-8')
 file.write(code)
 file.close()
+
+################### Presentation
+
+
+fig.canvas.draw()
+
+code = tikzplotlib.get_tikz_code(figure = fig,
+                                 figurewidth = "\\figurewidth",
+                                 figureheight = "4cm",
+                                 extra_axis_parameters = ["tick pos=left",
+             "legend style={font=\\footnotesize, at={(0 ,0)},xshift=-0.4cm, yshift=-1.5cm,anchor=north,nodes=right}",],
+                                 extra_tikzpicture_parameters = ["every axis plot post./append style={line width = 1pt}"],
+                                 )#strict = True)
+
+#catch missed underscores & save
+code = code.replace("\_", "_").replace("_", "\_")
+file = codecs.open("../../presentation/images/exp_preconditioning.pgf", "w", 'utf-8')
+file.write(code)
+file.close()
+
+################## Presentation part 2
+# get rid of upper two figures
+
+fig.delaxes(axess[0][0])
+fig.delaxes(axess[0][1])
+fig.delaxes(axess[1][0])
+fig.delaxes(axess[1][1])
+fig.canvas.draw()
+
+code = tikzplotlib.get_tikz_code(figure = fig,
+                                 figurewidth = "\\figurewidth",
+                                 figureheight = "4cm",
+                                 extra_axis_parameters = ["tick pos=left",
+             "legend style={font=\\footnotesize, at={(0 ,0)},xshift=-0.4cm, yshift=-1.5cm,anchor=north,nodes=right}",],
+                                 extra_tikzpicture_parameters = ["every axis plot post./append style={line width = 1pt}"],
+                                 )#strict = True)
+
+#catch missed underscores & save
+code = code.replace("\_", "_").replace("_", "\_")
+file = codecs.open("../../presentation/images/exp_preconditioning2.pgf", "w", 'utf-8')
+file.write(code)
+file.close()
