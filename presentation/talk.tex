@@ -46,7 +46,7 @@
 
 
 \setlength{\figwidth}{.9\textwidth}
-\setlength{\figheight}{.6\textheight}
+\setlength{\figheight}{\textwidth /2 }
 
 \section{Background}
 
@@ -56,16 +56,28 @@
 	\begin{block}{Definition \footnote{Tom Mitchell, "Machine Learning", 1997}}
 		"A computer program is said to learn from \emph{experience E} with respect to some class of \emph{tasks T} and \emph{performance measure P} if its performance at tasks in T, as measured by P, improves with experience E"
 	\end{block}
-\begin{itemize}
-	\item Special case in Deep Learning: Finding the \emph{optimal point} in \emph{parameter space}
-	\item The \emph{Loss function $\L (w)$} tells us how bad a specific parametrization $w$ is. For example, the model's predictions for all possible inputs are compared to the desired outputs.
-	% TODO image of 2-dimensional problem
-\end{itemize}
+	\begin{itemize}
+		\item Special case in Deep Learning: Finding the \emph{optimal point} in \emph{parameter space}
+		\item The \emph{Loss function $\L (w)$} tells us how bad a specific parametrization $w$ is. For example, the model's predictions for all possible inputs are compared to the desired outputs.
+	\end{itemize}
 \end{frame}
 \note[itemize]{
 	\item Most of you will have seen this definition before.
 	\item As an example, have a look at this 2-parametrical problem
 }
+
+\begin{frame}[label=landscape]{}{ }
+\begin{columns}
+	\begin{column}{0.5 \linewidth}
+		\include{images/original_prob}
+	\end{column}
+	\begin{column}{0.5 \linewidth}
+		\include{images/rescaled_prob}
+	\end{column}
+\end{columns}
+\end{frame}
+
+
 
 \begin{frame}
 \frametitle{Gradient Descent}
@@ -75,6 +87,7 @@
 	where $\alpha$ is the learning rate.
 	
 \end{frame}
+
 
 \begin{frame}
 \frametitle{Stochastic Gradient Descent}
@@ -89,6 +102,7 @@ where $\alpha$ is the learning rate.
 
 \end{frame}
 
+\againframe{landscape}
 
 \begin{frame}
 \frametitle{Preconditioning}
@@ -102,6 +116,8 @@ where $\alpha$ is the learning rate.
 		%TODO example image!
 	\end{itemize}
 \end{frame}
+
+\againframe{landscape}
 
 \begin{frame}{Probabilistic Preconditioning}{by Filip \& Philipp, 2019}
 In the stochastic (minibatched) setting and while only having access to \emph{Hessian-vector products}, it isn't obvious how to construct the preconditioner. This is the method I'm testing:
@@ -187,6 +203,16 @@ get_log()
 \vspace{3mm}
 \input{images/exp_preconditioning.pgf}
 \end{frame}
+\note[itemize]{
+\item - Show \& explain the figure exp\_preconditioning, It's created by DeepOBS
+\item - Different Optimizers on two testproblems. Blue is the PreconditionedSGD and Orange is the AdaptiveSGD.
+\item - Explain the Optimizers
+\item - (Explain Testproblems) Only Convolutional nets!
+\item - Both variants perform worse than other widely used algorithms.
+\item - They converge much slower than the other algorithms, which seem to reach an optimum after 40 epochs, while the two don't converge even after 100 epochs
+\item - Maybe mention the overfitting going on.
+\item - Main conclusion: The algorithm does not perform better than others.	
+}
 
 \begin{frame}{Effectiveness of Preconditioning}{\tikz\draw[orange,fill=orange] (0,0) circle (.7ex); AdaptiveSGD \hspace{1cm} \tikz\draw[white,fill=blue] (0,0) circle (.7ex); PreconditionedSGD}
 \input{images/exp_preconditioning2.pgf}
@@ -207,6 +233,14 @@ get_log()
 \centering
 \input{../thesis/images/exp_perf_prec.pgf}
 \end{frame}
+\note[itemize]{
+\item - Running on mnist\_mlp with a batch size of 128.
+\item - Shown Optimizers are
+\item - SGD at 100% as a baseline.
+\item - PreconditionedSGD, AdaptiveSGD, OnlyAdaptiveSGD
+\item - They add a large performance penalty, but that would depend on the batch size.
+}
+
 
 %\begin{frame}{Stability depending on initialization}
 %%TODO Do I want to keep this? & include figure
@@ -216,6 +250,15 @@ get_log()
 \centering
 \input{images/exp_lr_sens.pgf}
 \end{frame}
+\note[itemize]{
+\item- Seeing that the algorithm is stable for an automatically constructed learning rate, I wanted to see if there are effects on success measures.
+\item - Describing the plot
+\item - Dropoff of SGD for small learning rates, plateau, cliff for large learning rates.
+\item - Usually, on this testproblem the algorithm would estimate a learning rate of around 0.02 and then slowly decay it over epochs.
+\item - This means we should let the algorithm chose the learning rate automatically
+}
+
+
 
 \begin{frame}{Conclusion/Final Remarks}{}
 
