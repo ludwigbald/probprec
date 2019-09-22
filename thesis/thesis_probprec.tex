@@ -314,27 +314,37 @@ part 3: - Every step, re-scale the gradients by applying the preconditioner
 The implementation and theoretical work lead to the following proposed changes to the abstract algorithm.
 \subsubsection{Parameter groups}
 Mainly due to technical reasons (see \todo{reference chapter}), support was added for parameter groups, but this also yields an interesting theoretical change. The algorithm already treated every parameter layer as an independent task for inversion (???), but estimated a global step size, which was the same for every parameter. With this modification, the algorithm is able to use larger step sizes for parameters that allow for it. In theory, this would allow for faster learning in the direction of those parameters. However, the time to reach total convergence relies on the slowest parameter, not on the fastest. The benefit of this approach in practice remanins to be tested.
+\todo{Connect to sgd. Original algorithm finds single alpha which is the same as normal sgd. Parameter groups allow alpha\_l per layer. \\
+	Convergence statement not as obvious. It depends on many factors but having a more adaptive optimizer could be beneficial.}
+
 \subsubsection{Automatic Assessment of the Hessian's quality}
-In the original algorithm, the Hessian is arbitrarily re-estimated every epoch. Hessian re-estimation is needed, as demonstrated in the original paper, alpha changes over time. The goal of this modification was to expose a measure of how useful/correct the estimated Hessian is, after observing a bit of data. A new estimation proces would be started if the current estimate was worse than a certain threshold. Multiple approaches were tried. A key point of trouble was the variance-less estimate of the Hessian. The original paper mentions that the Hessian is taken as the mean of a multivariate Gaussian distribution, but it fails to take this distribution's variance into account. Instead, it just assumes this Hessian is the optimal choice.
+In the original algorithm, the Hessian is arbitrarily re-estimated every epoch. Hessian re-estimation is needed, as demonstrated in the original paper, \todo{alpha should refer to an equation or as the scalar diagonal of the approximation.}alpha changes over time. The goal of this modification was to expose a measure of how useful/correct the estimated Hessian is, after observing a bit of data. A new estimation proces would be started if the current estimate was worse than a certain threshold. Multiple approaches were tried. A key point of trouble was the variance-less estimate of the Hessian. The original paper mentions that the Hessian is taken as the mean of a multivariate Gaussian distribution, but it fails to take this distribution's variance into account. Instead, it just assumes this Hessian is the optimal choice. \todo{The mean is the maximum a-posteriori (MAP) estimate i.e. the value that best fits the observations to the prior belief.
+	It does take uncertainty into account (albeit unfounded but practical). The full covariance would be intractable so it fits a diagonal estimate for the covariance. }
 - Comparing the predicted gradient to the actual observed gradient.
 
 - Maybe: Automatic restart of the estimation process, once the old Hessian is determined to be out of date.
+\todo{Good idea but difficult to formulate mathematically}
 
 \subsubsection{Focusing on the adaptive learning rate}
-Deep learning problems are very high-dimensional and usually feature many (10\%) large eigenvalues. For performance reasons, the proposed algorithm however estimates only a low-rank preconditioner. When applied, the preconditioner therefore might not reduce the problem's condition number, or might reduce it only by a little bit. It appears likely that the added computational need of constructing and repeatedly applying the preconditioner does not come with a performance benefit. Therefore I propose abandoning the preconditioning part of the algorithm. In experiment x \todo{ref} this assumption is tested.
+Deep learning problems are very high-dimensional and usually feature many (10\%) \todo{10\% of what? dimensionality, batch size?
+	Suggestion: 10\% still high rank and pre-conditioner requires higher rank for usefulness. Most likely a proper pre-conditioner would eat up the computational benefits.}
+large eigenvalues. For performance reasons, the proposed algorithm however estimates only a low-rank preconditioner. When applied, the preconditioner therefore might not reduce the problem's condition number, or might reduce it only by a little bit. It appears likely that the added computational need of constructing and repeatedly applying the preconditioner does not come with a performance benefit. Therefore I propose abandoning the preconditioning part of the algorithm. In experiment x \todo{ref} this assumption is tested.
 
 \section{Documentation for the class Preconditioner}
 \subsection{Overview}
+\todo[inline]{The developed class is an easy-to-use wrapper for the functionalty. 
+	Should mention that it is implemeted in pytorch.}
 \begin{markdown}
 The class `Preconditioner` provides an easy way to use the probabilistic preconditioning algorithm proposed by \cite{roos2019active}.
 This is how to use it:
 
 1. Get the source file from the repo and include it in your project
 2. Initialize the preconditioner like any other optimizer. There are reasonable default values for the hyperparameters.
-3. Depending on the version you're using, manually call `start_estimate()_` at the beginning of each epoch.
+3. Depending on the version you're using, manually call `start_estimate()` at the beginning of each epoch.
 
 In the next section there is more detailed documentation for the class, its attributes and functions.
 \end{markdown}
+\todo{Could include a runscript with  necessary changes in the appendix.}
 
 \subsection{Methods}
 \begin{markdown}
@@ -358,6 +368,14 @@ In the next section there is more detailed documentation for the class, its attr
 	
 \end{markdown}
 \subsection{Implementation Details}
+\todo[inline]{This part is a bit dense and difficult to follow along. You could add a paragraph instead of line breaks with informative titles.
+	Maybe something along the lines:
+	- Python standard
+	- Inherited Optimizer
+	- Contained Optimizer
+	- Data logging
+	- Development vs Application
+	- Remedied implementation}
 \begin{markdown}
 In the following, I will highlight and explain some key software design decisions I took while implementing and refactoring the algorithm provided by Filip.
 The main goals for the implementation were to make the algorithm as easy to use as possible for a standard usecase, while maintaining the flexibility I needed to research specific variations. The changes to the abstract algorithm are discussed in detail in \todo{ref} The simple, default usecase was a user trying to use the preconditioner as proposed in the original paper, to optimize a neural network model. In this case, the necessary changes to the user's existing code should be minimal, with hyperparameters set to reasonable default values. For development, it is important to understand the algorithm's structure and the code and be able to easily modify the algorithm without disturbing other parts.
@@ -374,32 +392,44 @@ In order to change behavior of the class during development and research, the be
 
 Some bugs were also fixed. Previously, the algorithm skipped some minibatches, which was a problem in the small `quadratic_deep` dataset.
 \end{markdown}
-
+\todo[inline]{Make clearer the optimizer input, this is a large contribution that I only mentioned in my paper but never implemented. 
+	Maybe include the Preconditioner class definition as a verbatim environment and discuss the inputs.   
+	
+	And maybe also a pseudo code for the algorithm.}
 
 \section{Test Problems}
-For most experiments, the standard test problems included in DeepOBS were used, namely
-The test problems used were deep learning models.
-- mnist/fmnist
-- cifar10
-- quadratic\_deep
+The optimizers were tested on some of the testproblems that come with DeepOBS and had a stable pytorch implementation at the time of testing. DeepOBS specifies the data set, the model architecture and initialization, the loss function and regularization. It also proposes a standard batch size that is shared by all baselines.
 
+Before training, the data set is split into a validation set for hyperparameter tuning, a training set and a holdout test set.
 
-For some experiments, I used a seperate implementation of a cifar10 test problem.
+The DeepOBS testproblem \verb|fmnist_2c2d| uses the Fashion-MNIST data set\todo{cite FMNIST}, which consists of 60000 labeled greyscale $32 \times 32$ pixel images of ten classes of fashion items. The model used consists of two convolutional layers, each followed by max-pooling, a fully connected layer with ReLU activation functions, and a 10-unit softmax output layer. The initial weights are drawn from a truncated normal distribution with $\sigma = 0.05$ and initial biases are set to 0.05. As a loss function, cross entropy loss is used, without any regularization term. The standard batch size is 128.
+
+The DeepOBS testproblem \verb|cifar10_3c3d| uses the CIFAR10 data set\todo{cite CIFAR10}, which consists of 60000 labeled RGB $32 \times 32$ pixel images of ten classes of objects. The model used consists of three convolutional layers with ReLU activation functions, each followed by max-pooling, two fully connected layers with respectively 512 and 256 units and ReLU activation functions, and a 10-unit softmax output layer. The initial weights are initialized using Xavier initialization and initial biases are set to 0.0. As a loss function, cross entropy loss is used, with L2 regularization on the weights (but not the biases) with a factor of 0.002. The standard batch size is 128.
+
+For the experiment investigating computational complexity, DeepOBS uses the built-in testproblem \verb|mnist_mlp|, which is a multi-layer perceptron that consists of four layers with 1000, 500, 100 and 10 unis respectively, using ReLU activation on the first three layers and softmax on the output layer. Initial weights are drawn from a truncated normal distribution ($\sigma = 0.03$)and the initial biases are set to 0.0. As a loss function, cross entropy loss is used, without any regularization term. The standard batch size is 128.
+
+In the experiment investigating different initialization methods, the goal was to replicate the findings from \todo{cite filip}, so the exact same model was used. It is very similar to the one that comes with DeepOBS. There are three convolutional layers, each followed by ReLU and maxpooling. After that, there are three fully-connected layers preceded by ReLUs. As a loss function, cross-entropy loss is used, with regularization as in \verb|cifar10_3c3d|.
+Batch size and initialization methods are varied.
+
+\done{Describe the models/architectures used for the datasets.}
 
 \section{DeepOBS baselines}
-Baselines are taken from XXX, well-tuned hyperparameters, but no schedule or such things. Some baselines come with variance, others (Nesterov) don't.
+When using a standardized testing procedure like the one provided by DeepOBS, it is not necessary to run every optimizer, as reproducibility of the results is guaranteed across different hardware. This saves a lot of work and energy that every single researcher otherwise would have needed to spend.
+DeepOBS comes with results from many established and well-studied optimizers as a baseline, and it is easy to compare a new optimizer against them. Their hyperparameters are tuned for each testproblem, but some standard techniques like hyperparameter schedules are not available.
 
+\done[inline]{Mention that one advantage of a package like DeepOBS offers baselines for various metrics. 
+	What kind of baselines are used? Optimizers, optimization curves, hyperparameters?}
 \section{Technical details}
 The experiments were run on the TCML cluster at the University of Tübingen.
-A Singularity container was set up on Ubuntu 16.4 LTS with python 3.5, pytorch (version) and DeepOBS (see Appendix for Singulariy recipe).
-Computation was distributed over multiple GPU compute nodes using the workload manager Slurm.
+A Singularity container was set up on Ubuntu 16.4 LTS with python 3.5, pytorch (version) and DeepOBS (see Appendix for Singulariy recipe\todo{append recipe}).
+Computation was distributed over multiple GPU compute nodes using the workload manager Slurm. Every job had access to 4 CPU cores (Intel XEON CPU E5-2650 v4), 3GB of RAM, and 1 GPU (GeForce GTX 1080 Ti).
+
+
 During development, I used git for distributed version control.
 
-Other optimizers like Adam and SGD are taken from the current, but unpublished DeepOBS baselines.
+\done{Include specific hardware details}
 
-
-
-\chapter{Experiment}
+\chapter{Experiments}
 \section{Experiment 1: Preconditioning}
 \begin{markdown}
 In order to investigate the effect on training performance of the proposed preconditioning algorithm, two similar, but distinct versions were used. The full algorithm as described in section \todo{cite} as `PreconditionedSGD` and the same algorithm, which does everything in the same way except for applying the preconditioner at every SGD step, called `AdaptiveSGD`. This was achieved by subclassing and overwriting the `_apply_precenditioner()` method with an empty method. Those two optimizers were tested on the DeepOBS testproblems `cifar10_3c3d` and `fmnist_2c2d`, using the standard settings. 
@@ -417,6 +447,8 @@ Another finding is that the variance of PreconditionedSGD and AdaptiveSGD is lar
 
 \section{Experiment 2: Computational Complexity}
 \begin{markdown}
+\todo[inline]{make clear we're measuring wallclock time here. CPU time would also be interesting}
+\todo[inline]{Mention that CPU time would also be interesting. Maybe as a proposition for DeepOBS?}
 Wallclock time is an important metric for practitioners. To the practicioner it is important how much time, energy and money the training of a model costs. It is however difficult to interpret in experiment, because it depends on outside factors like hardware configuration, system load and other sources of statistical noise. DeepOBS provides a script that allows to compare the runtime of an optimizer against the runtime of SGD, run as a baseline on the same problem and the same hardware.
 
 The three investigated optimizers were `PreconditionedSGD` and `AdaptiveSGD`, as defined in the previous experiment, and `OnlyAdaptiveSGD`, which only estimates the prior and constructs a step size. `OnlyAdaptiveSGD` is a more efficient version of `AdaptiveSGD`, which also constructs the estimate for the Hessian and the precondiotioner itself, but does not use this information. Once again, `OnlyAdaptiveSGD` is a subclass of `PreconditionedSGD`, but with some knocked-out functions.
@@ -426,6 +458,7 @@ The testproblem used was the default value set by DeepOBS, `mnist_mlp`. Every op
 
 The results are presented in figure \ref{fig:exp_perf_prec}. As expected, the more computations an optimizer does, the more time it takes to run.
 \verb|PreconditionedSGD| was the slowest optimizer, taking an average of 2.39 ($SD = 0.36$) times as long as SGD, followed by \verb|AdaptiveSGD|, which required 1.87 ($SD = 0.25$) times the runtime of SGD. \verb|OnlyAdaptiveSGD| took about as much time as SGD, with a mean time of 1.00 ($SD = 0.07$) the time of SGD. A standard deviation for SGD is not given in the current version DeepOBS.
+\todo{Mention Adam/Momentum. Maybe in the DeepOBS paper?}
 
 
 \begin{figure}
@@ -441,11 +474,12 @@ The results are presented in figure \ref{fig:exp_perf_prec}. As expected, the mo
 \cite{roos2019active} report that their implementation of the algorithm includes a hyperparameter for the manual first-epoch learning rate, because the learning rate constructed by the algorithm would be so high that the model diverges in the first epochs. Using the proposed implementation, I was not able to replicate this finding. On all tested problems included in DeepOBS, using the constructed learning rate for the first epoch lead the algorithm to eventual convergence. The authors used a model very similar to the one used in DeepOBS' testproblem \verb|cifar10_3c3d|. Upon closer inspection, the main difference was that DeepOBS initializes the weights explicitly, while the authors used the built-in pytorch initialization functions.
 In order to investigate the effect of initialization, DeepOBS was modied to include the original net, either with explicit DeepOBS or implicit pytorch initialization. This model was then trained for both variations, with a batch size of 64 and 128, for five epochs, for each of 10 random seed values.
 As is presented in figure \ref{fig:exp_init}, while the initialization method certainly plays a big role in training performance, neither initialization method and neither batch size lead to a diverging run.
-
+\todo{Add new version using bs 32, explain results}
+\todo[inline]{rearrange figure into 2x2}
 \begin{figure}
 	\centering \hspace{-1,5cm}
 	\input{images/exp_init.pgf}
-	\caption{PreconditionedSGD on a cifar10 net. For both batch size 64 and 128, the preconditioner converges. The initialization method has an effect, but the optimizer handles them fine (on this testproblem.)}
+	\caption{PreconditionedSGD on a cifar10 net, comparing initialization methods. The algorithm is stable regardless of batch size and initialization method.}
 	\label{fig:exp_init}
 	
 \end{figure}
@@ -464,7 +498,7 @@ Both SGD and \verb|PreconditionedSGD| with an optimal choice for learning rate a
 \begin{figure}
 	\centering \hspace{-1,5cm}
 	\input{images/exp_lr_sens.pgf}
-	\caption{The originally proposed algorithm has an optional hyperparameter "learning rate", which is used as SGD's learning rate in the first epoch. Below a certain model-specific threshold, it performs just as well as the constructed learning rate. Over that threshold, it diverges in the first epoch.}
+	\caption{The originally proposed algorithm has an optional hyperparameter "learning rate", which is used as SGD's learning rate in the first epoch. Below a certain model-specific threshold, it performs just as well as the constructed learning rate. Over that threshold, it diverges in the first epoch. }
 	\label{fig:exp_lr_sens}
 \end{figure}
 
@@ -481,6 +515,7 @@ Another possible reason that SGD outperforms the preconditioner is that while es
 
 
 In experiment 2, the performance penalty was investigated. The authors report that the cost of building the rank 2 approximation accounted for 2-5\% of the total computational cost per epoch, using a batch size of 32 on the training subset of CIFAR-10. This number does not tell the whole story. This thesis adds to this finding the performance penalty of estimating the Hessian and applying the preconditioner. As DeepOBS splits the data into three subsets (validation for hyperparameter tuning, training and testing), the training set is smaller. Using the DeepOBS standard batch size of 128, there are fewer minibatches per epoch, which means the estimation of the Hessian on the same number of steps uses a larger proportion of total training time. In this setting, using the preconditioner incurs a computational cost of more than double that of SGD. While the algorithm can be further optimized for performance, for example by moving all computations on the GPU, that's a big difference in computational cost. Calculating only the adaptive step size might be a better idea, as that incurs no significant performance penalty while achieving better accuracies.
+\todo[inline]{So estimating the Hessian with B=128 costs the same as 2 epochs of sgd? Or is it referring to applying the preconditioner over an epoch. The latter makes sense but can be remedied and is why it should rather be compared to adam in cost.}
 
 Experiment 3 and 4 show that it can be a good idea to rely on the algorithm constructing a learning rate. While the achieved accuracies are a bit worse than those of well-tuned SGD, the trade-off of not having to do the expensive tuning process can be worth the tradeoff.
 The runs in experiment 3 were only done for a small number of test problem/hyperparameter combinations. There is no guarantee that the found stability translates to other kinds of problems, so it is probably useful to keep the option of setting an initial learning rate.
@@ -505,8 +540,35 @@ In this thesis, I present an implementation of the probabilistic preconditioning
 
 
 \appendix %% Start the appendices.
-\chapter{An appendix}
-Here you can insert the appendices of your thesis.
+\chapter{Code}
+\section{Singularity build recipe}
+\begin{verbatim}
+#header
+Bootstrap: docker
+From: ubuntu:16.04
+
+#Sections
+
+%environment
+# set environment variables
+
+%post
+#commands executed inside the container after os has been installed. Used for setup of the container
+
+apt-get -y update
+apt-get -y install python3-pip git python3-tk
+
+python3 --version
+
+pip3 install --upgrade pip
+pip install torch torchvision
+pip install git+https://github.com/abahde/DeepOBS.git@v2.0.0-beta#egg=deepobs
+
+\end{verbatim}
+This build recipe was used to build the Singularity container by invoking \verb|sudo singularity build|
+
+
+\section{Runscript}
 
 \addcontentsline{toc}{chapter}{References}
 \bibliographystyle{apalike}

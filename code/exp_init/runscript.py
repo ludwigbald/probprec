@@ -131,9 +131,9 @@ phyperparams = {'lr': {"type": float, 'default': None}}
 # create the runner instance
 prunner = SORunner(poptimizer_class, phyperparams)
 pyt.testproblems.cifar10_3c3d.set_up = setup_with_init
-prunner.run(testproblem='cifar10_3c3d', num_epochs = 5)
+prunner.run(testproblem='cifar10_3c3d', num_epochs = 5, batch_size = 32)
 
 
 prunner = SORunner(PreconditionedSGD_noinit, phyperparams)
 pyt.testproblems.cifar10_3c3d.set_up = setup_no_init
-prunner.run(testproblem='cifar10_3c3d', num_epochs = 5)
+prunner.run(testproblem='cifar10_3c3d', num_epochs = 5, batch_size = 32)

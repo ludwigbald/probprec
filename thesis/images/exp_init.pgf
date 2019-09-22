@@ -5,39 +5,39 @@ every axis plot post./append style={line width = 1pt}
 \definecolor{color0}{rgb}{0.12156862745098,0.466666666666667,0.705882352941177}
 \definecolor{color1}{rgb}{1,0.498039215686275,0.0549019607843137}
 \definecolor{color2}{rgb}{0.172549019607843,0.627450980392157,0.172549019607843}
-\definecolor{color3}{rgb}{0.83921568627451,0.152941176470588,0.156862745098039}
 
-\begin{groupplot}[group style={group size=1 by 4}]
+\begin{groupplot}[group style={group size=2 by 4}]
 \nextgroupplot[
-height=4cm,
-legend style={font=\footnotesize, at={(0.5 ,0)},yshift=-1.5cm,anchor=north,nodes=right},
+height=5cm,
+legend style={font=\footnotesize, at={(0 ,0)},xshift = -0.4cm, yshift=-1.5cm,anchor=north,nodes=right},
 tick align=outside,
+tick pos=both,
 tick pos=left,
-tick pos=left,
+title={DeepOBS init},
 width=\figurewidth,
 x grid style={white!69.01960784313725!black},
-xmin=-0.25, xmax=5.25,
+xmin=0, xmax=5,
 xtick style={color=black},
 y grid style={white!69.01960784313725!black},
 ylabel={test loss},
-ymin=1.06718993000966, ymax=3.71778309920945,
+ymin=1, ymax=4,
 ytick style={color=black}
 ]
 \path [fill=color0, fill opacity=0.3]
-(axis cs:0,2.65934388556788)
---(axis cs:0,2.65828571828266)
---(axis cs:1,1.9267959527913)
---(axis cs:2,1.56488130785738)
---(axis cs:3,1.37845804750606)
---(axis cs:4,1.26513021248347)
---(axis cs:5,1.18767143770056)
---(axis cs:5,1.35754002386793)
---(axis cs:5,1.35754002386793)
---(axis cs:4,1.40932189619621)
---(axis cs:3,1.51621271526515)
---(axis cs:2,1.70138665692142)
---(axis cs:1,2.10598227774744)
---(axis cs:0,2.65934388556788)
+(axis cs:0,3.59730157452197)
+--(axis cs:0,3.57355904994421)
+--(axis cs:1,2.33561101103167)
+--(axis cs:2,1.98779030259002)
+--(axis cs:3,1.76371659968136)
+--(axis cs:4,1.64958983093498)
+--(axis cs:5,1.54204444317621)
+--(axis cs:5,1.69541111850446)
+--(axis cs:5,1.69541111850446)
+--(axis cs:4,1.79300770706858)
+--(axis cs:3,1.8914149048696)
+--(axis cs:2,2.0794771600976)
+--(axis cs:1,2.52643459647403)
+--(axis cs:0,3.59730157452197)
 --cycle;
 
 \path [fill=color1, fill opacity=0.3]
@@ -58,6 +58,100 @@ ytick style={color=black}
 --cycle;
 
 \path [fill=color2, fill opacity=0.3]
+(axis cs:0,3.59730155764735)
+--(axis cs:0,3.57355905077144)
+--(axis cs:1,2.72861131283476)
+--(axis cs:2,2.43169549440986)
+--(axis cs:3,2.30304297342161)
+--(axis cs:4,2.20698813363396)
+--(axis cs:5,2.16588996519467)
+--(axis cs:5,2.30378595750479)
+--(axis cs:5,2.30378595750479)
+--(axis cs:4,2.3626354778896)
+--(axis cs:3,2.42471748701626)
+--(axis cs:2,2.57048604231355)
+--(axis cs:1,2.83166649029282)
+--(axis cs:0,3.59730155764735)
+--cycle;
+
+\addplot [ultra thick, color0]
+table {%
+0 3.58543031223309
+1 2.43102280375285
+2 2.03363373134381
+3 1.82756575227548
+4 1.72129876900178
+5 1.61872778084034
+};
+\addplot [very thick, color1, opacity=0.8, dashed]
+table {%
+0 3.58543032759275
+1 2.62200925762837
+2 2.25943890634256
+3 2.12105887348835
+4 2.00250096145349
+5 1.92243371896255
+};
+\addplot [very thick, color2, opacity=0.8, dashed]
+table {%
+0 3.58543030420939
+1 2.78013890156379
+2 2.5010907683617
+3 2.36388023021894
+4 2.28481180576178
+5 2.23483796134973
+};
+
+\nextgroupplot[
+height=5cm,
+legend style={font=\footnotesize, at={(0 ,0)},xshift = -0.4cm, yshift=-1.5cm,anchor=north,nodes=right},
+tick align=outside,
+tick pos=both,
+tick pos=left,
+title={PyTorch default init},
+width=\figurewidth,
+x grid style={white!69.01960784313725!black},
+xmin=0, xmax=5,
+xtick style={color=black},
+y grid style={white!69.01960784313725!black},
+ymin=1, ymax=4,
+ytick style={color=black}
+]
+\path [fill=color0, fill opacity=0.3]
+(axis cs:0,2.65934389660457)
+--(axis cs:0,2.65828572680852)
+--(axis cs:1,1.77237089771476)
+--(axis cs:2,1.43221190044726)
+--(axis cs:3,1.21194669703827)
+--(axis cs:4,1.11588334061734)
+--(axis cs:5,1.02283827315052)
+--(axis cs:5,1.12968645122293)
+--(axis cs:5,1.12968645122293)
+--(axis cs:4,1.18341255628572)
+--(axis cs:3,1.30094934143896)
+--(axis cs:2,1.58878257935415)
+--(axis cs:1,1.90115132241691)
+--(axis cs:0,2.65934389660457)
+--cycle;
+
+\path [fill=color1, fill opacity=0.3]
+(axis cs:0,2.65934388556788)
+--(axis cs:0,2.65828571828266)
+--(axis cs:1,1.9267959527913)
+--(axis cs:2,1.56488130785738)
+--(axis cs:3,1.37845804750606)
+--(axis cs:4,1.26513021248347)
+--(axis cs:5,1.18767143770056)
+--(axis cs:5,1.35754002386793)
+--(axis cs:5,1.35754002386793)
+--(axis cs:4,1.40932189619621)
+--(axis cs:3,1.51621271526515)
+--(axis cs:2,1.70138665692142)
+--(axis cs:1,2.10598227774744)
+--(axis cs:0,2.65934388556788)
+--cycle;
+
+\path [fill=color2, fill opacity=0.3]
 (axis cs:0,2.65934387940532)
 --(axis cs:0,2.65828571955458)
 --(axis cs:1,2.1375490651651)
@@ -74,42 +168,25 @@ ytick style={color=black}
 --(axis cs:0,2.65934387940532)
 --cycle;
 
-\path [fill=color3, fill opacity=0.3]
-(axis cs:0,3.59730155764734)
---(axis cs:0,3.57355905077144)
---(axis cs:1,2.72861131283476)
---(axis cs:2,2.43169549440986)
---(axis cs:3,2.30304297342161)
---(axis cs:4,2.20698813363396)
---(axis cs:5,2.16588996519467)
---(axis cs:5,2.30378595750479)
---(axis cs:5,2.30378595750479)
---(axis cs:4,2.3626354778896)
---(axis cs:3,2.42471748701626)
---(axis cs:2,2.57048604231355)
---(axis cs:1,2.83166649029282)
---(axis cs:0,3.59730155764734)
---cycle;
-
-\addplot [very thick, color0]
+\addplot [ultra thick, color0]
+table {%
+0 2.65881481170654
+1 1.83676111006584
+2 1.51049723990071
+3 1.25644801923862
+4 1.14964794845153
+5 1.07626236218673
+};
+\addplot [very thick, color1, opacity=0.8, dashed]
 table {%
 0 2.65881480192527
 1 2.01638911526937
 2 1.6331339823894
 3 1.44733538138561
 4 1.33722605433984
-5 1.27260573078424
+5 1.27260573078425
 };
-\addplot [very thick, color1]
-table {%
-0 3.58543032759275
-1 2.62200925762837
-2 2.25943890634256
-3 2.12105887348835
-4 2.00250096145349
-5 1.92243371896255
-};
-\addplot [very thick, color2]
+\addplot [very thick, color2, opacity=0.8, dashed]
 table {%
 0 2.65881479947995
 1 2.24499436662747
@@ -118,50 +195,41 @@ table {%
 4 1.59630856269445
 5 1.54053829679122
 };
-\addplot [very thick, color3]
-table {%
-0 3.58543030420939
-1 2.78013890156379
-2 2.5010907683617
-3 2.36388023021894
-4 2.28481180576178
-5 2.23483796134973
-};
 
 \nextgroupplot[
-height=4cm,
-legend style={font=\footnotesize, at={(0.5 ,0)},yshift=-1.5cm,anchor=north,nodes=right},
+height=5cm,
+legend style={font=\footnotesize, at={(0 ,0)},xshift = -0.4cm, yshift=-1.5cm,anchor=north,nodes=right},
 tick align=outside,
-tick pos=left,
+tick pos=both,
 tick pos=left,
 width=\figurewidth,
 x grid style={white!69.01960784313725!black},
-xmin=-0.25, xmax=5.25,
+xmin=0, xmax=5,
 xtick style={color=black},
 y grid style={white!69.01960784313725!black},
 ylabel={train loss},
-ymin=1.13098261418335, ymax=3.71561760576469,
+ymin=1, ymax=4,
 ytick style={color=black}
 ]
 \path [fill=color0, fill opacity=0.3]
-(axis cs:0,2.65958819148342)
---(axis cs:0,2.65822224338376)
---(axis cs:1,2.0018666247058)
---(axis cs:2,1.64691086100636)
---(axis cs:3,1.45102810193676)
---(axis cs:4,1.3317726224347)
---(axis cs:5,1.24846602289159)
---(axis cs:5,1.42501621001223)
---(axis cs:5,1.42501621001223)
---(axis cs:4,1.47229658123856)
---(axis cs:3,1.58507025235393)
---(axis cs:2,1.77300975312615)
---(axis cs:1,2.18133563128905)
---(axis cs:0,2.65958819148342)
+(axis cs:0,3.59813419146963)
+--(axis cs:0,3.57458446734444)
+--(axis cs:1,2.4357676650697)
+--(axis cs:2,2.06148877007218)
+--(axis cs:3,1.83308965792479)
+--(axis cs:4,1.69925225667363)
+--(axis cs:5,1.58579587359929)
+--(axis cs:5,1.74575953975996)
+--(axis cs:5,1.74575953975996)
+--(axis cs:4,1.85499776861708)
+--(axis cs:3,1.96510553192414)
+--(axis cs:2,2.15490008889721)
+--(axis cs:1,2.63270410694387)
+--(axis cs:0,3.59813419146963)
 --cycle;
 
 \path [fill=color1, fill opacity=0.3]
-(axis cs:0,3.59813419705645)
+(axis cs:0,3.59813419705644)
 --(axis cs:0,3.5745844593123)
 --(axis cs:1,2.63318237731678)
 --(axis cs:2,2.28234222813806)
@@ -174,7 +242,100 @@ ytick style={color=black}
 --(axis cs:3,2.27224470311017)
 --(axis cs:2,2.40553587193925)
 --(axis cs:1,2.83791340168646)
---(axis cs:0,3.59813419705645)
+--(axis cs:0,3.59813419705644)
+--cycle;
+
+\path [fill=color2, fill opacity=0.3]
+(axis cs:0,3.5981341791581)
+--(axis cs:0,3.57458446559538)
+--(axis cs:1,2.8408677820149)
+--(axis cs:2,2.53439090834454)
+--(axis cs:3,2.39656100778736)
+--(axis cs:4,2.3000222180576)
+--(axis cs:5,2.24650708184006)
+--(axis cs:5,2.40655254714786)
+--(axis cs:5,2.40655254714786)
+--(axis cs:4,2.47102529035332)
+--(axis cs:3,2.54037848358243)
+--(axis cs:2,2.69087937518332)
+--(axis cs:1,2.94700796566576)
+--(axis cs:0,3.5981341791581)
+--cycle;
+
+\addplot [ultra thick, color0]
+table {%
+0 3.58635932940703
+1 2.53423588600678
+2 2.1081944294847
+3 1.89909759492446
+4 1.77712501264535
+5 1.66577770667963
+};
+\addplot [very thick, color1, opacity=0.8, dashed]
+table {%
+0 3.58635932818437
+1 2.73554788950162
+2 2.34393905003866
+3 2.20613592649118
+4 2.07915110473449
+5 1.98603833738046
+};
+\addplot [very thick, color2, opacity=0.8, dashed]
+table {%
+0 3.58635932237674
+1 2.89393787384033
+2 2.61263514176393
+3 2.46846974568489
+4 2.38552375420546
+5 2.32652981449396
+};
+
+\nextgroupplot[
+height=5cm,
+legend style={font=\footnotesize, at={(0 ,0)},xshift = -0.4cm, yshift=-1.5cm,anchor=north,nodes=right},
+tick align=outside,
+tick pos=both,
+tick pos=left,
+width=\figurewidth,
+x grid style={white!69.01960784313725!black},
+xmin=0, xmax=5,
+xtick style={color=black},
+y grid style={white!69.01960784313725!black},
+ymin=1, ymax=4,
+ytick style={color=black}
+]
+\path [fill=color0, fill opacity=0.3]
+(axis cs:0,2.65958818210532)
+--(axis cs:0,2.65822224848255)
+--(axis cs:1,1.85743711374536)
+--(axis cs:2,1.49555258182741)
+--(axis cs:3,1.27263707712006)
+--(axis cs:4,1.16855713279602)
+--(axis cs:5,1.0731693963508)
+--(axis cs:5,1.17538623096162)
+--(axis cs:5,1.17538623096162)
+--(axis cs:4,1.24387103638569)
+--(axis cs:3,1.35414232658939)
+--(axis cs:2,1.67377653002376)
+--(axis cs:1,1.99220930408946)
+--(axis cs:0,2.65958818210532)
+--cycle;
+
+\path [fill=color1, fill opacity=0.3]
+(axis cs:0,2.65958819148342)
+--(axis cs:0,2.65822224338376)
+--(axis cs:1,2.00186662470579)
+--(axis cs:2,1.64691086100636)
+--(axis cs:3,1.45102810193676)
+--(axis cs:4,1.3317726224347)
+--(axis cs:5,1.24846602289159)
+--(axis cs:5,1.42501621001223)
+--(axis cs:5,1.42501621001223)
+--(axis cs:4,1.47229658123856)
+--(axis cs:3,1.58507025235393)
+--(axis cs:2,1.77300975312615)
+--(axis cs:1,2.18133563128905)
+--(axis cs:0,2.65958819148342)
 --cycle;
 
 \path [fill=color2, fill opacity=0.3]
@@ -194,24 +355,16 @@ ytick style={color=black}
 --(axis cs:0,2.65958817585622)
 --cycle;
 
-\path [fill=color3, fill opacity=0.3]
-(axis cs:0,3.5981341791581)
---(axis cs:0,3.57458446559538)
---(axis cs:1,2.8408677820149)
---(axis cs:2,2.53439090834454)
---(axis cs:3,2.39656100778736)
---(axis cs:4,2.3000222180576)
---(axis cs:5,2.24650708184006)
---(axis cs:5,2.40655254714786)
---(axis cs:5,2.40655254714786)
---(axis cs:4,2.47102529035332)
---(axis cs:3,2.54037848358243)
---(axis cs:2,2.69087937518332)
---(axis cs:1,2.94700796566576)
---(axis cs:0,3.5981341791581)
---cycle;
-
-\addplot [very thick, color0]
+\addplot [ultra thick, color0]
+table {%
+0 2.65890521529393
+1 1.92482320891741
+2 1.58466455592559
+3 1.31338970185472
+4 1.20621408459086
+5 1.12427781365621
+};
+\addplot [very thick, color1, opacity=0.8, dashed]
 table {%
 0 2.65890521743359
 1 2.09160112799742
@@ -220,16 +373,7 @@ table {%
 4 1.40203460183663
 5 1.33674111645191
 };
-\addplot [very thick, color1]
-table {%
-0 3.58635932818437
-1 2.73554788950162
-2 2.34393905003866
-3 2.20613592649118
-4 2.07915110473449
-5 1.98603833738046
-};
-\addplot [very thick, color2]
+\addplot [very thick, color2, opacity=0.8, dashed]
 table {%
 0 2.65890521880908
 1 2.28815591243597
@@ -238,48 +382,37 @@ table {%
 4 1.67853523660929
 5 1.61176761037264
 };
-\addplot [very thick, color3]
-table {%
-0 3.58635932237674
-1 2.89393787384033
-2 2.61263514176393
-3 2.46846974568489
-4 2.38552375420546
-5 2.32652981449396
-};
 
 \nextgroupplot[
-height=4cm,
-legend style={font=\footnotesize, at={(0.5 ,0)},yshift=-1.5cm,anchor=north,nodes=right},
+height=5cm,
+legend style={font=\footnotesize, at={(0 ,0)},xshift = -0.4cm, yshift=-1.5cm,anchor=north,nodes=right},
 tick align=outside,
-tick pos=left,
+tick pos=both,
 tick pos=left,
 width=\figurewidth,
 x grid style={white!69.01960784313725!black},
-xmin=-0.25, xmax=5.25,
+xmin=0, xmax=5,
 xtick style={color=black},
 y grid style={white!69.01960784313725!black},
 ylabel={test acc},
-ymin=0.0566693347063754, ymax=0.7133339624688,
-ytick style={color=black},
-ytick={0,0.2,0.4,0.6,0.8},
-yticklabels={0.0,0.2,0.4,0.6,0.8}
+ymin=0.1, ymax=0.75,
+ytick style={color=black}
 ]
 \path [fill=color0, fill opacity=0.3]
-(axis cs:0,0.101726093071793)
---(axis cs:0,0.0961905735948736)
---(axis cs:1,0.290409127399819)
---(axis cs:2,0.44250272315225)
---(axis cs:3,0.517808934515249)
---(axis cs:4,0.558743983653416)
---(axis cs:5,0.589110213449146)
---(axis cs:5,0.6578248827047)
---(axis cs:5,0.6578248827047)
---(axis cs:4,0.633263227885046)
---(axis cs:3,0.591526001382187)
---(axis cs:2,0.520417949924673)
---(axis cs:1,0.380604494395053)
---(axis cs:0,0.101726093071793)
+(axis cs:0,0.11450390773799)
+--(axis cs:0,0.0865177268773948)
+--(axis cs:1,0.459592903614964)
+--(axis cs:2,0.58568863543711)
+--(axis cs:3,0.644874149759254)
+--(axis cs:4,0.67582858196938)
+--(axis cs:5,0.697154000513858)
+--(axis cs:5,0.723479012306654)
+--(axis cs:5,0.723479012306654)
+--(axis cs:4,0.694704270594723)
+--(axis cs:3,0.667705978445875)
+--(axis cs:2,0.621803351742378)
+--(axis cs:1,0.52530292971837)
+--(axis cs:0,0.11450390773799)
 --cycle;
 
 \path [fill=color1, fill opacity=0.3]
@@ -300,23 +433,6 @@ yticklabels={0.0,0.2,0.4,0.6,0.8}
 --cycle;
 
 \path [fill=color2, fill opacity=0.3]
-(axis cs:0,0.101726093071793)
---(axis cs:0,0.0961905735948736)
---(axis cs:1,0.192201181963988)
---(axis cs:2,0.332948595556271)
---(axis cs:3,0.408929386237031)
---(axis cs:4,0.437367154340008)
---(axis cs:5,0.455373722105833)
---(axis cs:5,0.580623874048014)
---(axis cs:5,0.580623874048014)
---(axis cs:4,0.553578358480505)
---(axis cs:3,0.519215645814251)
---(axis cs:2,0.458718071110396)
---(axis cs:1,0.288387760343704)
---(axis cs:0,0.101726093071793)
---cycle;
-
-\path [fill=color3, fill opacity=0.3]
 (axis cs:0,0.11450390773799)
 --(axis cs:0,0.0865177268773948)
 --(axis cs:1,0.394684963873386)
@@ -328,21 +444,21 @@ yticklabels={0.0,0.2,0.4,0.6,0.8}
 --(axis cs:5,0.613215301033007)
 --(axis cs:4,0.601162260614452)
 --(axis cs:3,0.569241017301918)
---(axis cs:2,0.539188979335172)
+--(axis cs:2,0.539188979335173)
 --(axis cs:1,0.43271888228046)
 --(axis cs:0,0.11450390773799)
 --cycle;
 
-\addplot [very thick, color0]
+\addplot [ultra thick, color0]
 table {%
-0 0.0989583333333333
-1 0.335506810897436
-2 0.481460336538461
-3 0.554667467948718
-4 0.596003605769231
-5 0.623467548076923
+0 0.100510817307692
+1 0.492447916666667
+2 0.603745993589744
+3 0.656290064102564
+4 0.685266426282051
+5 0.710316506410256
 };
-\addplot [very thick, color1]
+\addplot [very thick, color1, opacity=0.8, dashed]
 table {%
 0 0.100510817307692
 1 0.451472355769231
@@ -351,16 +467,7 @@ table {%
 4 0.644481169871795
 5 0.666526442307692
 };
-\addplot [very thick, color2]
-table {%
-0 0.0989583333333333
-1 0.240294471153846
-2 0.395833333333333
-3 0.464072516025641
-4 0.495472756410256
-5 0.517998798076923
-};
-\addplot [very thick, color3]
+\addplot [very thick, color2, opacity=0.8, dashed]
 table {%
 0 0.100510817307692
 1 0.413701923076923
@@ -371,40 +478,129 @@ table {%
 };
 
 \nextgroupplot[
-height=4cm,
-legend cell align={left},
-legend style={at={(0.97,0.03)}, anchor=south east, draw=white!80.0!black},
-legend style={font=\footnotesize, at={(0.5 ,0)},yshift=-1.5cm,anchor=north,nodes=right},
+height=5cm,
+legend style={font=\footnotesize, at={(0 ,0)},xshift = -0.4cm, yshift=-1.5cm,anchor=north,nodes=right},
 tick align=outside,
+tick pos=both,
 tick pos=left,
+width=\figurewidth,
+x grid style={white!69.01960784313725!black},
+xmin=0, xmax=5,
+xtick style={color=black},
+y grid style={white!69.01960784313725!black},
+ymin=0.1, ymax=0.75,
+ytick style={color=black}
+]
+\path [fill=color0, fill opacity=0.3]
+(axis cs:0,0.101726093071793)
+--(axis cs:0,0.0961905735948736)
+--(axis cs:1,0.404283590589658)
+--(axis cs:2,0.508586995430517)
+--(axis cs:3,0.619581224981296)
+--(axis cs:4,0.661898259301344)
+--(axis cs:5,0.685327793768693)
+--(axis cs:5,0.720441437000538)
+--(axis cs:5,0.720441437000538)
+--(axis cs:4,0.690225138134553)
+--(axis cs:3,0.652974864762293)
+--(axis cs:2,0.572102107133585)
+--(axis cs:1,0.451064967102649)
+--(axis cs:0,0.101726093071793)
+--cycle;
+
+\path [fill=color1, fill opacity=0.3]
+(axis cs:0,0.101726093071793)
+--(axis cs:0,0.0961905735948736)
+--(axis cs:1,0.290409127399819)
+--(axis cs:2,0.44250272315225)
+--(axis cs:3,0.517808934515249)
+--(axis cs:4,0.558743983653416)
+--(axis cs:5,0.589110213449146)
+--(axis cs:5,0.6578248827047)
+--(axis cs:5,0.6578248827047)
+--(axis cs:4,0.633263227885046)
+--(axis cs:3,0.591526001382187)
+--(axis cs:2,0.520417949924673)
+--(axis cs:1,0.380604494395053)
+--(axis cs:0,0.101726093071793)
+--cycle;
+
+\path [fill=color2, fill opacity=0.3]
+(axis cs:0,0.101726093071793)
+--(axis cs:0,0.0961905735948736)
+--(axis cs:1,0.192201181963988)
+--(axis cs:2,0.332948595556271)
+--(axis cs:3,0.408929386237032)
+--(axis cs:4,0.437367154340008)
+--(axis cs:5,0.455373722105832)
+--(axis cs:5,0.580623874048014)
+--(axis cs:5,0.580623874048014)
+--(axis cs:4,0.553578358480505)
+--(axis cs:3,0.519215645814251)
+--(axis cs:2,0.458718071110396)
+--(axis cs:1,0.288387760343704)
+--(axis cs:0,0.101726093071793)
+--cycle;
+
+\addplot [ultra thick, color0]
+table {%
+0 0.0989583333333333
+1 0.427674278846154
+2 0.540344551282051
+3 0.636278044871795
+4 0.676061698717949
+5 0.702884615384615
+};
+\addplot [very thick, color1, opacity=0.8, dashed]
+table {%
+0 0.0989583333333333
+1 0.335506810897436
+2 0.481460336538461
+3 0.554667467948718
+4 0.596003605769231
+5 0.623467548076923
+};
+\addplot [very thick, color2, opacity=0.8, dashed]
+table {%
+0 0.0989583333333333
+1 0.240294471153846
+2 0.395833333333333
+3 0.464072516025641
+4 0.495472756410256
+5 0.517998798076923
+};
+
+\nextgroupplot[
+height=5cm,
+legend style={font=\footnotesize, at={(0 ,0)},xshift = -0.4cm, yshift=-1.5cm,anchor=north,nodes=right},
+tick align=outside,
+tick pos=both,
 tick pos=left,
 width=\figurewidth,
 x grid style={white!69.01960784313725!black},
 xlabel={epochs},
-xmin=-0.25, xmax=5.25,
+xmin=0, xmax=5,
 xtick style={color=black},
 y grid style={white!69.01960784313725!black},
 ylabel={train acc},
-ymin=0.0611724585816769, ymax=0.692414851736991,
-ytick style={color=black},
-ytick={0,0.2,0.4,0.6,0.8},
-yticklabels={0.0,0.2,0.4,0.6,0.8}
+ymin=0.1, ymax=0.75,
+ytick style={color=black}
 ]
 \path [fill=color0, fill opacity=0.3]
-(axis cs:0,0.103200377658935)
---(axis cs:0,0.0943356800333729)
---(axis cs:1,0.270417431242425)
---(axis cs:2,0.422284618147657)
---(axis cs:3,0.496811549751685)
---(axis cs:4,0.541161952592147)
---(axis cs:5,0.561216267345133)
---(axis cs:5,0.638783732654867)
---(axis cs:5,0.638783732654867)
---(axis cs:4,0.609058399971956)
---(axis cs:3,0.565488129735494)
---(axis cs:2,0.493260253647215)
---(axis cs:1,0.35199843414219)
---(axis cs:0,0.103200377658935)
+(axis cs:0,0.113740474596578)
+--(axis cs:0,0.0898652946341912)
+--(axis cs:1,0.425491531908614)
+--(axis cs:2,0.563587799311228)
+--(axis cs:3,0.619765140633916)
+--(axis cs:4,0.654111734468296)
+--(axis cs:5,0.680681432215451)
+--(axis cs:5,0.708521292143523)
+--(axis cs:5,0.708521292143523)
+--(axis cs:4,0.679361823224011)
+--(axis cs:3,0.645539346545571)
+--(axis cs:2,0.590759155816977)
+--(axis cs:1,0.489312153988822)
+--(axis cs:0,0.113740474596578)
 --cycle;
 
 \path [fill=color1, fill opacity=0.3]
@@ -425,6 +621,102 @@ yticklabels={0.0,0.2,0.4,0.6,0.8}
 --cycle;
 
 \path [fill=color2, fill opacity=0.3]
+(axis cs:0,0.113740474596578)
+--(axis cs:0,0.0898652946341912)
+--(axis cs:1,0.364766315103381)
+--(axis cs:2,0.44962430593114)
+--(axis cs:3,0.513344185503534)
+--(axis cs:4,0.53784824944366)
+--(axis cs:5,0.562681854529349)
+--(axis cs:5,0.588560132650138)
+--(axis cs:5,0.588560132650138)
+--(axis cs:4,0.575392936453776)
+--(axis cs:3,0.54372712859903)
+--(axis cs:2,0.505383706889373)
+--(axis cs:1,0.402160768229952)
+--(axis cs:0,0.113740474596578)
+--cycle;
+
+\addplot [ultra thick, color0]
+table {%
+0 0.101802884615385
+1 0.457401842948718
+2 0.577173477564103
+3 0.632652243589744
+4 0.666736778846154
+5 0.694601362179487
+};
+\addplot [very thick, color1, opacity=0.8, dashed]
+table {%
+0 0.101802884615385
+1 0.41786858974359
+2 0.539453125
+3 0.57685296474359
+4 0.619421073717949
+5 0.647155448717949
+};
+\addplot [very thick, color2, opacity=0.8, dashed]
+table {%
+0 0.101802884615385
+1 0.383463541666667
+2 0.477504006410256
+3 0.528535657051282
+4 0.556620592948718
+5 0.575620993589744
+};
+
+\nextgroupplot[
+height=5cm,
+legend cell align={left},
+legend style={draw=white!80.0!black},
+legend style={font=\footnotesize, at={(0 ,0)},xshift = -0.4cm, yshift=-1.5cm,anchor=north,nodes=right},
+tick align=outside,
+tick pos=both,
+tick pos=left,
+width=\figurewidth,
+x grid style={white!69.01960784313725!black},
+xlabel={epochs},
+xmin=0, xmax=5,
+xtick style={color=black},
+y grid style={white!69.01960784313725!black},
+ymin=0.1, ymax=0.75,
+ytick style={color=black}
+]
+\path [fill=color0, fill opacity=0.3]
+(axis cs:0,0.103200377658935)
+--(axis cs:0,0.0943356800333729)
+--(axis cs:1,0.370832884371329)
+--(axis cs:2,0.481516072332342)
+--(axis cs:3,0.599179988647226)
+--(axis cs:4,0.640909463810663)
+--(axis cs:5,0.668276288319513)
+--(axis cs:5,0.701815859116385)
+--(axis cs:5,0.701815859116385)
+--(axis cs:4,0.670488773368825)
+--(axis cs:3,0.631829626737389)
+--(axis cs:2,0.547850914847145)
+--(axis cs:1,0.419992436141491)
+--(axis cs:0,0.103200377658935)
+--cycle;
+
+\path [fill=color1, fill opacity=0.3]
+(axis cs:0,0.103200377658935)
+--(axis cs:0,0.0943356800333729)
+--(axis cs:1,0.270417431242425)
+--(axis cs:2,0.422284618147657)
+--(axis cs:3,0.496811549751685)
+--(axis cs:4,0.541161952592147)
+--(axis cs:5,0.561216267345133)
+--(axis cs:5,0.638783732654867)
+--(axis cs:5,0.638783732654867)
+--(axis cs:4,0.609058399971956)
+--(axis cs:3,0.565488129735494)
+--(axis cs:2,0.493260253647215)
+--(axis cs:1,0.35199843414219)
+--(axis cs:0,0.103200377658935)
+--cycle;
+
+\path [fill=color2, fill opacity=0.3]
 (axis cs:0,0.103200377658935)
 --(axis cs:0,0.0943356800333729)
 --(axis cs:1,0.176835930964136)
@@ -441,24 +733,17 @@ yticklabels={0.0,0.2,0.4,0.6,0.8}
 --(axis cs:0,0.103200377658935)
 --cycle;
 
-\path [fill=color3, fill opacity=0.3]
-(axis cs:0,0.113740474596578)
---(axis cs:0,0.0898652946341912)
---(axis cs:1,0.364766315103381)
---(axis cs:2,0.449624305931139)
---(axis cs:3,0.513344185503534)
---(axis cs:4,0.53784824944366)
---(axis cs:5,0.562681854529349)
---(axis cs:5,0.588560132650138)
---(axis cs:5,0.588560132650138)
---(axis cs:4,0.575392936453776)
---(axis cs:3,0.54372712859903)
---(axis cs:2,0.505383706889373)
---(axis cs:1,0.402160768229952)
---(axis cs:0,0.113740474596578)
---cycle;
-
-\addplot [very thick, color0]
+\addplot [ultra thick, color0]
+table {%
+0 0.0987680288461538
+1 0.39541266025641
+2 0.514683493589744
+3 0.615504807692308
+4 0.655699118589744
+5 0.685046073717949
+};
+\addlegendentry{Batch Size = 32}
+\addplot [very thick, color1, opacity=0.8, dashed]
 table {%
 0 0.0987680288461538
 1 0.311207932692308
@@ -467,18 +752,8 @@ table {%
 4 0.575110176282051
 5 0.6
 };
-\addlegendentry{pytorch init, bs = 64}
-\addplot [very thick, color1]
-table {%
-0 0.101802884615385
-1 0.41786858974359
-2 0.539453125
-3 0.57685296474359
-4 0.619421073717949
-5 0.647155448717949
-};
-\addlegendentry{DeepOBS init, bs = 64}
-\addplot [very thick, color2]
+\addlegendentry{Batch Size = 64}
+\addplot [very thick, color2, opacity=0.8, dashed]
 table {%
 0 0.0987680288461538
 1 0.22372796474359
@@ -487,17 +762,7 @@ table {%
 4 0.468840144230769
 5 0.495542868589744
 };
-\addlegendentry{pytorch init, bs = 128}
-\addplot [very thick, color3]
-table {%
-0 0.101802884615385
-1 0.383463541666667
-2 0.477504006410256
-3 0.528535657051282
-4 0.556620592948718
-5 0.575620993589744
-};
-\addlegendentry{DeepOBS init, bs = 128}
+\addlegendentry{Batch Size = 128}
 \end{groupplot}
 
 \end{tikzpicture}
