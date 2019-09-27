@@ -141,6 +141,16 @@ I would also like to thank my supervisor Filip De Roos, who was always available
 
 \chapter{Introduction}
 What is this all about?
+- Machine Learning has taken the world by storm. It is already widely used, but the research lacks behind practitioners.
+- Deep Learning is a useful thing
+- SGD is a widely used optimization algorithm. Many variations on SGD have been proposed and sometimes are quicker.
+- Second order methods seem to be crowd's favourites now. They learn quicker as they use more information to find the minimum.
+[Preconditioning...]
+
+
+- Why is it hard to study?
+- This is because the field is hard to study. There are many parameters to fix when designing an experiment or doing theoretical work. Optimizers, Models and lifelike testproblems are not exhaustively studied.
+- DeepOBS fixes some parameters, providing a kind of stable base for running comparable experiments. It provides baselines of standard optimizers to test against.
 
 
 \chapter{Fundamentals and Related Work}
@@ -443,6 +453,12 @@ Another finding is that the variance of PreconditionedSGD and AdaptiveSGD is lar
 	%\missingfigure[figheight=23cm]{Excluded for performance reasons. Many optimizers on fmnist and cifar10}
 	\caption{Both variants of the algorithm perform significantly worse than established alternatives. AdaptiveSGD is better than PreconditionedSGD. On the fmnist model, the baseline optimizers quickly reach a minimum, but then continue to overfit. AdaptiveSGD and PreconditionedSGD arrive at the mimimum much slower, but don't diverge.}
 	\label{fig:exp_preconditioning}
+\end{figure}
+
+\begin{figure}
+	\input{images/exp_tunedalpha.pgf}
+	\caption{This figure shows the preconditioning algorithm, modified to use the same learning rate as well-tuned SGD, for every epoch. It performs slightly worse than standard tuned SGD using the same learning rate.}
+	\label{fig:exp_tunedalpha}
 \end{figure}
 
 \section{Experiment 2: Computational Complexity}

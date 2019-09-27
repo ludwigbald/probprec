@@ -4,16 +4,16 @@ import matplotlib.pyplot as plt
 import tikzplotlib
 import codecs
 
-fig, axess = analyzer.plot_testset_performances("./results",
-            reference_path = "../exp_preconditioning/results",
+fig, axess = analyzer.plot_testset_performances("../exp_preconditioning/results",
+            reference_path = "./results",
             mode = 'final')
 
 axess[0][0].get_legend().remove()
 axess[3][1].legend()
 
-axess[1][0].set_ylim(0.05, 0.25)
-axess[2][0].set_ylim(0.85, 0.93)
-axess[3][0].set_ylim(0.85, 1,0)
+axess[1][1].set_ylim(0.05, 0.25)
+axess[2][1].set_ylim(0.85, 0.93)
+axess[3][1].set_ylim(0.85, 1,0)
 
 axess[0][0].set_ylabel("test loss")
 axess[1][0].set_ylabel("train loss")
@@ -42,6 +42,6 @@ code = tikzplotlib.get_tikz_code(figure = fig,
 
 #catch missed underscores & save
 code = code.replace("\_", "_").replace("_", "\_")
-file = codecs.open("../../thesis/images/exp_preconditioning.pgf", "w", 'utf-8')
+file = codecs.open("../../thesis/images/exp_tunedalpha.pgf", "w", 'utf-8')
 file.write(code)
 file.close()

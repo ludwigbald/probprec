@@ -4,7 +4,7 @@
 #a) Define slurm job parameters
 ####
 
-#SBATCH --job-name=prec
+#SBATCH --job-name=tuneda
 
 #resources:
 
@@ -24,7 +24,7 @@
 # the maximum time the scripts needs to run
 # "minutes:seconds", "hours:minutes:seconds", "days-hours", "days-hours:minutes" and "days-hours:minutes:seconds"
 
-#SBATCH --array=42-51
+#SBATCH --array=46-49
 
 #SBATCH --error=job.%J.err
 # write the error output to job.*jobID*.err
