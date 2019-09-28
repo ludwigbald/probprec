@@ -18,6 +18,10 @@ sgd = Overhead(name = 'SGD',
                overheads = [1, 1, 1, 1, 1],
                mean = 1,
                std = 0)
+adam = Overhead(name = 'Adam',
+                overheads = [0.82807931,1.02359392,1.03193346,1.04567853,1.01347421],
+                mean = 0.9885518872087333,
+                std = 0.08092703856461941)
 precon_sgd = Overhead(name = 'Preconditioned SGD',
                       overheads = [1.87697424, 2.85373601, 2.73309405, 2.23167897, 2.24178113],
                       mean = 2.387452881992991,
@@ -30,7 +34,7 @@ adapt_only_sgd = Overhead(name = 'Only Adaptive SGD',
                       overheads = [0.85414052, 1.04404432, 1.01982744, 1.03676231, 1.03591921],
                       mean = 0.9981387614088575,
                       std = 0.07243252473207047)
-object_list = [sgd, adapt_only_sgd, adapt_sgd, precon_sgd]
+object_list = [adam, adapt_only_sgd, adapt_sgd, precon_sgd]
 
 
 

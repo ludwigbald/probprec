@@ -1,0 +1,6 @@
+ADAM:
+
+** Mean run time SGD: 60.57818131446838
+** Mean run time new optimizer: 59.40465807914734
+** Overhead per run: [0.82807931 1.02359392 1.03193346 1.04567853 1.01347421]
+** Mean overhead: 0.9885518872087333 Standard deviation: 0.08092703856461941

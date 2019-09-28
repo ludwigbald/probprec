@@ -140,18 +140,19 @@ I would also like to thank my supervisor Filip De Roos, who was always available
 
 
 \chapter{Introduction}
+\begin{markdown}
 What is this all about?
+
 - Machine Learning has taken the world by storm. It is already widely used, but the research lacks behind practitioners.
 - Deep Learning is a useful thing
-- SGD is a widely used optimization algorithm. Many variations on SGD have been proposed and sometimes are quicker.
-- Second order methods seem to be crowd's favourites now. They learn quicker as they use more information to find the minimum.
-[Preconditioning...]
-
+- SGD is a widely used optimization algorithm. Many variations on SGD have been proposed and sometimes are quicker, but it's hard to study optimizers.
 
 - Why is it hard to study?
 - This is because the field is hard to study. There are many parameters to fix when designing an experiment or doing theoretical work. Optimizers, Models and lifelike testproblems are not exhaustively studied.
 - DeepOBS fixes some parameters, providing a kind of stable base for running comparable experiments. It provides baselines of standard optimizers to test against.
 
+- Second order methods seem to be crowd's favourites now. They tend to learn quicker as they use more information to find the minimum.
+\end{markdown}
 
 \chapter{Fundamentals and Related Work}
 \section{Probability Basics}
@@ -189,7 +190,22 @@ Matrix-valued Normal distributions can be written as vector-valued normal distri
 		- Hyperparameter tuning
 	- **Training the model**
 	- Application
-	
+
+\end{markdown}	
+Machine Learning is everywhere. It controls which products we buy, which music we discover and it enables recent advances in industrial automation, like autonomous driving. Specialist AI agents routinely outperform the best human players in the hardest games, like Go (\cite{gibney2016google}) or Starcraft II (\cite{vinyals2019alphastar})
+This recent rise of machine learning can be explained by a number of reasons. Enabled by the internet, almost every interaction with a technological system is tracked and recorded. Big Data is available to the masses through Open Data initiatives.
+Learning algorithms have been around for a few decades, but recent advances in hardware meant it became economically feasable to use them on a large scale.
+
+The general process of machine learning can be summarized in multiple steps:
+\\
+
+\begin{markdown}
+1. Gathering Data: The gathered data needs to be prepared and split into multiple sets, one for training, a test set for evaluation and a third set for validation of hyperparameter tuning.
+2. Chosing the model: Depends on the problem. A possible choice for image classification tasks is a Convolutional Deep Neural Network, for example.
+3. Training the model: The model is shown the data, and its parameters are adjusted towards the optimal point. The process is often run multiple times with different optimizer hyperparameters to find the best setting.
+4. Application: The model is applied to new data to see how it performs. If it does well, it can be deployed on the designed task.
+\end{markdown}
+
 \subsection{Loss functions}
 How do we recognize the optimal solution, or even tell which of two solutions is better?
 Depending on the task that the model is meant to perform, we can define different so-called Loss Functions (also called "risk"). These are typically some sort of distance measure between the model's output and the desired, output.
@@ -197,7 +213,6 @@ However, there are other values we care about, such as the model's ability to ge
 \todo[inline]{formula}
 \todo[inline]{split data}
 
-\end{markdown}
 
 \section{Optimization}
 In order to find the optimal values for the parameters of a model, different methods have been proposed. For low-dimensional optimization problems with a small number of parameters, it is often possible to find the optimal parametrization analytically. For high-dimensional optimization problems, the analytical solution often is computationally intractable. As a result, numerical optimization algorithms have emerged.
@@ -403,8 +418,7 @@ In order to change behavior of the class during development and research, the be
 Some bugs were also fixed. Previously, the algorithm skipped some minibatches, which was a problem in the small `quadratic_deep` dataset.
 \end{markdown}
 \todo[inline]{Make clearer the optimizer input, this is a large contribution that I only mentioned in my paper but never implemented. 
-	Maybe include the Preconditioner class definition as a verbatim environment and discuss the inputs.   
-	
+	Maybe include the Preconditioner class definition as a verbatim environment and discuss the inputs.
 	And maybe also a pseudo code for the algorithm.}
 
 \section{Test Problems}
@@ -431,7 +445,7 @@ DeepOBS comes with results from many established and well-studied optimizers as 
 	What kind of baselines are used? Optimizers, optimization curves, hyperparameters?}
 \section{Technical details}
 The experiments were run on the TCML cluster at the University of Tübingen.
-A Singularity container was set up on Ubuntu 16.4 LTS with python 3.5, pytorch (version) and DeepOBS (see Appendix for Singulariy recipe\todo{append recipe}).
+A Singularity container was set up on Ubuntu 16.4 LTS with python 3.5, pytorch (version) and DeepOBS (see Appendix for Singulariy recipe\done{append recipe}).
 Computation was distributed over multiple GPU compute nodes using the workload manager Slurm. Every job had access to 4 CPU cores (Intel XEON CPU E5-2650 v4), 3GB of RAM, and 1 GPU (GeForce GTX 1080 Ti).
 
 
@@ -457,14 +471,15 @@ Another finding is that the variance of PreconditionedSGD and AdaptiveSGD is lar
 
 \begin{figure}
 	\input{images/exp_tunedalpha.pgf}
+	%\missingfigure[figheight=23cm]{Excluded for performance reasons. Many optimizers on fmnist and cifar10}
 	\caption{This figure shows the preconditioning algorithm, modified to use the same learning rate as well-tuned SGD, for every epoch. It performs slightly worse than standard tuned SGD using the same learning rate.}
 	\label{fig:exp_tunedalpha}
 \end{figure}
 
 \section{Experiment 2: Computational Complexity}
-\begin{markdown}
 \todo[inline]{make clear we're measuring wallclock time here. CPU time would also be interesting}
 \todo[inline]{Mention that CPU time would also be interesting. Maybe as a proposition for DeepOBS?}
+\begin{markdown}
 Wallclock time is an important metric for practitioners. To the practicioner it is important how much time, energy and money the training of a model costs. It is however difficult to interpret in experiment, because it depends on outside factors like hardware configuration, system load and other sources of statistical noise. DeepOBS provides a script that allows to compare the runtime of an optimizer against the runtime of SGD, run as a baseline on the same problem and the same hardware.
 
 The three investigated optimizers were `PreconditionedSGD` and `AdaptiveSGD`, as defined in the previous experiment, and `OnlyAdaptiveSGD`, which only estimates the prior and constructs a step size. `OnlyAdaptiveSGD` is a more efficient version of `AdaptiveSGD`, which also constructs the estimate for the Hessian and the precondiotioner itself, but does not use this information. Once again, `OnlyAdaptiveSGD` is a subclass of `PreconditionedSGD`, but with some knocked-out functions.
@@ -473,14 +488,13 @@ The testproblem used was the default value set by DeepOBS, `mnist_mlp`. Every op
 \end{markdown}
 
 The results are presented in figure \ref{fig:exp_perf_prec}. As expected, the more computations an optimizer does, the more time it takes to run.
-\verb|PreconditionedSGD| was the slowest optimizer, taking an average of 2.39 ($SD = 0.36$) times as long as SGD, followed by \verb|AdaptiveSGD|, which required 1.87 ($SD = 0.25$) times the runtime of SGD. \verb|OnlyAdaptiveSGD| took about as much time as SGD, with a mean time of 1.00 ($SD = 0.07$) the time of SGD. A standard deviation for SGD is not given in the current version DeepOBS.
-\todo{Mention Adam/Momentum. Maybe in the DeepOBS paper?}
+\verb|PreconditionedSGD| was the slowest optimizer, taking an average of 2.39 ($SD = 0.36$) times as long as SGD, followed by \verb|AdaptiveSGD|, which required 1.87 ($SD = 0.25$) times the runtime of SGD. \verb|OnlyAdaptiveSGD| took about as much time as SGD, with a mean time of 1.00 ($SD = 0.07$) the time of SGD. \verb|Adam| took about as long as SGD, with a mean time of 0.99 ($SD = 0.08$).
 
 
 \begin{figure}
 	\centering \hspace{-1,5cm}
 	\input{images/exp_perf_prec.pgf}
-	\caption{Wallclock time per epoch in relation to SGD, as tested on the DeepOBS testproblem mnist\_mlp . The original algorithm is the slowest, followed by the version that does everything but apply the preconditioner. Finally, the version that only computes the prior and uses the adaptive step size is as fast as the baseline SGD.}
+	\caption{This figure shows wallclock time per epoch, as tested on the DeepOBS testproblem mnist\_mlp. A score of 1 represents the baseline runtime of SGD. The original algorithm is the slowest. Calculating, but not applying the preconditioner is considerably faster. Only gathering the prior observations is about as fast as SGD and Adam.}
 	\label{fig:exp_perf_prec}
 	
 \end{figure}
@@ -490,8 +504,7 @@ The results are presented in figure \ref{fig:exp_perf_prec}. As expected, the mo
 \cite{roos2019active} report that their implementation of the algorithm includes a hyperparameter for the manual first-epoch learning rate, because the learning rate constructed by the algorithm would be so high that the model diverges in the first epochs. Using the proposed implementation, I was not able to replicate this finding. On all tested problems included in DeepOBS, using the constructed learning rate for the first epoch lead the algorithm to eventual convergence. The authors used a model very similar to the one used in DeepOBS' testproblem \verb|cifar10_3c3d|. Upon closer inspection, the main difference was that DeepOBS initializes the weights explicitly, while the authors used the built-in pytorch initialization functions.
 In order to investigate the effect of initialization, DeepOBS was modied to include the original net, either with explicit DeepOBS or implicit pytorch initialization. This model was then trained for both variations, with a batch size of 64 and 128, for five epochs, for each of 10 random seed values.
 As is presented in figure \ref{fig:exp_init}, while the initialization method certainly plays a big role in training performance, neither initialization method and neither batch size lead to a diverging run.
-\todo{Add new version using bs 32, explain results}
-\todo[inline]{rearrange figure into 2x2}
+\todo{Talk about new version using bs 32, explain results}
 \begin{figure}
 	\centering \hspace{-1,5cm}
 	\input{images/exp_init.pgf}
@@ -531,7 +544,8 @@ Another possible reason that SGD outperforms the preconditioner is that while es
 
 
 In experiment 2, the performance penalty was investigated. The authors report that the cost of building the rank 2 approximation accounted for 2-5\% of the total computational cost per epoch, using a batch size of 32 on the training subset of CIFAR-10. This number does not tell the whole story. This thesis adds to this finding the performance penalty of estimating the Hessian and applying the preconditioner. As DeepOBS splits the data into three subsets (validation for hyperparameter tuning, training and testing), the training set is smaller. Using the DeepOBS standard batch size of 128, there are fewer minibatches per epoch, which means the estimation of the Hessian on the same number of steps uses a larger proportion of total training time. In this setting, using the preconditioner incurs a computational cost of more than double that of SGD. While the algorithm can be further optimized for performance, for example by moving all computations on the GPU, that's a big difference in computational cost. Calculating only the adaptive step size might be a better idea, as that incurs no significant performance penalty while achieving better accuracies.
-\todo[inline]{So estimating the Hessian with B=128 costs the same as 2 epochs of sgd? Or is it referring to applying the preconditioner over an epoch. The latter makes sense but can be remedied and is why it should rather be compared to adam in cost.}
+\todo[inline]{Clarify: So estimating the Hessian with B=128 costs the same as 2 epochs of sgd? Or is it referring to applying the preconditioner over an epoch. The latter makes sense but can be remedied and is why it should rather be compared to adam in cost. --> DeepOBS paper?}
+\todo[inline]{RUNNING: add Adam in the comparison}
 
 Experiment 3 and 4 show that it can be a good idea to rely on the algorithm constructing a learning rate. While the achieved accuracies are a bit worse than those of well-tuned SGD, the trade-off of not having to do the expensive tuning process can be worth the tradeoff.
 The runs in experiment 3 were only done for a small number of test problem/hyperparameter combinations. There is no guarantee that the found stability translates to other kinds of problems, so it is probably useful to keep the option of setting an initial learning rate.
@@ -569,7 +583,8 @@ From: ubuntu:16.04
 # set environment variables
 
 %post
-#commands executed inside the container after os has been installed. Used for setup of the container
+# commands executed inside the container after os has been installed.
+# Used for setup of the container
 
 apt-get -y update
 apt-get -y install python3-pip git python3-tk
@@ -584,7 +599,125 @@ pip install git+https://github.com/abahde/DeepOBS.git@v2.0.0-beta#egg=deepobs
 This build recipe was used to build the Singularity container by invoking \verb|sudo singularity build|
 
 
-\section{Runscript}
+\section{DeepOBS Runscript for experiment 1}
+This code includes the definitions for PreconditionedSGD and AdaptiveSGD. It was run 10 times using different seeds each time.
+\begin{verbatim}
+"""Simple run script using SORunner."""
+
+import torch.optim as optim
+import deepobs.pytorch as pyt
+from sorunner import SORunner
+from probprec import Preconditioner
+import numpy
+import math
+
+# DeepOBS setup
+
+class PreconditionedSGD(Preconditioner):
+    """docstring for PreconditionedSGD"""
+    def __init__(self, *args, **kwargs):
+    super(PreconditionedSGD, self).__init__(
+        *args,
+        optim_class = optim.SGD,
+        **kwargs)
+
+class AdaptiveSGD(Preconditioner):
+    """docstring for PreconditionedSGD"""
+    def __init__(self, *args, **kwargs):
+    super(AdaptiveSGD, self).__init__(
+        *args,
+        optim_class = optim.SGD,
+        **kwargs)
+
+    def _apply_preconditioner(self):
+        return;
+
+
+# specify the Preconditioned Optimizer class
+poptimizer_class = PreconditionedSGD
+
+# and its hyperparameters
+phyperparams = {'lr': {"type": float, 'default': None}}
+
+# create the runner instances
+prunner = SORunner(PreconditionedSGD, phyperparams)
+
+runner = SORunner(AdaptiveSGD, phyperparams)
+
+runner.run(testproblem='fmnist_2c2d')
+runner.run(testproblem='cifar10_3c3d')
+prunner.run(testproblem='fmnist_2c2d')
+prunner.run(testproblem='cifar10_3c3d')
+
+\end{verbatim}
+
+\section{Slurm Batch Definition File}
+This file was used to run experiment 1 on the compute cluster.
+
+\begin{verbatim}
+#!/bin/bash
+
+####
+#a) Define slurm job parameters
+####
+
+#SBATCH --job-name=prec
+
+#resources:
+
+#SBATCH --cpus-per-task=4
+# the job can use and see 4 CPUs (from max 24).
+
+#SBATCH --partition=day
+# the slurm partition the job is queued to.
+
+#SBATCH --mem-per-cpu=3G
+# the job will need 12GB of memory equally distributed on 4 cpus.
+# (251GB are available in total on one node)
+
+#SBATCH --gres=gpu:1
+#the job can use and see 1 GPUs (4 GPUs are available in total on one node)
+
+#SBATCH --time=03:30:00
+# the maximum time the scripts needs to run
+# "hours:minutes:seconds"
+
+#SBATCH --array=43-51
+
+#SBATCH --error=job.%J.err
+# write the error output to job.*jobID*.err
+
+#SBATCH --output=job.%J.out
+# write the standard output to job.*jobID*.out
+
+#SBATCH --mail-type=ALL
+#write a mail if a job begins, ends, fails, gets requeued or stages out
+
+#SBATCH --mail-user=ludwig.bald@student.uni-tuebingen.de
+# your mail address
+
+####
+#b) copy all needed data to the jobs scratch folder
+####
+
+DATA_DIR=/scratch/$SLURM_JOB_ID/data_deepobs/
+
+mkdir -p $DATA_DIR/pytorch
+mkdir -p $DATA_DIR/pytorch/FashionMNIST/raw
+cp -R /common/datasets/cifar10/. $DATA_DIR/pytorch/
+cp -R /common/datasets/Fashion-MNIST/. $DATA_DIR/pytorch/FashionMNIST/raw/
+
+####
+#c) Execute the code
+####
+
+
+singularity exec ~/image.sif python3 ~/exp_preconditioning/runscript.py 
+    --data_dir $DATA_DIR --random_seed $SLURM_ARRAY_TASK_ID
+
+echo DONE!
+\end{verbatim}
+
 
 \addcontentsline{toc}{chapter}{References}
 \bibliographystyle{apalike}

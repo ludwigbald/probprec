@@ -48,7 +48,7 @@
 
 
 
-singularity exec ~/image.sif python3 ~/exp_performance/estimateruntime.py
+singularity exec ~/image.sif python3 ~/exp_perf_prec/estimateruntime3.py
 
 
 echo DONE!
