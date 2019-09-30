@@ -20,6 +20,5 @@ Most of the technical parts are decribed in detail in the thesis, but here's a q
 
 1. Experiments were run using pytorch and DeepOBS in a Singularity container on the TCML cluster
 provided by the University of Tübingen.
-2. The presentation is based on the fibeamer theme for the beamer class, though I modified its
-source code to get rid of the included logo.
+2. The presentation is based on the internal template of the MoML chair.
 3. The thesis is based on the english language template provided by Kay Nieselt here: https://uni-tuebingen.de/fakultaeten/mathematisch-naturwissenschaftliche-fakultaet/fachbereiche/informatik/lehrstuehle/integrative-transkriptomik/theses/

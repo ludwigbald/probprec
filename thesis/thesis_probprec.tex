@@ -215,41 +215,41 @@ However, there are other values we care about, such as the model's ability to ge
 
 
 \section{Optimization}
-In order to find the optimal values for the parameters of a model, different methods have been proposed. For low-dimensional optimization problems with a small number of parameters, it is often possible to find the optimal parametrization analytically. For high-dimensional optimization problems, the analytical solution often is computationally intractable. As a result, numerical optimization algorithms have emerged.
-These algorithms use the available limited information in order to iteratively approximate the optimal parametrization. The number of iterations needed until the algorithm converges varies based on the implicit prior assumptions about the model.
+In order to find the optimal values for the parameters of a model, different methods have been proposed. For low-dimensional optimization problems with a small number of parameters, it is often possible to find the optimal parametrization analytically. For high-dimensional optimization problems, the analytical solution often is computationally intractable. Numerical algorithms are a solution to this problem.
+They use the available local information in order to iteratively approximate the globally optimal parametrization. The number of iterations needed until the algorithm converges varies based on the implicit prior assumptions about the model.
+Some of these optimization processes expose \textit{hyperparameters}, which influence the performance of the algorithm. These are different from the model's parameters, which we want to optimize.
 
-\subsection{First-Order and Second-Order Methods}
-For many models, it is possible to obtain information about the derivatives of the loss function \todo{symbol} at a given point in parameter-space. Optimization algorithms can be grouped by the order of the highest-order derivative they use.
+For Deep Learning models, it is possible to obtain information about the derivatives $\nabla ^n L$ of the loss function $L$ at a given point in parameter-space. Optimization algorithms can be grouped by the order of the highest-order derivative they use.
 
-There are zeroth-order methods that only require the value of the loss function itself. 
+There are zeroth-order methods that only require the value of the loss function itself.
 
-First-order methods use the first derivative, or the gradient. Adaptive Modifications of SGD like Adam and Momentum keep track of past gradients in order to take better steps. This implicitly assumes that past gradients contain information about future gradients, which is often the case. For example, if there is little change in the last gradients, we can assume that we are far away from the minimum, where gradients should converge to zero. Therefore, we are able to take larger steps.
+First-order methods like Gradient Descent use the first derivative, or the gradient. They work under the assumption that the gradient points in the direction of the global minimum.
+
+\subsection{Gradient Descent}
+If the gradient of the Loss function at a certain point in parameter space is known, we can use this information to update the parameters in a way that takes us closer to the solution. A popular family of algorithms is derived from SGD. SGD means: Just take a step in the direction of steepest gradient. Scale the step size by the steepness of the gradient. If the gradient is very steep, take a larger step. If it is small, take a smaller step, like a drunk student tumbling down a hill and ending up on a local minimum.
+SGD has only a single hyperparameter, the "learning rate" $\alpha$, which is multiplied with the step. Its optimal choice depends on the data, the model and is generally not obvious.
+$$w_{i+1} = w_i - \alpha \cdot \nabla L(w_i) $$
+
+\subsection{Stochastic Gradient Descent}
+Traditional Gradient Descent uses the whole data set to compute the true gradient, which is computationally instractable for large datasets, the usual case in machine learning. There is a variation called Stochastic Gradient Descent(SGD). Instead of the true loss, which is the model's performance on the whole training data, it computes only an estimate for the true loss by using a subset or \textit{Minibatch} of the training data. A common choice is between 32 and 256 data items per minibatch.
+This greatly improves convergence speed, as the required computations are much easier to perform. However, especially for smaller batch sizes, this adds noise to the system, meaning that our parameter update step points only roughly in the direction of the steepest actual gradient. It has also been shown to improve generalization of the model.
+Many variants of SGD have been proposed, adding things like a momentum term or otherwise adapting the learning rate dynamically.
+
+$$w_{i+1} = w_i - \alpha \cdot \nabla \hat{L}(w_i) $$
+
+\subsection{Second-Order Methods}
+First-order methods scale their step length by the gradient of the Loss function. This means that they get stuck on flat plateaus, because the gradient is very small.
+Adaptive Modifications of SGD like \verb|Adam| and \verb|Momentum| keep track of previously seen gradients in order to take better steps. This implicitly assumes that past gradients contain information about future gradients, which is often the case.
+For example, if there is little change in the last gradients, one can assume that the optimizer is far away from the minimum, where gradients should converge to zero. Therefore, it is now able to take larger steps.
 
 Second-Order-Methods are methods that explicitly use the Hessian $B$ of the Loss function, or the second derivative. This means they can use the explicit representation of curvature to directly compute where the gradient will hit zero.
 
 -RMSprop
--Adam
 - Conjugate gradient?
 s.o.:
 -Newton: Needs access to the Hessian.
 -Quasi-Newton.
 We can keep track of an estimate of the Hessian along the way.
-
-
-Some of these optimization processes have "hyperparameters" (different from the models "parameters" that we want to optimize).
-
-\subsection{Gradient Descent}
-If the gradient of the Loss function at a certain point in parameter space is known, we can use this information to update the parameters in a way that takes us closer to the solution. A popular family of algorithms is derived from SGD. SGD means: Just take a step in the direction of steepest gradient. Scale the step size by the steepness of the gradient. If the gradient is very steep, take a larger step. If it is small, take a smaller step, like a drunk student tumbling down a hill and ending up on a local minimum.
-SGD has only a single hyperparameter, the "learning rate" $\alpha$, which is multiplied with the step. Its optimal choice depends on the data, the model and is generally not obvious.
-\done{formula: Update Rule}
-$$w_{i+1} = w_i - \alpha \cdot \nabla L(w_i) $$
-
-\subsection{Stochastic Gradient Descent}
-Traditional Gradient Descent uses the whole data set to compute the true gradient, which is computationally instractable for large datasets, the usual case in machine learning. Instead, we use a variation called SGD. We compute only an estimate for the true gradient by "minibatching", using only a few, for example 64 data points in the forward pass. This greatly improves convergence speed, as the required computations are much easier to perform. However, especially for smaller batch sizes, this adds noise to the system, meaning that our parameter update step points only roughly in the direction of the steepest actual gradient. It has also been shown to improve generalization of the model.
-Many variants of SGD have been proposed, adding things like a momentum term or otherwise adapting the learning rate dynamically.
-\done{formula: Noisy update rule}
-
-$$w_{i+1} = w_i - \alpha \cdot \nabla \hat{L}(w_i) $$
 
 
 \section{Preconditioning}
@@ -269,7 +269,7 @@ If the eigenvalues are known, this is quite easy. However, in deep learning, the
 The PROBLEM:
 
 Up until now, there was no easy way to make use of preconditioning in a noisy setting, such as minibatched deep learning. I present an implementation of Filips Algorithm in an easy-to-use python class and demonstrate its strengths and weaknesses.
-- The convergence of optimizers depends on the condition number of the Hessian done{formula}, which describes the whole loss landscape.
+- The convergence of optimizers depends on the condition number of the Hessian, which describes the whole loss landscape.
 \todo{Image}
 \todo{Formula of how an optimal preconditioner works}
 \missingfigure{This figure illustrates the condition number. It shows what SGD does on an illconditioned two-dimensional problem. And what preconditioning can do to change this problem.}
@@ -286,7 +286,7 @@ As a mathematical object, a neuron is an activation function which depends on th
 \subsection{Regularization vs. weight decay}
 We minimize a different parameter than what we actually care about. (Loss on the training set vs accuracy on the test set). This can lead to problems, so there are some solutions.
 If the model's parameters are too large, that often means it is overfitting. in order to discourage this, a regularization term is sometimes added to the loss function. Usually this is the L2 norm of the parameter vector, but sometimes the L1 norm is also used.
-- But there are differences (see \cite{DBLP:conf/iclr/ChaudhariCSLBBC17})
+- But there are differences (see \cite{Chaudhari2017entropy})
 \todo{Bayesian?}
 \todo{Formula}
 \todo{Maybe illustrative plot}
@@ -334,13 +334,17 @@ Here I will give an overview of the algorithm's structure and steps:
 part 1: - Gather observations of the curvature in-place:
 part 2: - Estimating the Hessian and construct the preconditioner
 part 3: - Every step, re-scale the gradients by applying the preconditioner
+\todo[inline]{pseudo code for the algorithm.}
 
 \subsection{Modifications of the algorithm}
 The implementation and theoretical work lead to the following proposed changes to the abstract algorithm.
+
 \subsubsection{Parameter groups}
-Mainly due to technical reasons (see \todo{reference chapter}), support was added for parameter groups, but this also yields an interesting theoretical change. The algorithm already treated every parameter layer as an independent task for inversion (???), but estimated a global step size, which was the same for every parameter. With this modification, the algorithm is able to use larger step sizes for parameters that allow for it. In theory, this would allow for faster learning in the direction of those parameters. However, the time to reach total convergence relies on the slowest parameter, not on the fastest. The benefit of this approach in practice remanins to be tested.
-\todo{Connect to sgd. Original algorithm finds single alpha which is the same as normal sgd. Parameter groups allow alpha\_l per layer. \\
-	Convergence statement not as obvious. It depends on many factors but having a more adaptive optimizer could be beneficial.}
+Mainly due to technical reasons (see \todo{reference chapter}), support was added for parameter groups, but this also yields an interesting theoretical change. The algorithm already treated every parameter layer as an independent task while inverting the Hessian. It however estimated a global step size, which was the same for every parameter. With this modification, the user can specify which parameters should be grouped together and get the same learning rate.
+
+Rather than going for the safest choice, the algorithm is able to use larger step sizes if all parameters in a group allow for it. In theory, this would allow for faster learning in the direction of those parameters. However, the time to reach total convergence relies on the parameter that takes the longest to optimize, not on the fastest. The benefit of this approach in practice still needs to be tested.
+\todo{Connect to sgd. Original algorithm finds single alpha which is the same as normal sgd. Parameter groups allow alpha\_l per layer}
+\todo{Convergence statement not as obvious. It depends on many factors but having a more adaptive optimizer could be beneficial.}
 
 \subsubsection{Automatic Assessment of the Hessian's quality}
 In the original algorithm, the Hessian is arbitrarily re-estimated every epoch. Hessian re-estimation is needed, as demonstrated in the original paper, \todo{alpha should refer to an equation or as the scalar diagonal of the approximation.}alpha changes over time. The goal of this modification was to expose a measure of how useful/correct the estimated Hessian is, after observing a bit of data. A new estimation proces would be started if the current estimate was worse than a certain threshold. Multiple approaches were tried. A key point of trouble was the variance-less estimate of the Hessian. The original paper mentions that the Hessian is taken as the mean of a multivariate Gaussian distribution, but it fails to take this distribution's variance into account. Instead, it just assumes this Hessian is the optimal choice. \todo{The mean is the maximum a-posteriori (MAP) estimate i.e. the value that best fits the observations to the prior belief.
@@ -374,8 +378,18 @@ In the next section there is more detailed documentation for the class, its attr
 \subsection{Methods}
 \begin{markdown}
 * Public functions
-	* Constructor
+	* `Preconditioner(params, est_rank=2, num_observations=5, prior_iterations=10, weight_decay=0, lr=None,
+	optim_class=torch.optim.SGD, **optim_hyperparams)`
+		* `params`: the model's parameters that will be optimized
+		* `est_rank` : an Integer, the rank of the preconditioner
+		* `num_observations` : an Integer, the number of posterior updates to the estimated Hessian
+		* `prior_iterations`: an Integer, the number of iterations to construct the prior
+		* `weight_decay` : a float between 0 and 1, the amount of weight decay
+		* `lr`: The learning rate. If specified, it will be passed to the inner optimizer as `lr` in the first epoch.
+		* `optim_class` : The `torch.optim.optimizer` class to be used as inner optimizer.
+		* `**optim_hyperparameters` : any other hyperparameters to be used for the inner optimizer
 	* `start_estimate()`
+		* (Re)starts the process of estimating the Hessian.
 	* `step()`
 	* `get_log()`
 	* (`maybe_start_estimate()`)
@@ -402,24 +416,23 @@ In the next section there is more detailed documentation for the class, its attr
 	- Development vs Application
 	- Remedied implementation}
 \begin{markdown}
-In the following, I will highlight and explain some key software design decisions I took while implementing and refactoring the algorithm provided by Filip.
-The main goals for the implementation were to make the algorithm as easy to use as possible for a standard usecase, while maintaining the flexibility I needed to research specific variations. The changes to the abstract algorithm are discussed in detail in \todo{ref} The simple, default usecase was a user trying to use the preconditioner as proposed in the original paper, to optimize a neural network model. In this case, the necessary changes to the user's existing code should be minimal, with hyperparameters set to reasonable default values. For development, it is important to understand the algorithm's structure and the code and be able to easily modify the algorithm without disturbing other parts.
+In the following, I will highlight and explain some key software design decisions I took while implementing and refactoring the algorithm. The starting point was the original code from \cite{roos2019active}
 
-The code in its final form is provided as a self-contained class. According to Python best practices \todo{cite}, all the internal functions that a user should not call are marked as hidden by having names beginning with an `_`. This is an implementation of the design pattern "Low Coupling". All functions have been given descriptive names. For example, in order to start the estimation process, the function `start_estimate()` needs to be called.
+The **main goals** for the implementation were to make the algorithm as easy to use as possible for a standard usecase, while maintaining the flexibility I needed to research specific variations. The changes to the abstract algorithm are discussed in detail in \todo{ref} The simple, default usecase was a user trying to use the preconditioner as proposed in the original paper, to optimize a neural network model. In this case, the necessary changes to the user's existing code should be minimal, with hyperparameters set to reasonable default values. For development, it is important to understand the algorithm's structure and the code and be able to easily modify the algorithm without disturbing other parts.
 
-The class `Preconditioner` inherits from `torch.optim.Optimizer`. This means it follows all the conventions for how optimizers are expected to behave in pytorch. This makes it intuitive to use for the pytorch user. Features that were added to support this include the `state` dict, which can be used to save and load the state of the optimizer in order to pause or continue training. Another supported feature are parameter groups. This allows to treat different parameters seperately, for example different layers of a neural network. Specifically, each Parameter group will be optimized with a seperate learning rate.
+The code in its final form is provided as a **self-contained python class**, built for **pyTorch**. According to Python best practices \todo{cite}, all the internal functions that a user should not call are marked as hidden by having names beginning with an "`_`". This is an implementation of the design pattern *Low Coupling* and tells the user a clear interface. All functions have descriptive names. For example, in order to start the estimation process, the function `start_estimate()` needs to be called.
 
-The class `Preconditioner` has a field containing an inner optimizer to be used for the actual parameter updates. In the original paper, only SGD was studied as an option, but this modification allows to use preconditioning and the adaptive learning rate estimation together with other optimizers. The Preconditioner is mostly active when estimating the Hessian. Once the estimate is complete, the class turns into a "decorator" for the provided inner optimizer class. Before the inner optimizer does its optimization step, the previously constructed preconditioner is applied to the parameters' gradient.
+The class `Preconditioner` **inherits** from `torch.optim.Optimizer`. This means it follows all the conventions for how optimizers are expected to behave in pytorch. This makes it intuitive to use for the pytorch user. Features that were added to support this include the `state` dict, which can be used to save and load the state of the optimizer in order to pause or continue training. Another supported feature are parameter groups. This allows to treat different parameters seperately, for example different layers of a neural network. Specifically, each Parameter group will be optimized with a seperate learning rate.
 
-Logging data during training should not be a responsibility of the optimizer. In order to expose the data of interest, the class exhibits a method `get_log()`, which returns some values of interest. The user then takes care of logging and writing the data to a file outside the optimizer.
+The class `Preconditioner` wraps an **inner optimizer** which is responsible for the actual parameter updates. In the original paper and in this thesis, only SGD is studied as an option, but this modification allows to use preconditioning and the adaptive learning rate estimation together with other optimizers which are implemented in a pytorch optimizer class. The Preconditioner class is responsible for estimating the Hessian. Once the estimate is complete, the class turns into a *decorator* for the provided inner optimizer class. Before the inner optimizer does its optimization step, the previously constructed preconditioner is applied to the parameters' gradient.
 
-In order to change behavior of the class during development and research, the best way to make different versions is to make use of python's built-in subclassing. For example, I needed a version that skips applying the preconditioner every step, but behaves exactly the same in all other ways. This was solved by using a subclass of `Preconditioner`, which overwrites the function `_apply_preconditioner()` with an empty function.
+**Logging** data during training is a global task and should not be a responsibility of the optimizer. In order to expose the data of interest, the class exhibits a method `get_log()`, which returns some values of interest. It can be overwritten if the user wants to see other data. The user then takes care of further processing and writing the data to a file.
 
-Some bugs were also fixed. Previously, the algorithm skipped some minibatches, which was a problem in the small `quadratic_deep` dataset.
+In order to change behavior of the class during development and research, the best way to make different versions is to make use of python's built-in **subclassing**. For example, in the experiments there is a version `AdaptiveSGD` that skips applying the preconditioner every step, but behaves exactly the same as `Preconditioner` in all other ways. `AdaptiveSGD` is a subclass of `Preconditioner` that overwrites the function `_apply_preconditioner()` with an empty function.
+
+Some bugs were also fixed. Previously, the algorithm skipped some minibatches during the estimation phase. However, there remains room for improvement. The class assumes the user to input sensible values and won't complain otherwise. For some variables, helpful unit checks are in place. This is fine in a research environment, but not for deployment.
 \end{markdown}
-\todo[inline]{Make clearer the optimizer input, this is a large contribution that I only mentioned in my paper but never implemented. 
-	Maybe include the Preconditioner class definition as a verbatim environment and discuss the inputs.
-	And maybe also a pseudo code for the algorithm.}
+\done[inline]{Make clearer the optimizer input, this is a large contribution that I only mentioned in my paper but never implemented.}
 
 \section{Test Problems}
 The optimizers were tested on some of the testproblems that come with DeepOBS and had a stable pytorch implementation at the time of testing. DeepOBS specifies the data set, the model architecture and initialization, the loss function and regularization. It also proposes a standard batch size that is shared by all baselines.
@@ -435,50 +448,52 @@ For the experiment investigating computational complexity, DeepOBS uses the buil
 In the experiment investigating different initialization methods, the goal was to replicate the findings from \todo{cite filip}, so the exact same model was used. It is very similar to the one that comes with DeepOBS. There are three convolutional layers, each followed by ReLU and maxpooling. After that, there are three fully-connected layers preceded by ReLUs. As a loss function, cross-entropy loss is used, with regularization as in \verb|cifar10_3c3d|.
 Batch size and initialization methods are varied.
 
-\done{Describe the models/architectures used for the datasets.}
 
 \section{DeepOBS baselines}
 When using a standardized testing procedure like the one provided by DeepOBS, it is not necessary to run every optimizer, as reproducibility of the results is guaranteed across different hardware. This saves a lot of work and energy that every single researcher otherwise would have needed to spend.
-DeepOBS comes with results from many established and well-studied optimizers as a baseline, and it is easy to compare a new optimizer against them. Their hyperparameters are tuned for each testproblem, but some standard techniques like hyperparameter schedules are not available.
+DeepOBS comes with results from many established and well-studied optimizers as a baseline, and it is easy to compare a new optimizer against them. Their hyperparameters are tuned for each testproblem, but some more complicated widely used techniques like hyperparameter schedules are not available.
 
-\done[inline]{Mention that one advantage of a package like DeepOBS offers baselines for various metrics. 
-	What kind of baselines are used? Optimizers, optimization curves, hyperparameters?}
 \section{Technical details}
 The experiments were run on the TCML cluster at the University of Tübingen.
-A Singularity container was set up on Ubuntu 16.4 LTS with python 3.5, pytorch (version) and DeepOBS (see Appendix for Singulariy recipe\done{append recipe}).
+A Singularity container was set up on Ubuntu 16.4 LTS with python 3.5, pytorch (version) and DeepOBS (see Appendix for Singulariy recipe).
 Computation was distributed over multiple GPU compute nodes using the workload manager Slurm. Every job had access to 4 CPU cores (Intel XEON CPU E5-2650 v4), 3GB of RAM, and 1 GPU (GeForce GTX 1080 Ti).
 
+During development, I used git on github for distributed version control.
 
-During development, I used git for distributed version control.
-
-\done{Include specific hardware details}
 
 \chapter{Experiments}
 \section{Experiment 1: Preconditioning}
 \begin{markdown}
-In order to investigate the effect on training performance of the proposed preconditioning algorithm, two similar, but distinct versions were used. The full algorithm as described in section \todo{cite} as `PreconditionedSGD` and the same algorithm, which does everything in the same way except for applying the preconditioner at every SGD step, called `AdaptiveSGD`. This was achieved by subclassing and overwriting the `_apply_precenditioner()` method with an empty method. Those two optimizers were tested on the DeepOBS testproblems `cifar10_3c3d` and `fmnist_2c2d`, using the standard settings. 
+In order to investigate the effect on training performance of the proposed preconditioning algorithm, two similar, but distinct versions were used. Firstly, `PreconditionedSGD`, the full algorithm as previously described uses SGD to do the actual parameter updates. Secondly, `AdaptiveSGD` also computes the preconditioner and constructs a learning rate, but does not apply the preconditioner. It is a subclass of `Preconditioner` that has the `_apply_precenditioner()` method replaced with an empty method. Those two optimizers were tested on the DeepOBS testproblems `cifar10_3c3d` and `fmnist_2c2d`, using the standard settings as provided by DeepOBS.
 The hyperparameters used for the experiment were the same for both optimizers: `num_observations = 10`, `prior_iterations = 5`, `est_rank = 2`, `optim_class = torch.SGD`, `lr = None`
 
-The results are presented in figure \ref{fig:exp_preconditioning}, together with the DeepOBS baselines on the same problems. In almost every metric, both tested optimizers were outperformed by all widely used standards like simple SGD and Adam. Interesingly, the `fmnist_2c2d` problem seems prone to some kind of overfitting: All the standard optimizers perform start to increase test loss after reaching a local minimum. However, the test accuracy does not seem to suffer from this same problem. `PreconditionedSGD` and `AdaptiveSGD` don't show this behavior, but also don't reach convergence after 100 epochs, as they still continue to improve. Note however that the difference in accuracy is quite a bit smaller on `fmnist_2c2d` than on `cifar10_3c3d`.
-Another finding is that the variance of PreconditionedSGD and AdaptiveSGD is larger than the variance of the baseline optimizers.
+The results are presented in figure \end{markdown}
+\ref{fig:exp_preconditioning}
+\begin{markdown}, together with the DeepOBS baselines on the same problems. In almost every metric, both tested optimizers were outperformed by all widely used standards like simple SGD and Adam. Interesingly, the `fmnist_2c2d` problem seems prone to some kind of overfitting: All the standard optimizers increase on test loss after reaching a local minimum. However, the test accuracy does not seem to suffer from this same problem. `PreconditionedSGD` and `AdaptiveSGD` don't show this behavior, but also don't reach convergence even after 100 epochs, when they still continue to improve. The difference in achieved accuracy is smaller on `fmnist_2c2d` than on `cifar10_3c3d`.
+Another finding is that the variance of `PreconditionedSGD` and `AdaptiveSGD` is larger than the variance of the baseline optimizers.
+
+In general, `PreconditionedSGD` is significantly outperformed by the variant without preconditioning, `AdaptiveSGD`.
 \end{markdown}
+
+Investigating further, figure \ref{fig:exp_tunedalpha} shows the performance of \verb|PreconditionedTunedSGD|, which calculates the preconditioner, but does not apply the constructed learning rate. Instead, it uses the exact same learning rate as the well-tuned baseline SGD. This version performs comparably to SGD and outperforms the two adaptive versions.
+
 \begin{figure}
 	\input{images/exp_preconditioning.pgf}
-	%\missingfigure[figheight=23cm]{Excluded for performance reasons. Many optimizers on fmnist and cifar10}
-	\caption{Both variants of the algorithm perform significantly worse than established alternatives. AdaptiveSGD is better than PreconditionedSGD. On the fmnist model, the baseline optimizers quickly reach a minimum, but then continue to overfit. AdaptiveSGD and PreconditionedSGD arrive at the mimimum much slower, but don't diverge.}
+	%\missingfigure[figheight=22cm]{Excluded for performance reasons. Many optimizers on fmnist and cifar10}
+	\caption{Both variants of the algorithm perform significantly worse than established alternatives. AdaptiveSGD is better than PreconditionedSGD. On the fmnist model, the baseline optimizers quickly reach a minimum, but then get worse on the loss. AdaptiveSGD and PreconditionedSGD arrive close the mimimum much later and don't diverge.}
 	\label{fig:exp_preconditioning}
 \end{figure}
 
 \begin{figure}
 	\input{images/exp_tunedalpha.pgf}
-	%\missingfigure[figheight=23cm]{Excluded for performance reasons. Many optimizers on fmnist and cifar10}
-	\caption{This figure shows the preconditioning algorithm, modified to use the same learning rate as well-tuned SGD, for every epoch. It performs slightly worse than standard tuned SGD using the same learning rate.}
+	%\missingfigure[figheight=22cm]{Excluded for performance reasons. Many optimizers on fmnist and cifar10}
+	\caption{This figure shows the preconditioning algorithm, modified to use the same learning rate as well-tuned SGD, for every epoch. It performs slightly worse than standard tuned SGD using the same learning rate, but better than the adaptive versions.}
 	\label{fig:exp_tunedalpha}
 \end{figure}
 
 \section{Experiment 2: Computational Complexity}
-\todo[inline]{make clear we're measuring wallclock time here. CPU time would also be interesting}
-\todo[inline]{Mention that CPU time would also be interesting. Maybe as a proposition for DeepOBS?}
+\done[inline]{make clear we're measuring wallclock time here. CPU time would also be interesting}
+\done[inline]{Mention that CPU time would also be interesting. Maybe as a proposition for DeepOBS?}
 \begin{markdown}
 Wallclock time is an important metric for practitioners. To the practicioner it is important how much time, energy and money the training of a model costs. It is however difficult to interpret in experiment, because it depends on outside factors like hardware configuration, system load and other sources of statistical noise. DeepOBS provides a script that allows to compare the runtime of an optimizer against the runtime of SGD, run as a baseline on the same problem and the same hardware.
 
@@ -494,28 +509,28 @@ The results are presented in figure \ref{fig:exp_perf_prec}. As expected, the mo
 \begin{figure}
 	\centering \hspace{-1,5cm}
 	\input{images/exp_perf_prec.pgf}
-	\caption{This figure shows wallclock time per epoch, as tested on the DeepOBS testproblem mnist\_mlp. A score of 1 represents the baseline runtime of SGD. The original algorithm is the slowest. Calculating, but not applying the preconditioner is considerably faster. Only gathering the prior observations is about as fast as SGD and Adam.}
+	\caption{Experiment 2: Wallclock time per epoch, as tested on the DeepOBS testproblem mnist\_mlp. A score of 1 represents the baseline runtime of SGD. The original algorithm is the slowest. Calculating, but not applying the preconditioner is considerably faster. Only gathering the prior observations is about as fast as SGD and Adam.}
 	\label{fig:exp_perf_prec}
 	
 \end{figure}
 
 
 \section{Experiment 3: Initialization}
-\cite{roos2019active} report that their implementation of the algorithm includes a hyperparameter for the manual first-epoch learning rate, because the learning rate constructed by the algorithm would be so high that the model diverges in the first epochs. Using the proposed implementation, I was not able to replicate this finding. On all tested problems included in DeepOBS, using the constructed learning rate for the first epoch lead the algorithm to eventual convergence. The authors used a model very similar to the one used in DeepOBS' testproblem \verb|cifar10_3c3d|. Upon closer inspection, the main difference was that DeepOBS initializes the weights explicitly, while the authors used the built-in pytorch initialization functions.
-In order to investigate the effect of initialization, DeepOBS was modied to include the original net, either with explicit DeepOBS or implicit pytorch initialization. This model was then trained for both variations, with a batch size of 64 and 128, for five epochs, for each of 10 random seed values.
+In \cite{roos2019active} it is reported that the studied implementation of the algorithm includes a hyperparameter for the manual first-epoch learning rate, because the learning rate constructed by the algorithm would be so high that the model diverges in the first epochs. Using the proposed implementation, I was not able to replicate this finding. On all tested problems included in DeepOBS, using the constructed learning rate for the first epoch lead the algorithm to eventual convergence. The authors used a model very similar to the one used in DeepOBS' testproblem \verb|cifar10_3c3d|. Upon closer inspection, the main difference was that DeepOBS initializes the weights explicitly, while the authors used the built-in pytorch initialization functions.
+
+In order to investigate the effect of initialization, DeepOBS was modied to include the original paper's net, either with explicit DeepOBS or implicit pytorch initialization. This model was then trained for both versions, with batch sizes of 32 (as in the original paper), 64 and 128, for five epochs, for each of 10 random seed values.
+
 As is presented in figure \ref{fig:exp_init}, while the initialization method certainly plays a big role in training performance, neither initialization method and neither batch size lead to a diverging run.
-\todo{Talk about new version using bs 32, explain results}
 \begin{figure}
 	\centering \hspace{-1,5cm}
 	\input{images/exp_init.pgf}
-	\caption{PreconditionedSGD on a cifar10 net, comparing initialization methods. The algorithm is stable regardless of batch size and initialization method.}
+	\caption{Experiment 3: PreconditionedSGD on a cifar10 net, comparing initialization methods. The algorithm is stable regardless of batch size and initialization method.}
 	\label{fig:exp_init}
 	
 \end{figure}
 
 
 \section{Experiment 4: Learning Rate Sensitivity}
-\todo{Maybe multiple problems: quadratic\_deep, fmnist\_2c2d, cifar10\_3c3d, maybe more}
 
 After establishing that it's safe to use the automatically constructed learning rate, it is still unclear whether there is an effect on training success of manually setting a first-epoch learning rate versus using the constructed learning rate.
 A DeepOBS-aided grid search with 10 evaluations on a logarithmic grid between $10^-5$ and $10^2$ on the \verb|fmnist_2c2d| testproblem.
@@ -527,29 +542,38 @@ Both SGD and \verb|PreconditionedSGD| with an optimal choice for learning rate a
 \begin{figure}
 	\centering \hspace{-1,5cm}
 	\input{images/exp_lr_sens.pgf}
-	\caption{The originally proposed algorithm has an optional hyperparameter "learning rate", which is used as SGD's learning rate in the first epoch. Below a certain model-specific threshold, it performs just as well as the constructed learning rate. Over that threshold, it diverges in the first epoch. }
+	\caption{Experiment 4: The originally proposed algorithm has an optional hyperparameter "learning rate", which is used as SGD's learning rate in the first epoch. Below a certain model-specific threshold, it performs just as well as the constructed learning rate. Over that threshold, it diverges in the first epoch. }
 	\label{fig:exp_lr_sens}
 \end{figure}
 
 
 
 \section{Discussion}
-The experiments presented in the previous sections show that the algorithm proposed in \cite{roos2019active} is not generally useful for application in deep learning. In Experiment 1 it is outperformed in nearly every measure of training success by established optimizers. This stands in direct contrast to the findings of the original authors, who report it comparing favourably against SGD in particular. However, the used testing protocol is not thoroughly explained. Test problem, batch size and SGD learning rates were set manually and without giving a reason, which makes the results hard to interpret. In a similar way, the hyperparameters were not tuned in a systematic way for either optimizer.
+The experiments presented in the previous sections show that the algorithm proposed in \cite{roos2019active} is not generally useful for application in deep learning. In Experiment 1 it is outperformed in nearly every measure of training success by established optimizers. When compared to a direct alternative without it, neither the preconditioner nor the adaptive step size show an increase in performance.
 
-Given this caveat, the comparatively poor performance of both AdaptiveSGD and PreconditionedSGD compared to the DeepOBS baselines can be explained. While the DeepOBS baselines were exhaustively toned for accuracy, the proposed algorithms were not tuned to the testproblem. While tuning their learning rate is not necessary, other hyperparameters like the number of steps used for the Hessian estimate rely on guessing and do impact performance. The algorithm uses Bayesian methods to estimate the Hessian, but does not leverage the knowledge about the uncertainty of the estimates.
+This stands in direct contrast to the findings of the original authors, who report the algorithm comparing favourably against SGD in particular. However, the used testing protocol is not thoroughly explained. Test problem, batch size and SGD learning rates were set manually and without giving a reason, which makes the results hard to interpret. In a similar way, the hyperparameters were not tuned in a systematic way for either optimizer.
+
+Given this caveat, the comparatively poor performance of both AdaptiveSGD and PreconditionedSGD compared to the DeepOBS baselines can be explained. The Preconditioner is a quite complicated algorithm that has many hyperparameters, so complete tuning was infeasible. While the DeepOBS baselines were exhaustively tuned for accuracy, the proposed algorithms were not tuned to the testproblem. While tuning their learning rate is not necessary, other hyperparameters like the number of steps used for the Hessian estimate rely on guessing and do impact performance. The algorithm uses Bayesian methods to estimate the Hessian, but does not leverage the knowledge about the uncertainty of the estimates.
 
 In order to keep computational overhead of applying the preconditioner manageable, the preconditioner matrix was reduced to rank two. This however does not have a large effect on the condition number. In Deep Learning, generally there are many large eigenvalues \todo{cite} that would all need to be reduced by a preconditioner in order to see a notable improvement on the condition number. Given that applying the preconditioner actually leads to smaller learning success than ignoring it, applying the rank-2-approximation preconditioner seems to be counterproductive. Because gradients can vary dramatically, the preconditioner is noisy. The algorithm also always re-starts the whole estimation process, while ignoring curvature data gathered in previous iterations. As a consequence the estimate does not become more accurate over time. This is in accordance with the authors' assesment that the good performance is mainly caused by the adaptive step size.
 
 Another possible reason that SGD outperforms the preconditioner is that while estimating the Hessian, the Preconditioner does not use the data for actual parameter updates. The effect of this depends on the number of minibatches.
 
 
-In experiment 2, the performance penalty was investigated. The authors report that the cost of building the rank 2 approximation accounted for 2-5\% of the total computational cost per epoch, using a batch size of 32 on the training subset of CIFAR-10. This number does not tell the whole story. This thesis adds to this finding the performance penalty of estimating the Hessian and applying the preconditioner. As DeepOBS splits the data into three subsets (validation for hyperparameter tuning, training and testing), the training set is smaller. Using the DeepOBS standard batch size of 128, there are fewer minibatches per epoch, which means the estimation of the Hessian on the same number of steps uses a larger proportion of total training time. In this setting, using the preconditioner incurs a computational cost of more than double that of SGD. While the algorithm can be further optimized for performance, for example by moving all computations on the GPU, that's a big difference in computational cost. Calculating only the adaptive step size might be a better idea, as that incurs no significant performance penalty while achieving better accuracies.
-\todo[inline]{Clarify: So estimating the Hessian with B=128 costs the same as 2 epochs of sgd? Or is it referring to applying the preconditioner over an epoch. The latter makes sense but can be remedied and is why it should rather be compared to adam in cost. --> DeepOBS paper?}
-\todo[inline]{RUNNING: add Adam in the comparison}
+In experiment 2, the performance penalty was investigated. The authors report that the cost of building the rank 2 approximation accounted for 2-5\% of the total computational cost per epoch, using a batch size of 32 on the training subset of CIFAR-10. This number does not tell the whole story. This thesis adds to this finding the performance penalty of estimating the Hessian and applying the preconditioner. The prior observations add no considerable overhead compared to SGD, while both calculating and applying the Preconditioner add considerable overhead. Adam as another adaptive method is almost exactly as fast as SGD.
 
-Experiment 3 and 4 show that it can be a good idea to rely on the algorithm constructing a learning rate. While the achieved accuracies are a bit worse than those of well-tuned SGD, the trade-off of not having to do the expensive tuning process can be worth the tradeoff.
-The runs in experiment 3 were only done for a small number of test problem/hyperparameter combinations. There is no guarantee that the found stability translates to other kinds of problems, so it is probably useful to keep the option of setting an initial learning rate.
-Generally, the experiments in this thesis were mostly performed on convolutional nets, and it is unclear which properties would translate to other architectures.
+Using the DeepOBS standard batch size of 128, there are fewer minibatches per epoch, which means the estimation of the Hessian on the same number of steps uses a larger proportion of total training time. In this setting, using the preconditioner incurs a computational cost of more than double that of SGD. Two epochs of SGD can be run in the time it takes to compute the preconditioner and apply it during every step in one epoch.
+
+While the algorithm can be further optimized for performance, for example by moving all computations on the GPU, that's a big difference in computational cost. Calculating only the adaptive step size might be a better idea, as that incurs no significant performance penalty while achieving better accuracies.
+CPU time would also be interesting, because it is a more direct measure of the amount of computations required by the algorithm. Unfortunately, DeepOBS does not provide this function as of now.
+\done{Clarify: So estimating the Hessian with B=128 costs the same as 2 epochs of sgd? Or is it referring to applying the preconditioner over an epoch. The latter makes sense but can be remedied and is why it should rather be compared to adam in cost.}
+\done{add Adam in the comparison}
+
+Experiment 3 and 4 show that it is possible to rely on the algorithm constructing a learning rate. While the achieved accuracies are a bit worse than those of well-tuned SGD, the trade-off of not having to do the expensive tuning process might be worth the tradeoff observed in experiment 2.
+
+The runs in experiment 3 were only done for a small number of test problem/hyperparameter combinations. There is no guarantee that the found stability translates to other kinds of problems, so it is useful to keep the option of setting an initial learning rate. It is also unclear exactly why the new algorithm is stable.
+
+Generally, the experiments in this thesis were mostly performed on convolutional nets, and it is unclear which of the found properties would translate to other architectures.
 
 The usability goals of the implementation were met, as the experiments required no modifications to the final optimizer class to be run and integrate nicely with DeepOBS.
 
