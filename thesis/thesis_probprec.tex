@@ -139,20 +139,19 @@ I would also like to thank my supervisor Filip De Roos, who was always available
 \setcounter{page}{1}
 
 
-\chapter{Introduction}
-\begin{markdown}
-What is this all about?
+\chapter{Introduction} % 1-2 pages
+In recent years, machine learning and more specifically Deep Learning has been becoming more and more relevant. Both in research and in application, it is ubiquitous. It has lead to anything from a better understanding of the brain's structure (\cite{brown2016machine}) to major advancements in self-driving cars.
 
-- Machine Learning has taken the world by storm. It is already widely used, but the research lacks behind practitioners.
-- Deep Learning is a useful thing
-- SGD is a widely used optimization algorithm. Many variations on SGD have been proposed and sometimes are quicker, but it's hard to study optimizers.
+Even though the practical use of the current state of machine learning is unquestionable, there is a lot of opportunity for research and further improvement of the inner workings. One of the areas of interest is the study of optimization algorithms. They have a large effect on the time it takes to find an optimal parametrization while training a machine learning model. Improvements in this area lead to reduced cost, reduced need for data and reduced energy consumption.
 
-- Why is it hard to study?
-- This is because the field is hard to study. There are many parameters to fix when designing an experiment or doing theoretical work. Optimizers, Models and lifelike testproblems are not exhaustively studied.
-- DeepOBS fixes some parameters, providing a kind of stable base for running comparable experiments. It provides baselines of standard optimizers to test against.
+The simplest optimizer is Stochastic Gradient Descent, which is a first-order-method and needs access to the gradient of the error function of the model. Second-order methods make use of the Hessian of the error function, which is the second derivation and contains information about curvature. The additional curvature information allows these methods to take much larger and more precise steps, but they require more computational effort which is infeasible for high-dimensional problems like Deep Learning models.
 
-- Second order methods seem to be crowd's favourites now. They tend to learn quicker as they use more information to find the minimum.
-\end{markdown}
+Two recent publications mainly drive this thesis: \cite{roos2019active} describes a preconditioning algorithm that estimates the Hessian and applies its inverse to the parameters, which is a way of including second-order information. This changes the parameter landscape so that standard first-order optimizers can converge faster to the optimum. The paper shows that it compares favourably in performance over non-preconditioned, standard SGD. The paper also shows results for a single Deep Learning experiment.
+The second paper, \cite{deepobs}, presents the benchmarking suite "DeepOBS" which makes it easier to compare new optimization algorithms in an unbiased way against established baselines.
+
+This thesis makes multiple key contributions. The first is a reimplementation of the preconditioning algorithm, which increases usability and adds functionality, like the possibility to easily switch out the optimizer that takes over after preconditioning. The second contribution is the comparison of the preconditioning algorithm against established benchmarks measured using DeepOBS, which includes both an attempt to reproduce the results, and further investigation of applying the optimizer to Deep Learning models.
+In parallel with this thesis, a pyTorch version of DeepOBS was being developed by Aaron Bahde. Another contribution was to provide user feedback to the development team of DeepOBS. \todo{some of the feedback is found where in the thesis?} This development is described in detail in \todo{cite Aarons MA}
+
 
 \chapter{Fundamentals and Related Work}
 \section{Probability Basics}
@@ -487,9 +486,10 @@ Investigating further, figure \ref{fig:exp_tunedalpha} shows the performance of 
 \begin{figure}
 	\input{images/exp_tunedalpha.pgf}
 	%\missingfigure[figheight=22cm]{Excluded for performance reasons. Many optimizers on fmnist and cifar10}
-	\caption{This figure shows the preconditioning algorithm, modified to use the same learning rate as well-tuned SGD, for every epoch. It performs slightly worse than standard tuned SGD using the same learning rate, but better than the adaptive versions.}
+	\caption{This figure shows the preconditioning algorithm, modified to use the same learning rate as well-tuned SGD, for every epoch. It performs slightly worse than standard tuned SGD using the same learning rate, but better than the adaptive versions. }
 	\label{fig:exp_tunedalpha}
 \end{figure}
+\todo{change name to "PreconditionedTunedSGD" in the plot tunedalpha}
 
 \section{Experiment 2: Computational Complexity}
 \done[inline]{make clear we're measuring wallclock time here. CPU time would also be interesting}
