@@ -1,5 +1,12 @@
-Wallclock time is an important metric for practitioners. To the practicioner it is important how much time, energy and money the training of a model costs. It is however difficult to interpret in experiment, because it depends on outside factors like hardware configuration, system load and other sources of statistical noise. DeepOBS provides a script that allows to compare the runtime of an optimizer against the runtime of SGD, run as a baseline on the same problem and the same hardware.
-
-The three investigated optimizers were `PreconditionedSGD` and `AdaptiveSGD`, as defined in the previous experiment, and `OnlyAdaptiveSGD`, which only estimates the prior and constructs a step size. `OnlyAdaptiveSGD` is a more efficient version of `AdaptiveSGD`, which also constructs the estimate for the Hessian and the precondiotioner itself, but does not use this information. Once again, `OnlyAdaptiveSGD` is a subclass of `PreconditionedSGD`, but with some knocked-out functions.
-
-The testproblem used was the default value set by DeepOBS, `mnist_mlp`. Every optimizer was run 5 times for 5 epochs each, on a GPU node of the TCML cluster.
+* Usability:
+	- In general, DeepOBS is quite easy to use. The minimal examples provided with the documentation work well and are easy to adapt to other optimizers.
+	- Output files used to be single-line strings of json. This was changed to easily human-readable formatting.
+	- The way DeepOBS currently handles output files is very transparent (It simply writes json files for each optimizer run in an appropriate file structure). However, there is no unique place where DeepOBS saves and looks for metadata. Sometimes it's in the folder name, sometimes in the file itself, where it should be. It would make more sense to save consistently defined "run"-objects which point to all the runs that logically belong together.
+	- When analyzing runs, DeepOBS should not rely on the operating system to determine things like the order of testproblems. The user should be able to define this, for example by manipulating a "run" object before plotting.
+* Protocol:
+	- The testproblems' hyperparameters like the batch size do affect optimizer performance a lot. DeepOBS provides default values, but it should be clearer if and how they can be left on their default values to compare optimizers without introducing bias.
+	- DeepOBS now uses a web-based issue tracking system where users can easily report bugs and request additional functionality.
+* Features:
+	- DeepOBS lacks a testproblem that uses parameter groups. While this might be less important for optimizer testing, it would be useful for optimizer development.
+	- For measuring computational complexity, CPU time might be a more useful metric than Wallclock time, because that would rely less on the algorithm being tuned to the used hardware setup.
+	- In the output files, DeepOBS should record if a run was stopped (and why) or if the algorithm was stable all the way throughout the run.

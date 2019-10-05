@@ -150,7 +150,7 @@ Two recent publications mainly drive this thesis: \cite{roos2019active} describe
 The second paper, \cite{deepobs}, presents the benchmarking suite "DeepOBS" which makes it easier to compare new optimization algorithms in an unbiased way against established baselines.
 
 This thesis makes multiple key contributions. The first is a reimplementation of the preconditioning algorithm, which increases usability and adds functionality, like the possibility to easily switch out the optimizer that takes over after preconditioning. The second contribution is the comparison of the preconditioning algorithm against established benchmarks measured using DeepOBS, which includes both an attempt to reproduce the results, and further investigation of applying the optimizer to Deep Learning models.
-In parallel with this thesis, a pyTorch version of DeepOBS was being developed by Aaron Bahde. Another contribution was to provide user feedback to the development team of DeepOBS. \todo{some of the feedback is found where in the thesis?} This development is described in detail in \todo{cite Aarons MA}
+In parallel with this thesis, a pyTorch version of DeepOBS was being developed by Aaron Bahde. This development is described in detail in \cite{abahde}. Another contribution was to provide user feedback to the development team of DeepOBS. A selection of feedback is replicated towards the end of this thesis.
 
 
 \chapter{Fundamentals and Related Work}
@@ -477,17 +477,17 @@ In general, `PreconditionedSGD` is significantly outperformed by the variant wit
 Investigating further, figure \ref{fig:exp_tunedalpha} shows the performance of \verb|PreconditionedTunedSGD|, which calculates the preconditioner, but does not apply the constructed learning rate. Instead, it uses the exact same learning rate as the well-tuned baseline SGD. This version performs comparably to SGD and outperforms the two adaptive versions.
 
 \begin{figure}
-	\input{images/exp_preconditioning.pgf}
-	%\missingfigure[figheight=22cm]{Excluded for performance reasons. Many optimizers on fmnist and cifar10}
-	\caption{Both variants of the algorithm perform significantly worse than established alternatives. AdaptiveSGD is better than PreconditionedSGD. On the fmnist model, the baseline optimizers quickly reach a minimum, but then get worse on the loss. AdaptiveSGD and PreconditionedSGD arrive close the mimimum much later and don't diverge.}
-	\label{fig:exp_preconditioning}
+		%\input{images/exp_preconditioning.pgf}
+		\missingfigure[figheight=22cm]{Excluded for performance reasons. Many optimizers on fmnist and cifar10}
+		\caption{Both variants of the algorithm perform significantly worse than established alternatives. AdaptiveSGD is better than PreconditionedSGD. On the fmnist model, the baseline optimizers quickly reach a minimum, but then get worse on the loss. AdaptiveSGD and PreconditionedSGD arrive close the mimimum much later and don't diverge.}
+		\label{fig:exp_preconditioning}
 \end{figure}
 
 \begin{figure}
-	\input{images/exp_tunedalpha.pgf}
-	%\missingfigure[figheight=22cm]{Excluded for performance reasons. Many optimizers on fmnist and cifar10}
-	\caption{This figure shows the preconditioning algorithm, modified to use the same learning rate as well-tuned SGD, for every epoch. It performs slightly worse than standard tuned SGD using the same learning rate, but better than the adaptive versions. }
-	\label{fig:exp_tunedalpha}
+		%\input{images/exp_tunedalpha.pgf}
+		\missingfigure[figheight=22cm]{Excluded for performance reasons. Many optimizers on fmnist and cifar10}
+		\caption{This figure shows the preconditioning algorithm, modified to use the same learning rate as well-tuned SGD, for every epoch. It performs slightly worse than standard tuned SGD using the same learning rate, but better than the adaptive versions.}
+		\label{fig:exp_tunedalpha}
 \end{figure}
 \todo{change name to "PreconditionedTunedSGD" in the plot tunedalpha}
 
@@ -588,6 +588,23 @@ It is also unclear whether parameter groups are only a convenient feature for pr
 
 In order to make general statements about the robustness and performance of the algorithm, it would need to be either further examined analytically or run on many more, different kinds of model architectures.
 
+\section{Feedback for DeepOBS}
+This thesis is one of the first semi-external projects that use DeepOBS and more specifically the pyTorch version of DeepOBS. Naturally, some issues and unexpected behavior came up while using it. This is a selection of Feedback on DeepOBS.
+
+\begin{markdown}
+* Usability:
+	- In general, DeepOBS is quite easy to use. The minimal examples provided with the documentation work well and are easy to adapt to other optimizers.
+	- Output files used to be single-line strings of json. This was changed to easily human-readable formatting.
+	- The way DeepOBS currently handles output files is very transparent (It simply writes json files for each optimizer run in an appropriate file structure). However, there is no unique place where DeepOBS saves and looks for metadata. Sometimes it's in the folder name, sometimes in the file itself, where it should be. It would make more sense to save consistently defined "run"-objects which point to all the runs that logically belong together.
+	- When analyzing runs, DeepOBS should not rely on the operating system to determine things like the order of testproblems. The user should be able to define this, for example by manipulating a "run" object before plotting.
+* Protocol: 
+	- The testproblems' hyperparameters like the batch size do affect optimizer performance a lot. DeepOBS provides default values, but it should be clearer if and how they can be left on their default values to compare optimizers without introducing bias.
+	- DeepOBS now uses a web-based issue tracking system where users can easily report bugs and request additional functionality.
+* Features:
+	- DeepOBS lacks a testproblem that uses parameter groups. While this might be less important for optimizer testing, it would be useful for optimizer development.
+	- For measuring computational complexity, CPU time might be a more useful metric than Wallclock time, because that would rely less on the algorithm being tuned to the used hardware setup.
+	- In the output files, DeepOBS should record if a run was stopped (and why) or if the algorithm was stable all the way throughout the run.
+\end{markdown}
 
 \chapter{Conclusion}
 In this thesis, I present an implementation of the probabilistic preconditioning algorithm proposed in \cite{roos2019active}. Using the optimizer benchmarking framework DeepOBS,  I show that it performs worse than well-tuned standard optimizers like SGD and Adam on convolutional neural networks. I also show that using the preconditioner incurs a large performance penalty. I propose a middle ground solution, which I call \verb|AdaptiveSGD| throughout this thesis. It uses information about the Hessian in order to propose a good step size, but does not construct a preconditioner.
