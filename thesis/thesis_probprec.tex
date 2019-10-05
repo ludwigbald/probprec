@@ -19,6 +19,8 @@
 \usepackage[ngerman, english]{babel}
 \usepackage[hidelinks]{hyperref}
 
+\usepackage{amssymb}
+
 \usepackage{pgfplots}
 \pgfplotsset{compat=newest}
 \usepgfplotslibrary{groupplots}
@@ -159,6 +161,8 @@ One important concept in probability theory is the Gaussian distribution.
 The real-valued \textit{normal} or \textit{Gaussian} distribution is defined as:
 $$N(x | \mu, \sigma^2) = \frac{1}{(2\pi \sigma^2)^{1/2}} \exp\left(- \frac{1}{2\sigma^2} (x-\mu)^2 \right)$$
 It has the parameters \textit{mean} $\mu$ and \textit{variance} $\sigma ^2$.
+The mean represents the maximum-a-posteriori estimate for $x$; it is the maximum of $N(x | \mu, \sigma^2)$
+
 
 Extending this to a \textit{multivariate} Gaussian distribution with $n$ dimensions, the definition needs to be adapted:
 $$N(\vec{x} | \vec{\mu}, \Sigma) = \frac{1}{(2\pi)^{n/2}} \frac{1}{det(\Sigma)^{1/2}} \exp\left(-\frac{1}{2} (\vec{x} - \vec{\mu})^T \Sigma ^{-1} (\vec{x} - \vec{\mu})\right)$$
@@ -177,22 +181,8 @@ Matrix-valued Normal distributions can be written as vector-valued normal distri
 \end{markdown}
 
 \section{Machine Learning}
-\todo[inline]{Machine Learning intro}
-\begin{markdown}
-- recent changes: big data, specialized hardware
-- Machine Learning is used everywhere and really important
-	- key factor in automatization.
-- The process of machine learning
-	- Gathering data
-		- Splitting the data (Train, Test, validation)
-	- Designing a model
-		- Hyperparameter tuning
-	- **Training the model**
-	- Application
-
-\end{markdown}	
 Machine Learning is everywhere. It controls which products we buy, which music we discover and it enables recent advances in industrial automation, like autonomous driving. Specialist AI agents routinely outperform the best human players in the hardest games, like Go (\cite{gibney2016google}) or Starcraft II (\cite{vinyals2019alphastar})
-This recent rise of machine learning can be explained by a number of reasons. Enabled by the internet, almost every interaction with a technological system is tracked and recorded. Big Data is available to the masses through Open Data initiatives.
+This recent rise of machine learning is caused by a number of factors. Enabled by the internet, almost every interaction with a technological system is tracked and recorded. Big Data is available to the masses through Open Data initiatives.
 Learning algorithms have been around for a few decades, but recent advances in hardware meant it became economically feasable to use them on a large scale.
 
 The general process of machine learning can be summarized in multiple steps:
@@ -206,12 +196,17 @@ The general process of machine learning can be summarized in multiple steps:
 \end{markdown}
 
 \subsection{Loss functions}
-How do we recognize the optimal solution, or even tell which of two solutions is better?
-Depending on the task that the model is meant to perform, we can define different so-called Loss Functions (also called "risk"). These are typically some sort of distance measure between the model's output and the desired, output.
-However, there are other values we care about, such as the model's ability to generalize, i.e. how well it performs on data it has never seen before. If a model performs well on the trainig data set, but fails to generalize, this is called overfitting and means the model is not very useful on new data. The model memorizes the data, but doesn't get the underlying structure. To combat overfitting, people add a regularization term to the Loss function, which penalizes large parameters, which are usually an indicator that the model is overfitting.
-\todo[inline]{formula}
-\todo[inline]{split data}
+In order to find an optimal solution, there needs to be a measure of "goodness" of a given parametrization.
+The loss function usually is a sort of distance measure between the model's outputs and the true labels of the training data.
+$$L: \mathbb{R}^n \rightarrow \mathbb{R}$$
+One example for a loss function for classification problems, which is used for the experiments in this thesis, is Cross Entropy Loss, where $w$ are the model's parameters, $y$ is the true label, $\hat{y}_w$ is the model's output.
+$$L(w) = - \sum_{1}^{K}(y \cdot \log(\hat{y}_w(x)))$$
 
+In order ro prevent the model from overfitting, often a regularization term is added:
+$$L(w) = - \sum_{1}^{K}(y \cdot \log(\hat{y}_w(x) )) + \lambda \| w\|^2 $$
+Here $\lambda$ is a parameter that determines the strength of the regularization. This will penalize large weights during training, which biases the model towards parametrizations that perform better on unseen data. In most cases it is equivalent to weight decay, or decreasing weights after each optimization step. See \cite{Chaudhari2017entropy} for futher investigations on the differences between these two.
+
+It's worth noting that the choice of loss function and the regularization term have a significant impact on the outcome and convergence speed of training. Ultimately, other measures like classification accuracy might be more important during application.
 
 \section{Optimization}
 In order to find the optimal values for the parameters of a model, different methods have been proposed. For low-dimensional optimization problems with a small number of parameters, it is often possible to find the optimal parametrization analytically. For high-dimensional optimization problems, the analytical solution often is computationally intractable. Numerical algorithms are a solution to this problem.
@@ -222,19 +217,18 @@ For Deep Learning models, it is possible to obtain information about the derivat
 
 There are zeroth-order methods that only require the value of the loss function itself.
 
-First-order methods like Gradient Descent use the first derivative, or the gradient. They work under the assumption that the gradient points in the direction of the global minimum.
+First-order methods like Gradient Descent use the first derivative, or the gradient. They work under the assumption that the gradient points in the direction of the global minimum and approaches zero while approaching the minimum.
 
 \subsection{Gradient Descent}
-If the gradient of the Loss function at a certain point in parameter space is known, we can use this information to update the parameters in a way that takes us closer to the solution. A popular family of algorithms is derived from SGD. SGD means: Just take a step in the direction of steepest gradient. Scale the step size by the steepness of the gradient. If the gradient is very steep, take a larger step. If it is small, take a smaller step, like a drunk student tumbling down a hill and ending up on a local minimum.
-SGD has only a single hyperparameter, the "learning rate" $\alpha$, which is multiplied with the step. Its optimal choice depends on the data, the model and is generally not obvious.
+If the gradient of the Loss function at a certain point in parameter space is known, this information can be used to update the parameters in the direction towards towards the solution. A widely used family of optimization algorithms is derived from Gradient Descent. Gradient Descent means: Just take a step in the direction of steepest gradient. Scale the step size by the steepness of the gradient. If the gradient is very steep, take a larger step. If it is small, take a smaller step, like a drunk student tumbling down a hill and ending up on a local minimum.
 $$w_{i+1} = w_i - \alpha \cdot \nabla L(w_i) $$
+Gradient Descent has only a single hyperparameter, the "learning rate" $\alpha$, which is multiplied with the step. Its optimal choice depends on the data, the model and is generally not obvious.
 
 \subsection{Stochastic Gradient Descent}
 Traditional Gradient Descent uses the whole data set to compute the true gradient, which is computationally instractable for large datasets, the usual case in machine learning. There is a variation called Stochastic Gradient Descent(SGD). Instead of the true loss, which is the model's performance on the whole training data, it computes only an estimate for the true loss by using a subset or \textit{Minibatch} of the training data. A common choice is between 32 and 256 data items per minibatch.
 This greatly improves convergence speed, as the required computations are much easier to perform. However, especially for smaller batch sizes, this adds noise to the system, meaning that our parameter update step points only roughly in the direction of the steepest actual gradient. It has also been shown to improve generalization of the model.
-Many variants of SGD have been proposed, adding things like a momentum term or otherwise adapting the learning rate dynamically.
-
 $$w_{i+1} = w_i - \alpha \cdot \nabla \hat{L}(w_i) $$
+Many variants of SGD have been proposed, for example by adding a  momentum term or otherwise adapting the learning rate dynamically.
 
 \subsection{Second-Order Methods}
 First-order methods scale their step length by the gradient of the Loss function. This means that they get stuck on flat plateaus, because the gradient is very small.
@@ -280,15 +274,6 @@ As a mathematical object, a neuron is an activation function which depends on th
 \todo{nonlinear (affine) activation functions}
 \todo[inline]{architectures per task. ANN: CNN (visual/spatial), RNN (temporal)}
 
-
-
-\subsection{Regularization vs. weight decay}
-We minimize a different parameter than what we actually care about. (Loss on the training set vs accuracy on the test set). This can lead to problems, so there are some solutions.
-If the model's parameters are too large, that often means it is overfitting. in order to discourage this, a regularization term is sometimes added to the loss function. Usually this is the L2 norm of the parameter vector, but sometimes the L1 norm is also used.
-- But there are differences (see \cite{Chaudhari2017entropy})
-\todo{Bayesian?}
-\todo{Formula}
-\todo{Maybe illustrative plot}
 
 \subsection{Automatic Differentiation}
 \todo{Forward pass}
@@ -372,7 +357,7 @@ This is how to use it:
 
 In the next section there is more detailed documentation for the class, its attributes and functions.
 \end{markdown}
-\todo{Could include a runscript with  necessary changes in the appendix.}
+\done{Could include a runscript with  necessary changes in the appendix.}
 
 \subsection{Methods}
 \begin{markdown}
@@ -431,7 +416,6 @@ In order to change behavior of the class during development and research, the be
 
 Some bugs were also fixed. Previously, the algorithm skipped some minibatches during the estimation phase. However, there remains room for improvement. The class assumes the user to input sensible values and won't complain otherwise. For some variables, helpful unit checks are in place. This is fine in a research environment, but not for deployment.
 \end{markdown}
-\done[inline]{Make clearer the optimizer input, this is a large contribution that I only mentioned in my paper but never implemented.}
 
 \section{Test Problems}
 The optimizers were tested on some of the testproblems that come with DeepOBS and had a stable pytorch implementation at the time of testing. DeepOBS specifies the data set, the model architecture and initialization, the loss function and regularization. It also proposes a standard batch size that is shared by all baselines.
@@ -444,7 +428,7 @@ The DeepOBS testproblem \verb|cifar10_3c3d| uses the CIFAR10 data set\todo{cite 
 
 For the experiment investigating computational complexity, DeepOBS uses the built-in testproblem \verb|mnist_mlp|, which is a multi-layer perceptron that consists of four layers with 1000, 500, 100 and 10 unis respectively, using ReLU activation on the first three layers and softmax on the output layer. Initial weights are drawn from a truncated normal distribution ($\sigma = 0.03$)and the initial biases are set to 0.0. As a loss function, cross entropy loss is used, without any regularization term. The standard batch size is 128.
 
-In the experiment investigating different initialization methods, the goal was to replicate the findings from \todo{cite filip}, so the exact same model was used. It is very similar to the one that comes with DeepOBS. There are three convolutional layers, each followed by ReLU and maxpooling. After that, there are three fully-connected layers preceded by ReLUs. As a loss function, cross-entropy loss is used, with regularization as in \verb|cifar10_3c3d|.
+In the experiment investigating different initialization methods, the goal was to replicate the findings from \cite{roos2019active}, so the exact same model was used. It is very similar to the one that comes with DeepOBS. There are three convolutional layers, each followed by ReLU and maxpooling. After that, there are three fully-connected layers preceded by ReLUs. As a loss function, cross-entropy loss is used, with regularization as in \verb|cifar10_3c3d|.
 Batch size and initialization methods are varied.
 
 
@@ -477,23 +461,21 @@ In general, `PreconditionedSGD` is significantly outperformed by the variant wit
 Investigating further, figure \ref{fig:exp_tunedalpha} shows the performance of \verb|PreconditionedTunedSGD|, which calculates the preconditioner, but does not apply the constructed learning rate. Instead, it uses the exact same learning rate as the well-tuned baseline SGD. This version performs comparably to SGD and outperforms the two adaptive versions.
 
 \begin{figure}
-		%\input{images/exp_preconditioning.pgf}
-		\missingfigure[figheight=22cm]{Excluded for performance reasons. Many optimizers on fmnist and cifar10}
+		\input{images/exp_preconditioning.pgf}
+		%\missingfigure[figheight=22cm]{Excluded for performance reasons. Many optimizers on fmnist and cifar10}
 		\caption{Both variants of the algorithm perform significantly worse than established alternatives. AdaptiveSGD is better than PreconditionedSGD. On the fmnist model, the baseline optimizers quickly reach a minimum, but then get worse on the loss. AdaptiveSGD and PreconditionedSGD arrive close the mimimum much later and don't diverge.}
 		\label{fig:exp_preconditioning}
 \end{figure}
 
 \begin{figure}
-		%\input{images/exp_tunedalpha.pgf}
-		\missingfigure[figheight=22cm]{Excluded for performance reasons. Many optimizers on fmnist and cifar10}
+		\input{images/exp_tunedalpha.pgf}
+		%\missingfigure[figheight=22cm]{Excluded for performance reasons. Many optimizers on fmnist and cifar10}
 		\caption{This figure shows the preconditioning algorithm, modified to use the same learning rate as well-tuned SGD, for every epoch. It performs slightly worse than standard tuned SGD using the same learning rate, but better than the adaptive versions.}
 		\label{fig:exp_tunedalpha}
 \end{figure}
 \todo{change name to "PreconditionedTunedSGD" in the plot tunedalpha}
 
 \section{Experiment 2: Computational Complexity}
-\done[inline]{make clear we're measuring wallclock time here. CPU time would also be interesting}
-\done[inline]{Mention that CPU time would also be interesting. Maybe as a proposition for DeepOBS?}
 \begin{markdown}
 Wallclock time is an important metric for practitioners. To the practicioner it is important how much time, energy and money the training of a model costs. It is however difficult to interpret in experiment, because it depends on outside factors like hardware configuration, system load and other sources of statistical noise. DeepOBS provides a script that allows to compare the runtime of an optimizer against the runtime of SGD, run as a baseline on the same problem and the same hardware.
 
@@ -566,8 +548,6 @@ Using the DeepOBS standard batch size of 128, there are fewer minibatches per ep
 
 While the algorithm can be further optimized for performance, for example by moving all computations on the GPU, that's a big difference in computational cost. Calculating only the adaptive step size might be a better idea, as that incurs no significant performance penalty while achieving better accuracies.
 CPU time would also be interesting, because it is a more direct measure of the amount of computations required by the algorithm. Unfortunately, DeepOBS does not provide this function as of now.
-\done{Clarify: So estimating the Hessian with B=128 costs the same as 2 epochs of sgd? Or is it referring to applying the preconditioner over an epoch. The latter makes sense but can be remedied and is why it should rather be compared to adam in cost.}
-\done{add Adam in the comparison}
 
 Experiment 3 and 4 show that it is possible to rely on the algorithm constructing a learning rate. While the achieved accuracies are a bit worse than those of well-tuned SGD, the trade-off of not having to do the expensive tuning process might be worth the tradeoff observed in experiment 2.
 
