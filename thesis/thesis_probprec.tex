@@ -454,8 +454,8 @@ In general, `PreconditionedSGD` is significantly outperformed by the variant wit
 Investigating further, figure \ref{fig:exp_tunedalpha} shows the performance of \verb|PreconditionedTunedSGD|, which calculates the preconditioner, but does not apply the constructed learning rate. Instead, it uses the exact same learning rate as the well-tuned baseline SGD. This version performs comparably to SGD and outperforms the two adaptive versions.
 
 \begin{figure}
-		%\input{images/exp_preconditioning.pgf}
-		\missingfigure[figheight=22cm]{Excluded for performance reasons. Many optimizers on fmnist and cifar10}
+		\input{images/exp_preconditioning.pgf}
+		%\missingfigure[figheight=22cm]{Excluded for performance reasons. Many optimizers on fmnist and cifar10}
 		\caption{Both variants of the algorithm perform significantly worse than established alternatives. AdaptiveSGD is better than PreconditionedSGD. On the fmnist model, the baseline optimizers quickly reach a minimum, but then get worse on the loss. AdaptiveSGD and PreconditionedSGD arrive close the mimimum much later and don't diverge.}
 		\label{fig:exp_preconditioning}
 \end{figure}
