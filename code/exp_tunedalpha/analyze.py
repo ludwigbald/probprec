@@ -11,6 +11,8 @@ fig, axess = analyzer.plot_testset_performances("../exp_preconditioning/results"
 axess[0][0].get_legend().remove()
 axess[3][1].legend()
 
+axess[1][0].set_ylim(0.5, 2.0)
+
 axess[1][1].set_ylim(0.05, 0.25)
 axess[2][1].set_ylim(0.85, 0.93)
 axess[3][1].set_ylim(0.85, 1,0)
