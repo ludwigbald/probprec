@@ -19,7 +19,7 @@
 \usepackage[ngerman, english]{babel}
 \usepackage[hidelinks]{hyperref}
 
-\usepackage{amssymb}
+\usepackage{amssymb, amsmath}
 
 \usepackage{pgfplots}
 \pgfplotsset{compat=newest}
@@ -157,12 +157,15 @@ In parallel with this thesis, a pyTorch version of DeepOBS was being developed b
 
 \chapter{Fundamentals and Related Work}
 \section{Probability Basics}
-One important concept in probability theory is the Gaussian distribution.
+This thesis makes use of some basic concepts of probability theory. Most notably, vector-valued normal distributions, Bayes' Rule and point estimates.
+
+The following concepts are adapted from \cite{bishop2006pattern}.
+
+One of the central concepts in probability theory is the Gaussian distribution.
 The real-valued \textit{normal} or \textit{Gaussian} distribution is defined as:
 $$N(x | \mu, \sigma^2) = \frac{1}{(2\pi \sigma^2)^{1/2}} \exp\left(- \frac{1}{2\sigma^2} (x-\mu)^2 \right)$$
 It has the parameters \textit{mean} $\mu$ and \textit{variance} $\sigma ^2$.
 The mean represents the maximum-a-posteriori estimate for $x$; it is the maximum of $N(x | \mu, \sigma^2)$
-
 
 Extending this to a \textit{multivariate} Gaussian distribution with $n$ dimensions, the definition needs to be adapted:
 $$N(\vec{x} | \vec{\mu}, \Sigma) = \frac{1}{(2\pi)^{n/2}} \frac{1}{det(\Sigma)^{1/2}} \exp\left(-\frac{1}{2} (\vec{x} - \vec{\mu})^T \Sigma ^{-1} (\vec{x} - \vec{\mu})\right)$$
@@ -172,16 +175,15 @@ For the diagonal entries it follows that:
 $$\Sigma_{ii} = cov(x_i,x_i) = var(x_i)$$
 If the variables $x_i$ are independent,$\Sigma$ is a diagonal matrix.
 
-Matrix-valued Normal distributions can be written as vector-valued normal distributions by flattening the matrix to a vector.
-\todo{cite the book}
+Matrix-valued Normal distributions can be written as vector-valued normal distributions by flattening the matrix to a single vector.
 
-\begin{markdown}
-- Point estimates
-- Bayes' Rule
-\end{markdown}
+Bayes' Rule tells us what happens to the probability of an event $X$ after observing new evidence $E$, given a prior probability $P(X)$ and probabilities $P(E)$ and $P(E|X)$. In its basic form it looks like this:
+$$ P(X|E) = \frac{P(X) \cdot P(E|X)}{P(E)}$$
+
+Bayes' rule can also be applied to vector-valued normal distributions, which leads to vector valued normal posterior distributions.
 
 \section{Machine Learning}
-Machine Learning is everywhere. It controls which products we buy, which music we discover and it enables recent advances in industrial automation, like autonomous driving. Specialist AI agents routinely outperform the best human players in the hardest games, like Go (\cite{gibney2016google}) or Starcraft II (\cite{vinyals2019alphastar})
+Machine Learning algorithms are everywhere. They control which products we buy, which music we discover and they enable recent advances in industrial automation and autonomous driving. Specialist AI agents routinely outperform the best human players in the hardest games, like Go (\cite{gibney2016google}) or Starcraft II (\cite{vinyals2019alphastar})
 This recent rise of machine learning is caused by a number of factors. Enabled by the internet, almost every interaction with a technological system is tracked and recorded. Big Data is available to the masses through Open Data initiatives.
 Learning algorithms have been around for a few decades, but recent advances in hardware meant it became economically feasable to use them on a large scale.
 
@@ -236,7 +238,7 @@ Adaptive Modifications of SGD like \verb|Adam| and \verb|Momentum| keep track of
 For example, if there is little change in the last gradients, one can assume that the optimizer is far away from the minimum, where gradients should converge to zero. Therefore, it is now able to take larger steps.
 
 Second-Order-Methods are methods that explicitly use the Hessian $B$ of the Loss function, or the second derivative. This means they can use the explicit representation of curvature to directly compute where the gradient will hit zero.
-
+\todo[inline]{everything}
 -RMSprop
 - Conjugate gradient?
 s.o.:
@@ -268,16 +270,18 @@ $$ \frac{\kappa - 1}{\kappa + 1}$$
 
 \section{Deep learning}
 \subsection{Artificial Neural Networks}
-A popular machine learning paradigma is living through a resurgence: Artificial Neural Networks. The fundamental building block is the single neuron, whcih somewhat resembles a biological neuron. Its activation depends on the sum of the activation of its inputs. A neural network model is a sequence of neuron layers, connected with each other. There is an input layer, which is a direct mapping of the training data point. The input layer' activation are fed forward into the "hidden layers", which in turn feed their activations to the neurons of the output layer. Information about observed data is stored in the model's parameters, the weights and biases of each layer.
-As a mathematical object, a neuron is an activation function which depends on the sum of the weighted activations of the inputs. Often there is a bias, which is a static value added to the input activation.
-\todo{nonlinear (affine) activation functions}
-\todo[inline]{architectures per task. ANN: CNN (visual/spatial), RNN (temporal)}
+A popular machine learning paradigma is living through a resurgence: Artificial Neural Networks. The fundamental building block is the single neuron, which somewhat resembles a biological neuron. Its activation depends on the sum of the activation of its inputs. A neural network model is a sequence of neuron layers, connected with each other. There is an input layer, which is a direct mapping of the training data point. The input layer' activation are fed forward into the "hidden layers", which in turn feed their activations to the neurons of the output layer. Information about observed data is stored in the model's parameters, the weights and biases of each layer.
+As a mathematical object, a neuron is an activation function which depends on the sum of the weighted activations of the inputs. Often there is a bias, which is a static value added to the input activation. Activation functions are not necessarily linear.
+For example, the Rectified Linear Unit is widely used:
+$$ReLU(x) = \max(0,x) $$
+
+Different architectures of neural networks have emerged, which are useful for different tasks and types of input data. For example, fully connected Convolutional Neural Networks (CNN) are good at encoding visual or spatial information, while Recurrent Neural Networks have an internal state and are good at encoding information over time.
 
 
 \subsection{Automatic Differentiation}
 \todo{Forward pass}
 \todo{Derivation}
-For the most interesting class of optimizers, it is required to know the gradient at the current point in parameter space. In neural networks, this is achieved by Automatic Differentiation.
+For first- and higher-order optimizers, it is required to know the gradient at the current point in parameter space. In neural networks, this is achieved by backpropagation.
 Loss functions in neural networks have an interesting structure, in that they are a composition of all the layerwise activation functions. This structure leads to the algorithm of backpropagation:
 During training, the model (using its current value for its parameters) is fed with data from the data set. The loss function of this minibatch is computed. While this happens, the computations that take place are tracked and built into a graph structure. This is necessary, because the loss function in practice isn't defined in a closed-form way directly on the parameters, but as a composition of layerwise activation functions. This means that for every parameter tracked by the graph, we can infer its influence on the loss. The parameters need to be leaves of the tree, which means they don't themselves depend on something else. (provide example graph image here).
 The gradient in the direction of an individual leaf (partial derivative) is then computed by applying the chain rule, starting from the output of the loss function. This is called the backward pass.
@@ -285,7 +289,6 @@ The gradient in the direction of an individual leaf (partial derivative) is then
 
 
 \section{Benchmarking}
-using deepobs \cite{deepobs}
 \begin{markdown}
 There are no standard established benchmarking protocols for new optimizers. It isn't even clear what measures to consider, or how they are to be measured. As a result, nobody knows which optimizers are actually good. And some bad optimizers will seem good.
 DeepOBS is a solution to this problem, standardizing a protocol, providing benchmarks and standard test problems.
@@ -394,7 +397,7 @@ In the following, I will highlight and explain some key software design decision
 The \textbf{main goals} for the implementation were to make the algorithm as easy to use as possible for a standard usecase, while maintaining the flexibility I needed to research specific variations. The conceptual modifications to the algorithm are discussed in section \ref{sec:modifications}. The simple, default usecase was a user trying to use the preconditioner as proposed in the original paper, to optimize a neural network model. In this case, the necessary changes to the user's existing code should be minimal, with hyperparameters set to reasonable default values. For development, it is important to understand the algorithm's structure and the code and be able to easily modify the algorithm without disturbing other parts.
 
 \begin{markdown}
-The code in its final form is provided as a **self-contained python class**, built for **pyTorch**. According to Python conventions, all the internal functions that a user should not call are marked as hidden by having names beginning with an "`_`". This is an implementation of the design pattern *Low Coupling* and tells the user a clear interface. All functions have descriptive names. For example, in order to start the estimation process, the function `start_estimate()` needs to be called.
+The code in its final form is provided as a **self-contained python class**, built for the deep-learning framework **pyTorch**. According to Python conventions, all the internal functions that a user should not call are marked as hidden by having names beginning with an "`_`". This is an implementation of the design pattern *Low Coupling* and tells the user a clear interface. All functions have descriptive names. For example, in order to start the estimation process, the function `start_estimate()` needs to be called.
 
 The class `Preconditioner` **inherits** from `torch.optim.Optimizer`. This means it follows all the conventions for how optimizers are expected to behave in pytorch. This makes it intuitive to use for the pytorch user. Features that were added to support this include the `state` dict, which can be used to save and load the state of the optimizer in order to pause or continue training. Another supported feature are parameter groups. This allows to treat different parameters seperately, for example different layers of a neural network. Specifically, each Parameter group will be optimized with a seperate learning rate.
 
@@ -578,6 +581,7 @@ This thesis is one of the first semi-external projects that use DeepOBS and more
 
 \chapter{Conclusion}
 In this thesis, I present an implementation of the probabilistic preconditioning algorithm proposed in \cite{roos2019active}. Using the optimizer benchmarking framework DeepOBS,  I show that it performs worse than well-tuned standard optimizers like SGD and Adam on convolutional neural networks. I also show that using the preconditioner incurs a large performance penalty. I propose a middle ground solution, which I call \verb|AdaptiveSGD| throughout this thesis. It uses information about the Hessian in order to propose a good step size, but does not construct a preconditioner.
+\todo[inline]{conclude}
 
 
 \appendix %% Start the appendices.
