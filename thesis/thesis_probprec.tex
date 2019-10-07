@@ -318,6 +318,7 @@ As described in section \ref{sec:preconditioning}, a perfect preconditioner woul
 The algorithm tested in this thesis is described in detail in \cite{roos2019active}.
 This is a high-level overview on the algorithm's structure.
 The algorithm is made up of four main parts, which will be tested seperately throughout this thesis.
+It restarts by default every epoch.
 \begin{markdown}
 1. Gather observations in-place to construct a multivariate Gaussian distribution as a prior estimate for the Hessian. Calculate alpha and initialize SGD with alpha as its learning rate.
 2. Gather more observations and calculate the posterior multivariate Gaussian distribution using Bayes' rule.
@@ -336,12 +337,13 @@ As described in section \ref{sec:preconditioning}, the learning rate corrects fo
 Rather than going for the safest choice, the modified algorithm is able to use larger step sizes if all parameters in a group allow for it. This accelerates learning in the direction of those parameters. The benefit of this approach in practice was not tested.
 
 \subsubsection{Automatic Assessment of the Hessian's quality}
-In the original algorithm, the Hessian is arbitrarily re-estimated every epoch. Hessian re-estimation is needed, as demonstrated in the original paper, \todo{alpha should refer to an equation or as the scalar diagonal of the approximation.}alpha changes over time. The goal of this modification was to expose a measure of how useful/correct the estimated Hessian is, after observing a bit of data. A new estimation proces would be started if the current estimate was worse than a certain threshold. Multiple approaches were tried. A key point of trouble was the variance-less estimate of the Hessian. The original paper mentions that the Hessian is taken as the mean of a multivariate Gaussian distribution, but it fails to take this distribution's variance into account. Instead, it just assumes this Hessian is the optimal choice. \todo{The mean is the maximum a-posteriori (MAP) estimate i.e. the value that best fits the observations to the prior belief.
-	It does take uncertainty into account (albeit unfounded but practical). The full covariance would be intractable so it fits a diagonal estimate for the covariance. }
-- Comparing the predicted gradient to the actual observed gradient.
+The algorithm estimates a low-rank estimate for the Hessian. After a number of optimization steps, the surrounding loss landscape has changed and the estimate for the Hessian no longer is useful.
+It is not clear when this re-estimation should optimally happen. An answer needs to balance the added computational cost of re-estimating the Hessian with the performance benefit that comes from having a better-fitting Hessian.
+Using the original algorithm, the estimation process is restarted every epoch. The authors don't justify this practical choice.
+The \verb|Preconditioner| class includes a method \verb|maybe_start_estimate()| which is called before every step of the optimizer and could be used to dynamically assess whether the Hessian is out of date.
 
-- Maybe: Automatic restart of the estimation process, once the old Hessian is determined to be out of date.
-\todo{Good idea but difficult to formulate mathematically}
+Assessment of the Hessian's quality is made especially difficult by sampling noise. A possible approach is to test prediction power of the Hessian. Given the last observed gradient, how well does the Hessian predict the gradient for the next minibatch? Standard statistical techniques like a $\chi^2$ homogenity test could be applied, varying the confidence level to find the balance mentioned before.
+If the algorithm kept track of a measure of uncertainty for the Hessian and in turn its predictions, Bayesian methods would be possible to apply.
 
 \subsubsection{Focusing on the adaptive learning rate}
 Deep learning problems are very high-dimensional. \cite{Chaudhari2017entropy} report that around 10\% of eigenvalues are large, while 90\% are close to zero. A proper preconditioner would need to rescale around 10\% of parameters. This means the proper preconditioner's rank would still be very high. Computations would be much more expensive and would probably eat up the performance benefit that comes with preconditioning.
@@ -445,13 +447,13 @@ The hyperparameters used for the experiment were the same for both optimizers: `
 
 The results are presented in figure \end{markdown}
 \ref{fig:exp_preconditioning}
-\begin{markdown}, together with the DeepOBS baselines on the same problems. In almost every metric, both tested optimizers were outperformed by all widely used standards like simple SGD and Adam. Interesingly, the `fmnist_2c2d` problem seems prone to some kind of overfitting: All the standard optimizers increase on test loss after reaching a local minimum. However, the test accuracy does not seem to suffer from this same problem. `PreconditionedSGD` and `AdaptiveSGD` don't show this behavior, but also don't reach convergence even after 100 epochs, when they still continue to improve. The difference in achieved accuracy is smaller on `fmnist_2c2d` than on `cifar10_3c3d`.
+\begin{markdown}, together with the DeepOBS baselines on the same problems. In almost every metric, both tested optimizers were outperformed by all widely used standards like simple SGD and Adam. Interesingly, the `fmnist_2c2d` problem seems prone to overfitting: All the standard optimizers increase on test loss after reaching a local minimum. However, the test accuracy does not seem to suffer from this same problem. `PreconditionedSGD` and `AdaptiveSGD` don't show this behavior, but also don't reach convergence even after 100 epochs, when they still continue to improve. The difference in achieved accuracy is smaller on `fmnist_2c2d` than on `cifar10_3c3d`.
 Another finding is that the variance of `PreconditionedSGD` and `AdaptiveSGD` is larger than the variance of the baseline optimizers.
 
-In general, `PreconditionedSGD` is significantly outperformed by the variant without preconditioning, `AdaptiveSGD`.
+On every metric, `PreconditionedSGD` is significantly outperformed by the variant without preconditioning, `AdaptiveSGD`.
 \end{markdown}
 
-Investigating further, figure \ref{fig:exp_tunedalpha} shows the performance of \verb|PreconditionedTunedSGD|, which calculates the preconditioner, but does not apply the constructed learning rate. Instead, it uses the exact same learning rate as the well-tuned baseline SGD. This version performs comparably to SGD and outperforms the two adaptive versions.
+Investigating further, figure \ref{fig:exp_tunedalpha} shows the performance of \verb|PreconditionedTunedSGD|, which calculates the preconditioner, but does not apply the constructed learning rate. Instead, it uses the exact same learning rate as the well-tuned baseline SGD. Comparing it to SGD isolates the effectiveness of preconditioning without an adaptive learning rate. This version performs comparably to SGD and outperforms the two adaptive versions. On the \verb|cifar10_3c3d| testproblem, it even outperforms SGD.
 
 \begin{figure}
 		\input{images/exp_preconditioning.pgf}
@@ -466,7 +468,6 @@ Investigating further, figure \ref{fig:exp_tunedalpha} shows the performance of 
 		\caption{This figure shows the preconditioning algorithm, modified to use the same learning rate as well-tuned SGD, for every epoch. It performs better than standard tuned SGD using the same learning rate, and even better than the adaptive versions.}
 		\label{fig:exp_tunedalpha}
 \end{figure}
-\todo[inline]{Preconditioned Tuned SGD is so good! This might mean that the algorithm always gets the learning rate quite wrong. The preconditioning seems to help with a fixed learning rate (at least on cifar), but it makes things worse for the adaptive learning rate.}
 
 \section{Experiment 2: Computational Complexity}
 \begin{markdown}
@@ -526,14 +527,16 @@ Both SGD and \verb|PreconditionedSGD| with an optimal choice for learning rate a
 \section{Discussion}
 The experiments presented in the previous sections show that the algorithm proposed in \cite{roos2019active} is not generally useful for application in deep learning. In Experiment 1 it is outperformed in nearly every measure of training success by established optimizers. When compared to a direct alternative without it, neither the preconditioner nor the adaptive step size show an increase in performance.
 
-This stands in direct contrast to the findings of the original authors, who report the algorithm comparing favourably against SGD in particular. However, the used testing protocol is not thoroughly explained. Test problem, batch size and SGD learning rates were set manually and without giving a reason, which makes the results hard to interpret. In a similar way, the hyperparameters were not tuned in a systematic way for either optimizer.
+This stands in direct contrast to the findings of the original authors, who report the algorithm comparing favourably against SGD in particular. However, the used testing protocol is not thoroughly explained. Test problem, batch size and SGD learning rates were set manually and without giving a reason, which makes the results hard to interpret. In a similar way, the Preconditioner's hyperparameters were not tuned in a systematic way in the experiments in this thesis.
 
-Given this caveat, the comparatively poor performance of both AdaptiveSGD and PreconditionedSGD compared to the DeepOBS baselines can be explained. The Preconditioner is a quite complicated algorithm that has many hyperparameters, so complete tuning was infeasible. While the DeepOBS baselines were exhaustively tuned for accuracy, the proposed algorithms were not tuned to the testproblem. While tuning their learning rate is not necessary, other hyperparameters like the number of steps used for the Hessian estimate rely on guessing and do impact performance. The algorithm uses Bayesian methods to estimate the Hessian, but does not leverage the knowledge about the uncertainty of the estimates.
+Given this caveat, the comparatively poor performance of both AdaptiveSGD and PreconditionedSGD compared to the DeepOBS baselines can be explained. The Preconditioner is a quite complicated algorithm that has many hyperparameters, so exhaustive tuning was infeasible. While the DeepOBS baselines were tuned for accuracy, the proposed algorithms were not tuned to the testproblem. While tuning their learning rate is not necessary, other hyperparameters like the number of steps used for the Hessian estimate rely on guessing and do impact performance. The algorithm uses Bayesian methods to estimate the Hessian, but does not leverage the knowledge about the uncertainty of the estimates.
 
 In order to keep computational overhead of applying the preconditioner manageable, the preconditioner matrix was reduced to rank two. This however does not have a large effect on the condition number. In Deep Learning, generally there are many large eigenvalues that would all need to be reduced by a preconditioner in order to see a notable improvement on the condition number. Given that applying the preconditioner actually leads to smaller learning success than ignoring it, applying the rank-2-approximation preconditioner seems to be counterproductive. Because gradients can vary dramatically, the preconditioner is noisy. The algorithm also always re-starts the whole estimation process, while ignoring curvature data gathered in previous iterations. As a consequence the estimate does not become more accurate over time. This is in accordance with the authors' assesment that the good performance is mainly caused by the adaptive step size.
 
 Another possible reason that SGD outperforms the preconditioner is that while estimating the Hessian, the Preconditioner does not use the data for actual parameter updates. The effect of this depends on the number of minibatches.
-
+\begin{markdown}
+*Preconditioning + adaptive learning rate* performs worse than *tuned SGD*, but *Preconditioning + fixed tuned learning rate* performs better than *tuned SGD*. *Adaptive learning rate* performs worse than *tuned SGD* but better than *Preconditioning + adaptive learning rate*. This means that there are interaction effects between applying preconditioning and dynamically adapting the learning rate. On the preconditioned loss landscape, using the adaptive learning rate is beneficial, while on the non-preconditioned loss landscape, it is not optimal.
+\end{markdown}
 
 In experiment 2, the performance penalty was investigated. The authors report that the cost of building the rank 2 approximation accounted for 2-5\% of the total computational cost per epoch, using a batch size of 32 on the training subset of CIFAR-10. This number does not tell the whole story. This thesis adds to this finding the performance penalty of estimating the Hessian and applying the preconditioner. The prior observations add no considerable overhead compared to SGD, while both calculating and applying the Preconditioner add considerable overhead. Adam as another adaptive method is almost exactly as fast as SGD.
 
@@ -732,6 +735,12 @@ singularity exec ~/image.sif python3 ~/exp_preconditioning/runscript.py
 
 echo DONE!
 \end{verbatim}
+
+\section{Repository}
+Everything that's needed to reproduce the experiments in this thesis is freely accessible.
+The python and bash source code for the preconditioner, cluster use, experiment setup are available in the following repository:
+\url{https://github.com/ludwigbald/probprec/}
+Raw experiment result files and the \LaTeX sources for this thesis and the presentation are in the same repository.
 
 
 \addcontentsline{toc}{chapter}{References}
