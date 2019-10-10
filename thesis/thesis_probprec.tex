@@ -157,9 +157,17 @@ In parallel with this thesis, a pyTorch version of DeepOBS was being developed b
 
 \chapter{Fundamentals and Related Work}
 \section{Probability Basics}
-This thesis makes use of some basic concepts of probability theory. Most notably, vector-valued normal distributions, Bayes' Rule and point estimates.
+This thesis makes use of some basic concepts of probability theory. Most notably Bayes' Rule, point estimates, and vector-valued normal distributions.
 
-The following concepts are adapted from \cite{bishop2006pattern}.
+The following concepts in this chapter are adapted from \cite{bishop2006pattern}, if not otherwise specified.
+
+Bayes' Rule tells us what happens to the probability of an event $X$ after observing new evidence $E$, given a \textit{prior} probability $P(X)$ and probabilities $P(E)$ and $P(E|X)$. It is given by this formula:
+$$ P(X|E) = \frac{P(X) \cdot P(E|X)}{P(E)}$$
+$P(X|E)$ is the \textit{posterior} probability.
+
+When modelling a random variable $x$, a point estimator $\hat{x}$ is a function that gives an approximation for the true value for $x$ based on evidence, e.g. observations of $x$. One example of a point estimator is the $maximum-a-posteriori$ estimate, which is defined as precisely that value which has the highest posterior probability, i.e. the maximum of the posterior probability distribution.
+
+\section{The normal distribution}
 
 One of the central concepts in probability theory is the Gaussian distribution.
 The real-valued \textit{normal} or \textit{Gaussian} distribution is defined as:
@@ -177,10 +185,7 @@ If the variables $x_i$ are independent,$\Sigma$ is a diagonal matrix.
 
 Matrix-valued Normal distributions can be written as vector-valued normal distributions by flattening the matrix to a single vector.
 
-Bayes' Rule tells us what happens to the probability of an event $X$ after observing new evidence $E$, given a prior probability $P(X)$ and probabilities $P(E)$ and $P(E|X)$. In its basic form it looks like this:
-$$ P(X|E) = \frac{P(X) \cdot P(E|X)}{P(E)}$$
-
-Bayes' rule can also be applied to vector-valued normal distributions, which leads to vector valued normal posterior distributions.
+Bayes' rule can also be applied to vector-valued normal distributions, which again leads to vector-valued normal distributions as posteriors.
 
 \section{Machine Learning}
 Machine Learning algorithms are everywhere. They control which products we buy, which music we discover and they enable recent advances in industrial automation and autonomous driving. Specialist AI agents routinely outperform the best human players in the hardest games, like Go (\cite{gibney2016google}) or Starcraft II (\cite{vinyals2019alphastar})
@@ -204,9 +209,10 @@ $$L: \mathbb{R}^n \rightarrow \mathbb{R}$$
 One example for a loss function for classification problems, which is used for the experiments in this thesis, is Cross Entropy Loss, where $w$ are the model's parameters, $y$ is the true label, $\hat{y}_w$ is the model's output.
 $$L(w) = - \sum_{1}^{K}(y \cdot \log(\hat{y}_w(x)))$$
 
-In order ro prevent the model from overfitting, often a regularization term is added:
+A model can achieve very good scores on training data, but fail to generalize these results to unseen data. This unwanted behavior is called \textit{overfitting}.
+In order to prevent the model from overfitting, often a regularization term is added:
 $$L(w) = - \sum_{1}^{K}(y \cdot \log(\hat{y}_w(x) )) + \lambda \| w\|^2 $$
-Here $\lambda$ is a parameter that determines the strength of the regularization. This will penalize large weights during training, which biases the model towards parametrizations that perform better on unseen data. In most cases it is equivalent to weight decay, or decreasing weights after each optimization step. See \cite{Chaudhari2017entropy} for futher investigations on the differences between these two.
+Here $\lambda$ is a parameter that determines the strength of the regularization. This will penalize large weights during training, which biases the model towards less extreme parametrizations which are caused by fitting too closely to training data. In most cases L2 regularization is equivalent to weight decay, or decreasing weights after each optimization step. See \cite{Chaudhari2017entropy} for futher investigations on the differences between these two.
 
 It's worth noting that the choice of loss function and the regularization term have a significant impact on the outcome and convergence speed of training. Ultimately, other measures like classification accuracy might be more important during application.
 
@@ -237,15 +243,11 @@ First-order methods scale their step length by the gradient of the Loss function
 Adaptive Modifications of SGD like \verb|Adam| and \verb|Momentum| keep track of previously seen gradients in order to take better steps. This implicitly assumes that past gradients contain information about future gradients, which is often the case.
 For example, if there is little change in the last gradients, one can assume that the optimizer is far away from the minimum, where gradients should converge to zero. Therefore, it is now able to take larger steps.
 
-Second-Order-Methods are methods that explicitly use the Hessian $B$ of the Loss function, or the second derivative. This means they can use the explicit representation of curvature to directly compute where the gradient will hit zero.
-\todo[inline]{everything}
--RMSprop
-- Conjugate gradient?
-s.o.:
--Newton: Needs access to the Hessian.
--Quasi-Newton.
-We can keep track of an estimate of the Hessian along the way.
+Second-Order-Methods are methods that explicitly use the Hessian $B$ of the Loss function, which is equivalent to the second derivative$\nabla\nabla{L}(w_i)$. This means they can use the explicit representation of curvature to take even better optimization steps.
 
+Newton's method is the theoretical base for Quasi-Newton methods that try to achieve similar performance while limiting computational complexity. Its update rule looks like this:
+$$w_{i+1} = w_i - \frac{\nabla \hat{L}(w_i)}{\nabla\nabla\hat{L}(w_i)}$$
+Note the similarity to SGD's update rule, but replacing the scalar learning rate with a matrix: $\alpha \equiv 1 / \nabla\nabla\hat{L}(w_i)$
 
 \section{Preconditioning} \label{sec:preconditioning}
 SGD takes large steps if the gradient of the loss landscape is steep, and it takes small steps if the gradient of the loss landscape is flat. The underlying assumption is that as the gradient gets flatter (approaches zero), the algorithm approaches the minimum of the loss function. Taking large steps close to the minimum most likely means taking a step away from the minimum.
