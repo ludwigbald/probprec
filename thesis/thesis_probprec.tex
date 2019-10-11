@@ -281,14 +281,10 @@ Different architectures of neural networks have emerged, which are useful for di
 
 
 \subsection{Automatic Differentiation}
-\todo{Forward pass}
-\todo{Derivation}
-For first- and higher-order optimizers, it is required to know the gradient at the current point in parameter space. In neural networks, this is achieved by backpropagation.
-Loss functions in neural networks have an interesting structure, in that they are a composition of all the layerwise activation functions. This structure leads to the algorithm of backpropagation:
-During training, the model (using its current value for its parameters) is fed with data from the data set. The loss function of this minibatch is computed. While this happens, the computations that take place are tracked and built into a graph structure. This is necessary, because the loss function in practice isn't defined in a closed-form way directly on the parameters, but as a composition of layerwise activation functions. This means that for every parameter tracked by the graph, we can infer its influence on the loss. The parameters need to be leaves of the tree, which means they don't themselves depend on something else. (provide example graph image here).
-The gradient in the direction of an individual leaf (partial derivative) is then computed by applying the chain rule, starting from the output of the loss function. This is called the backward pass.
+First- and higher-order optimizers require the gradient at the current point in parameter space. In neural networks, this is achieved by an algorithm called backpropagation.
+Loss functions in neural networks are the composition of all the layerwise activation functions, which are all individually differentiable. This structure leads to the algorithm of backpropagation, which computes the gradient by doing a \textit{forward pass} followed by a \textit{backward pass}.
 
-
+For the forward pass, the loss function for a given minibatch is computed by applying the model to the minibatch data and computing the error score on its output. During these computations, all operations on the hidden layers are recorded in a graph structure. For each of these basic operations, computing the gradient is trivial. Taking the final loss value as the root of the graph, the algorithm traverses backwards through the graph and computes individual partial derivatives for each parameter by applying the chain rule along the path.
 
 \section{Benchmarking}
 \begin{markdown}
@@ -309,23 +305,22 @@ DeepOBS is a solution to this problem, standardizing a protocol, providing bench
       	- DeepOBS provides the analyzer class, which is able to automatically generate matplotlib plots showing the results of your runs.
 \end{markdown}
 
-\section{Related Work}
-\todo{in which other ways has this problem been adressed? (What even is the problem?)}
+%\section{Related Work}
+%\todo{in which other ways has this problem been adressed? (What even is the problem?)}
 
 
 \chapter{Approach (Implementation)}
 \section{Description of the algorithm}
-\todo{Do I need to go into more detail here?}
 As described in section \ref{sec:preconditioning}, a perfect preconditioner would be the inverse of the Hessian of the loss function, wich is not directly accessible and expensive to compute.
 The algorithm tested in this thesis is described in detail in \cite{roos2019active}.
 This is a high-level overview on the algorithm's structure.
 The algorithm is made up of four main parts, which will be tested seperately throughout this thesis.
 It restarts by default every epoch.
 \begin{markdown}
-1. Gather observations in-place to construct a multivariate Gaussian distribution as a prior estimate for the Hessian. Calculate alpha and initialize SGD with alpha as its learning rate.
-2. Gather more observations and calculate the posterior multivariate Gaussian distribution using Bayes' rule.
-3. Take the mean of this distribution as the MAP-estimate. Invert it.
-4. For every following minibatch, rescale the gradients by applying the preconditioner and perform an update step of SGD.
+1. Using observations of Hessian-vector-products, construct a multivariate Gaussian distribution as a prior estimate for the Hessian. Using this information about curvature, calculate a scalar measure $\alpha$ for the inverse of the curvature and use it as the learning rate of the inner optimizer.
+2. Gather more observations and calculate the posterior multivariate Gaussian distribution using Bayes' rule and the prior constructed in step 1.
+3. Take the mean of this distribution as the maximum-a-posteriori-estimate. Invert it.
+4. For every following minibatch, rescale the observed gradient by applying the preconditioner, and perform an update step of the inner optimizer.
 \end{markdown}
 
 

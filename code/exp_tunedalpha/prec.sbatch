@@ -24,7 +24,7 @@
 # the maximum time the scripts needs to run
 # "minutes:seconds", "hours:minutes:seconds", "days-hours", "days-hours:minutes" and "days-hours:minutes:seconds"
 
-#SBATCH --array=46-49
+#SBATCH --array=42-51
 
 #SBATCH --error=job.%J.err
 # write the error output to job.*jobID*.err
@@ -56,7 +56,7 @@ cp -R /common/datasets/Fashion-MNIST/. $DATA_DIR/pytorch/FashionMNIST/raw/
 
 
 
-singularity exec ~/image.sif python3 ~/exp_tunedalpha/runscript.py --data_dir $DATA_DIR --random_seed $SLURM_ARRAY_TASK_ID
+singularity exec ~/image.sif python3 ~/exp_tunedalpha/runscript2.py --data_dir $DATA_DIR --random_seed $SLURM_ARRAY_TASK_ID
 
 
 echo DONE!
