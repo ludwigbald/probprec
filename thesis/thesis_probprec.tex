@@ -38,6 +38,9 @@
 \newcommand{\figurewidth}{\linewidth / 2}
 \newcommand{\done}[2][]{\todo[color=green!40, #1]{\textbf{Done:} #2}}
 
+\newcommand{\cov}{\operatorname{cov}}
+\newcommand{\var}{\operatorname{var}}
+
 % Kann von Student auch nach pers\"onlichem Geschmack ver\"andert werden.
 \pagestyle{headings}
 
@@ -57,7 +60,7 @@
 			Wilhelm-Schickard-Institut f\"ur Informatik\\[4cm]}
 		{\huge Bachelor Thesis Cognitive Science\\[2cm]}
 		{\Large\bf  Investigating Probabilistic Preconditioning on Artificial Neural Networks \\[1.5cm]}
-		{\large Ludwig Bald}\\[0.5cm]
+		{\large Ludwig Valentin Bald}\\[0.5cm]
 		\today \\[4cm]
 		\parbox{7cm}{\begin{center}{{\small\bf Gutachter}\\
 				[0.5cm]\large Prof. Dr. Philipp Hennig}\\
@@ -85,7 +88,7 @@
 	\textbf{Bald, Ludwig:}\\
 	\emph{Investigating Probabilistic Preconditioning on Artificial Neural Networks}\\ Bachelor Thesis Cognitive Science\\
 	Eberhard Karls Universit\"at T\"ubingen\\
-	Thesis period: von-bis
+	Thesis period: 19.06.2019-18.10.2019
 \end{minipage}
 \newpage
 
@@ -144,15 +147,16 @@ I would also like to thank my supervisor Filip De Roos, who was always available
 \chapter{Introduction} % 1-2 pages
 In recent years, machine learning and more specifically Deep Learning has been becoming more and more relevant. Both in research and in application, it is ubiquitous. It has lead to anything from a better understanding of the brain's structure (\cite{brown2016machine}) to major advancements in self-driving cars.
 
-Even though the practical use of the current state of machine learning is unquestionable, there is a lot of opportunity for research and further improvement of the inner workings. One of the areas of interest is the study of optimization algorithms. They have a large effect on the time it takes to find an optimal parametrization while training a machine learning model. Improvements in this area lead to reduced cost, reduced need for data and reduced energy consumption.
+Even though the practical use of the current state of machine learning is unquestionable, there is a lot of opportunity for research and further improvement of the inner workings. One of the areas of interest is the study of optimization algorithms. They have a large effect on the time it takes to find an optimal parametrization while training a machine learning model. Improvements in this area lead to reductions in cost, need for data and energy consumption.
 
-The simplest optimizer is Stochastic Gradient Descent, which is a first-order-method and needs access to the gradient of the error function of the model. Second-order methods make use of the Hessian of the error function, which is the second derivation and contains information about curvature. The additional curvature information allows these methods to take much larger and more precise steps, but they require more computational effort which is infeasible for high-dimensional problems like Deep Learning models.
+The simplest optimizer is Stochastic Gradient Descent (SGD), which is a first-order-method and needs access to the gradient of the error function of the model. Second-order methods make use of the Hessian of the error function, which is the second derivation and contains information about curvature. The additional curvature information allows these methods to take much larger and more precise steps, but they require more computational effort which is infeasible for high-dimensional problems like Deep Learning models.
 
-Two recent publications mainly drive this thesis: \cite{roos2019active} describes a preconditioning algorithm that estimates the Hessian and applies its inverse to the parameters, which is a way of including second-order information. This changes the parameter landscape so that standard first-order optimizers can converge faster to the optimum. The paper shows that it compares favourably in performance over non-preconditioned, standard SGD. The paper also shows results for a single Deep Learning experiment.
-The second paper, \cite{deepobs}, presents the benchmarking suite "DeepOBS" which makes it easier to compare new optimization algorithms in an unbiased way against established baselines.
+Two recent publications mainly drive this thesis: \cite{roos2019active} describes a preconditioning algorithm that estimates the Hessian and applies its inverse to the parameters, which is a way of including second-order information. This changes the parameter landscape so that standard first-order optimizers can converge faster to the optimum. The paper suggest that it compares favourably in performance over non-preconditioned, standard SGD. The paper also reports results for a single Deep Learning experiment.
+The second paper, \cite{deepobs}, presents the benchmarking suite "DeepOBS" which makes it easier to compare new optimization algorithms against established baselines in an unbiased way.
 
-This thesis makes multiple key contributions. The first is a reimplementation of the preconditioning algorithm, which increases usability and adds functionality, like the possibility to easily switch out the optimizer that takes over after preconditioning. The second contribution is the comparison of the preconditioning algorithm against established benchmarks measured using DeepOBS, which includes both an attempt to reproduce the results, and further investigation of applying the optimizer to Deep Learning models.
-In parallel with this thesis, a pyTorch version of DeepOBS was being developed by Aaron Bahde. This development is described in detail in \cite{abahde}. Another contribution was to provide user feedback to the development team of DeepOBS. A selection of feedback is replicated towards the end of this thesis.
+This thesis makes multiple key contributions. The first is a reimplementation of the preconditioning algorithm, which increases usability and adds functionality, like the possibility to easily switch out the inner optimizer which takes over after preconditioning.
+The second contribution is the comparison of the preconditioning algorithm against established benchmarks measured using DeepOBS, which includes both an attempt to reproduce the results and further investigation into applying the optimizer to Deep Learning models.
+In parallel with this thesis, a pyTorch version of DeepOBS was being developed, which is described in detail in \cite{abahde}. Another contribution was to provide user feedback to the development team of DeepOBS. A selection of main feedback points is replicated towards the end of this thesis.
 
 
 \chapter{Fundamentals and Related Work}
@@ -162,44 +166,42 @@ This thesis makes use of some basic concepts of probability theory. Most notably
 The following concepts in this chapter are adapted from \cite{bishop2006pattern}, if not otherwise specified.
 
 Bayes' Rule tells us what happens to the probability of an event $X$ after observing new evidence $E$, given a \textit{prior} probability $P(X)$ and probabilities $P(E)$ and $P(E|X)$. It is given by this formula:
-$$ P(X|E) = \frac{P(X) \cdot P(E|X)}{P(E)}$$
+$$P(X|E) = \frac{P(X) \cdot P(E|X)}{P(E)}$$
 $P(X|E)$ is the \textit{posterior} probability.
 
-When modelling a random variable $x$, a point estimator $\hat{x}$ is a function that gives an approximation for the true value for $x$ based on evidence, e.g. observations of $x$. One example of a point estimator is the $maximum-a-posteriori$ estimate, which is defined as precisely that value which has the highest posterior probability, i.e. the maximum of the posterior probability distribution.
+When modelling a random variable $x$, a point estimator $\hat{x}$ is a function that gives an approximation for the true value for $x$ based on evidence, for example observations of $x$. One example of a point estimator is the $maximum-a-posteriori$ estimate, which is defined as precisely the value for $x$ which has the highest posterior probability, i.e. the maximum of the posterior probability distribution.
 
-\section{The normal distribution}
+\section{The Normal Distribution}
 
 One of the central concepts in probability theory is the Gaussian distribution.
 The real-valued \textit{normal} or \textit{Gaussian} distribution is defined as:
-$$N(x | \mu, \sigma^2) = \frac{1}{(2\pi \sigma^2)^{1/2}} \exp\left(- \frac{1}{2\sigma^2} (x-\mu)^2 \right)$$
+$$\mathcal{N}(x | \mu, \sigma^2) = \frac{1}{(2\pi \sigma^2)^{1/2}} \exp\left(- \frac{1}{2\sigma^2} (x-\mu)^2 \right)$$
 It has the parameters \textit{mean} $\mu$ and \textit{variance} $\sigma ^2$.
 The mean represents the maximum-a-posteriori estimate for $x$; it is the maximum of $N(x | \mu, \sigma^2)$
-
 Extending this to a \textit{multivariate} Gaussian distribution with $n$ dimensions, the definition needs to be adapted:
-$$N(\vec{x} | \vec{\mu}, \Sigma) = \frac{1}{(2\pi)^{n/2}} \frac{1}{det(\Sigma)^{1/2}} \exp\left(-\frac{1}{2} (\vec{x} - \vec{\mu})^T \Sigma ^{-1} (\vec{x} - \vec{\mu})\right)$$
+$$\mathcal{N}(\vec{x} | \vec{\mu}, \Sigma) = \frac{1}{(2\pi)^{n/2}} \frac{1}{\det(\Sigma)^{1/2}} \exp\left(-\frac{1}{2} (\vec{x} - \vec{\mu})^T \Sigma ^{-1} (\vec{x} - \vec{\mu})\right)$$
 where $\vec{x}$ or simply $x$ is the $n$-dimensional vector of random variables. The parameters are similar to the one-dimensional case. The $n$-dimensional vector $\vec{\mu}$ or simply $\mu$ denotes the mean. The symmetric $n \times n$ matrix $\Sigma$ is the \textit{covariance matrix}, where
-$$ \Sigma_{ij} =  cov(x_i, x_j) = \Sigma_{ji}$$
+$$ \Sigma_{ij} =  \cov(x_i, x_j) = \Sigma_{ji}$$
 For the diagonal entries it follows that:
-$$\Sigma_{ii} = cov(x_i,x_i) = var(x_i)$$
-If the variables $x_i$ are independent,$\Sigma$ is a diagonal matrix.
+$$\Sigma_{ii} = \cov(x_i,x_i) = \var(x_i)$$
+If the variables $x_i$ are independent, $\Sigma$ is a diagonal matrix.
 
-Matrix-valued Normal distributions can be written as vector-valued normal distributions by flattening the matrix to a single vector.
-
+Matrix-valued normal distributions can be written as vector-valued normal distributions by flattening the matrix to a single vector.
 Bayes' rule can also be applied to vector-valued normal distributions, which again leads to vector-valued normal distributions as posteriors.
 
 \section{Machine Learning}
-Machine Learning algorithms are everywhere. They control which products we buy, which music we discover and they enable recent advances in industrial automation and autonomous driving. Specialist AI agents routinely outperform the best human players in the hardest games, like Go (\cite{gibney2016google}) or Starcraft II (\cite{vinyals2019alphastar})
-This recent rise of machine learning is caused by a number of factors. Enabled by the internet, almost every interaction with a technological system is tracked and recorded. Big Data is available to the masses through Open Data initiatives.
+Machine Learning algorithms are cetral to almost every area of modern society. They control which products we buy, which music we discover and they enable recent advances in industrial automation and autonomous driving. Specialist Artificial Intelligence agents routinely outperform the best human players in the hardest games, like Go (\cite{gibney2016google}) or Starcraft II (\cite{vinyals2019alphastar}).
+This recent rise of machine learning can be attributed to a number of factors. Enabled by the internet, almost every interaction with a technological system is tracked and recorded. Large, high-quality data sets are available to everyone with an internet connection through Open Data initiatives.
 Learning algorithms have been around for a few decades, but recent advances in hardware meant it became economically feasable to use them on a large scale.
 
 The general process of machine learning can be summarized in multiple steps:
 \\
 
 \begin{markdown}
-1. Gathering Data: The gathered data needs to be prepared and split into multiple sets, one for training, a test set for evaluation and a third set for validation of hyperparameter tuning.
-2. Chosing the model: Depends on the problem. A possible choice for image classification tasks is a Convolutional Deep Neural Network, for example.
-3. Training the model: The model is shown the data, and its parameters are adjusted towards the optimal point. The process is often run multiple times with different optimizer hyperparameters to find the best setting.
-4. Application: The model is applied to new data to see how it performs. If it does well, it can be deployed on the designed task.
+1. Gathering Data: The gathered data needs to be prepared and split into multiple sets, one for training, one set for testing generalization and a third set for validation of hyperparameter tuning.
+2. Chosing the model: Chosing a suitable model depends on the problem, requirements and other constraints. A possible choice for image classification tasks is for example a Convolutional Deep Neural Network.
+3. Training the model: The model is shown the data, and its parameters are adjusted towards the optimal setting, as measured by a predetermined metric. The process is often run multiple times with different optimizer hyperparameters to find the best setting, which is called \textit{hyperparameter tuning}.
+4. Application: The model is tested on the previously prepared test data set to see how it performs. If it does well, it can be deployed on the intended task.
 \end{markdown}
 
 \subsection{Loss functions}
@@ -217,31 +219,31 @@ Here $\lambda$ is a parameter that determines the strength of the regularization
 It's worth noting that the choice of loss function and the regularization term have a significant impact on the outcome and convergence speed of training. Ultimately, other measures like classification accuracy might be more important during application.
 
 \section{Optimization}
-In order to find the optimal values for the parameters of a model, different methods have been proposed. For low-dimensional optimization problems with a small number of parameters, it is often possible to find the optimal parametrization analytically. For high-dimensional optimization problems, the analytical solution often is computationally intractable. Numerical algorithms are a solution to this problem.
-They use the available local information in order to iteratively approximate the globally optimal parametrization. The number of iterations needed until the algorithm converges varies based on the implicit prior assumptions about the model.
+In order to find the optimal values for the parameters of a model, different methods have been proposed. For low-dimensional optimization problems with a small number of parameters, it is often possible to find the optimal parametrization analytically. For high-dimensional optimization problems, the analytical solution often is computationally intractable. 
+
+Numerical algorithms address this problem by using the available local information in order to iteratively approximate the globally optimal parametrization. The number of iterations needed until the algorithm converges varies based on the implicit prior assumptions about the model.
 Some of these optimization processes expose \textit{hyperparameters}, which influence the performance of the algorithm. These are different from the model's parameters, which we want to optimize.
 
-For Deep Learning models, it is possible to obtain information about the derivatives $\nabla ^n L$ of the loss function $L$ at a given point in parameter-space. Optimization algorithms can be grouped by the order of the highest-order derivative they use.
-
+Optimization algorithms can be grouped by the order of the highest-order derivative they use.
 There are zeroth-order methods that only require the value of the loss function itself.
-
 First-order methods like Gradient Descent use the first derivative, or the gradient. They work under the assumption that the gradient points in the direction of the global minimum and approaches zero while approaching the minimum.
 
 \subsection{Gradient Descent}
-If the gradient of the Loss function at a certain point in parameter space is known, this information can be used to update the parameters in the direction towards towards the solution. A widely used family of optimization algorithms is derived from Gradient Descent. Gradient Descent means: Just take a step in the direction of steepest gradient. Scale the step size by the steepness of the gradient. If the gradient is very steep, take a larger step. If it is small, take a smaller step, like a drunk student tumbling down a hill and ending up on a local minimum.
+If the gradient of the Loss function at a certain point in parameter space is known, this information can be used to update the parameters in the direction towards the solution. A widely used family of optimization algorithms is derived from Gradient Descent. Gradient Descent means: Just take a step in the direction of steepest gradient. Scale the step size by the steepness of the gradient. If the gradient is very steep, take a larger step. If it is small, take a smaller step, like a drunk student taking repeated tumbles down a hill and ending up on a local minimum.
 $$w_{i+1} = w_i - \alpha \cdot \nabla L(w_i) $$
-Gradient Descent has only a single hyperparameter, the "learning rate" $\alpha$, which is multiplied with the step. Its optimal choice depends on the data, the model and is generally not obvious.
+Gradient Descent only has a single hyperparameter, the "learning rate" $\alpha$, which scales the step. Its optimal choice depends on the problem and is generally not obvious.
 
 \subsection{Stochastic Gradient Descent}
-Traditional Gradient Descent uses the whole data set to compute the true gradient, which is computationally instractable for large datasets, the usual case in machine learning. There is a variation called Stochastic Gradient Descent(SGD). Instead of the true loss, which is the model's performance on the whole training data, it computes only an estimate for the true loss by using a subset or \textit{Minibatch} of the training data. A common choice is between 32 and 256 data items per minibatch.
-This greatly improves convergence speed, as the required computations are much easier to perform. However, especially for smaller batch sizes, this adds noise to the system, meaning that our parameter update step points only roughly in the direction of the steepest actual gradient. It has also been shown to improve generalization of the model.
+Traditional Gradient Descent is a deterministic model, which in Deep Learning is equivalent to using the whole data set to compute the true gradient. Given a large data set, one can better use their computational ressources by taking several noisy smaller steps instead of one precise step.
+This variation is called \textit{Stochastic} Gradient Descent. Instead of the true loss, which is the model's performance on the whole training data, it computes only an estimate for the true loss by using a subset or \textit{Minibatch} of the training data. A common choice is between 32 and 256 data items per minibatch.
+This greatly improves convergence speed, as the required computations are much easier to perform. However, especially for smaller batch sizes, this adds noise to the system, meaning that the parameter update step points only roughly in the direction of the steepest actual gradient.
 $$w_{i+1} = w_i - \alpha \cdot \nabla \hat{L}(w_i) $$
-Many variants of SGD have been proposed, for example by adding a  momentum term or otherwise adapting the learning rate dynamically.
+Many variants of SGD have been proposed, for example by adding a momentum term or otherwise dynamically adapting the learning rate.
 
 \subsection{Second-Order Methods}
 First-order methods scale their step length by the gradient of the Loss function. This means that they get stuck on flat plateaus, because the gradient is very small.
-Adaptive Modifications of SGD like \verb|Adam| and \verb|Momentum| keep track of previously seen gradients in order to take better steps. This implicitly assumes that past gradients contain information about future gradients, which is often the case.
-For example, if there is little change in the last gradients, one can assume that the optimizer is far away from the minimum, where gradients should converge to zero. Therefore, it is now able to take larger steps.
+Adaptive Modifications of SGD like Adam and Momentum keep track of previously seen gradients in order to take better steps. This implicitly assumes that past gradients contain information about future gradients, which is often the case.
+For example, if there is little change in the last observed gradients, one can assume that the optimizer is far away from the minimum where gradients should converge to zero. Therefore, it is now able to take larger steps.
 
 Second-Order-Methods are methods that explicitly use the Hessian $B$ of the Loss function, which is equivalent to the second derivative$\nabla\nabla{L}(w_i)$. This means they can use the explicit representation of curvature to take even better optimization steps.
 
@@ -251,19 +253,19 @@ Note the similarity to SGD's update rule, but replacing the scalar learning rate
 
 \section{Preconditioning} \label{sec:preconditioning}
 SGD takes large steps if the gradient of the loss landscape is steep, and it takes small steps if the gradient of the loss landscape is flat. The underlying assumption is that as the gradient gets flatter (approaches zero), the algorithm approaches the minimum of the loss function. Taking large steps close to the minimum most likely means taking a step away from the minimum.
-However, SGD is not aware of the scale of the loss landscape. Some problems are generally flatter and have low general curvature than others that might curve more. On these generally flat problems, flat gradients can be observed quite far from the minimum and mandate larger steps.
+However, SGD is not aware of the scale of the loss landscape. Some problems are generally flatter and have low general curvature than others. On these generally flat problems, flat gradients can be observed quite far from the minimum and mandate larger steps.
 Recalling the update function of SGD, the learning rate parameter $\alpha$ is a scaling factor for the gradient, which can correct for non-optimal general steepness:
 $$w_{i+1} = w_i - \alpha \cdot \nabla \hat{L}(w_i) $$
 Tuning the learning rate amounts to finding a global scaling factor for the gradient.
 
 Often, machine learning problems are scaled differently in different directions. In one direction with low curvature, the problem might be quite flat, while in another direction with high curvature, gradients are generally steeper. This means that the optimal step length depends not only on the steepness of the gradient, but also its direction (In the low curvature direction, longer steps are warranted than in the high curvature direction).
-This structure is impossible to fully capture and correct for with a simple scalar learning rate. Chosing the appropriate small learning rate for the high curvature direction means the algorithm learns very slowly in the low curvature direction. Chosing anything larger than that runs a risk of exploding gradients in the high curvature direction, as the steps are too large.
-Using a matrix $P$ (the \textit{Preconditioner}) to scale every entry of the gradient matrix individually, we get the following update rule for Preconditioned SGD:
+It is impossible to fully capture and correct for this structure using a simple scalar learning rate. Chosing the appropriate small learning rate for the high curvature direction will make the algorithm learn very slowly in the low curvature direction. Chosing anything larger than that runs a risk of exploding gradients in the high curvature direction, as the steps are too large.
+Using a matrix $P$ (the \textit{Preconditioner}\footnote{Technically, a Preconditioner is any transformation which reduces the \textit{condition number}, or the ratio between largest and smallest eigenvalues of a problem}) to scale every entry of the gradient matrix individually, we get the following update rule for Preconditioned SGD:
 $$w_{i+1} = w_i - \alpha \cdot P \cdot \nabla \hat{L}(w_i) $$
-A perfect preconditioner would be the inverse of the true Hessian of the loss function, which exactly captures the curvature of every parameter. If it were available, the true Hessian could however be used for second-order methods, eliminating the need for preconditioning.
-Computing the true Hessian is very hard and expensive in the high-dimensional and noisy deep learning setting, so various approximations have been proposed.
+A perfect preconditioner would be the inverse of the true Hessian of the loss function, which exactly captures the curvature of every parameter. If it were available, the true Hessian could be used for second-order methods, eliminating the need for preconditioning.
+Computing the true Hessian is very hard and expensive in the high-dimensional and noisy deep learning setting, so various approximations have been studied. \todo{maybe cite}
 
-Convergence speed depends on the \textit{condition number} $\kappa = \frac{\lambda_n}{\lambda_1}$ of the Hessian.\todo{cite}
+Convergence speed depends on the \textit{condition number} $\kappa = \frac{\lambda_n}{\lambda_1}$ of the Hessian.\todo{cite Saad, "Numerical Optimization"}
 
 \todo[inline]{derivation of why the condition number is important, Limit on convergence}
 $$ \frac{\kappa - 1}{\kappa + 1}$$
@@ -272,44 +274,41 @@ $$ \frac{\kappa - 1}{\kappa + 1}$$
 
 \section{Deep learning}
 \subsection{Artificial Neural Networks}
-A popular machine learning paradigma is living through a resurgence: Artificial Neural Networks. The fundamental building block is the single neuron, which somewhat resembles a biological neuron. Its activation depends on the sum of the activation of its inputs. A neural network model is a sequence of neuron layers, connected with each other. There is an input layer, which is a direct mapping of the training data point. The input layer' activation are fed forward into the "hidden layers", which in turn feed their activations to the neurons of the output layer. Information about observed data is stored in the model's parameters, the weights and biases of each layer.
+A popular machine learning paradigma is living through a resurgence: Artificial Neural Networks. The fundamental building block is the single neuron, which somewhat resembles a biological neuron. Its activation depends on the sum of the activation of its inputs. A neural network model is a connected sequence of neuron layers. There is an input layer which is a direct mapping of the training data point. The input layer' activation are fed forward into the "hidden layers", which in turn feed their activations to the neurons of the output layer. Information about observed data is stored in the model's parameters, the weights and biases of each layer.
 As a mathematical object, a neuron is an activation function which depends on the sum of the weighted activations of the inputs. Often there is a bias, which is a static value added to the input activation. Activation functions are not necessarily linear.
 For example, the Rectified Linear Unit is widely used:
 $$ReLU(x) = \max(0,x) $$
+The full activation of a Neuron $x_j$ in layer $\ell$ in a model with the layer's input weight matrix $W^{\ell -1}$ and bias $b_j$ is given by:
+$$x_j^{\ell}=\sigma \left( \sum\limits_i W^{\ell -1}_{ji}x_i^{\ell-1} + b_j\right)$$
+$W^{\ell -1}_{ji}$ refers to the weight between neuron $i$ in layer $\ell -1$ and neuron $j$ in layer $\ell$.
 
-Different architectures of neural networks have emerged, which are useful for different tasks and types of input data. For example, fully connected Convolutional Neural Networks (CNN) are good at encoding visual or spatial information, while Recurrent Neural Networks have an internal state and are good at encoding information over time.
+Different architectures of neural networks have been studied, which are useful for different tasks and types of input data. For example, fully connected Convolutional Neural Networks (CNN) are good at encoding visual or spatial information, while Recurrent Neural Networks have an internal state and are good at encoding information over time.
+
 
 
 \subsection{Automatic Differentiation}
-First- and higher-order optimizers require the gradient at the current point in parameter space. In neural networks, this is achieved by an algorithm called backpropagation.
-Loss functions in neural networks are the composition of all the layerwise activation functions, which are all individually differentiable. This structure leads to the algorithm of backpropagation, which computes the gradient by doing a \textit{forward pass} followed by a \textit{backward pass}.
+First- and higher-order optimizers require information about the derivatives $\nabla ^n L$ of the loss function $L$ at a given point in parameter-space.In neural networks, this is achieved by an algorithm called \textit{backpropagation}.
+Loss functions in neural networks are the composition of all the layerwise activation functions which are all individually differentiable. This structure leads to the algorithm of backpropagation, which computes the gradient by doing a \textit{forward pass} followed by a \textit{backward pass}.
 
-For the forward pass, the loss function for a given minibatch is computed by applying the model to the minibatch data and computing the error score on its output. During these computations, all operations on the hidden layers are recorded in a graph structure. For each of these basic operations, computing the gradient is trivial. Taking the final loss value as the root of the graph, the algorithm traverses backwards through the graph and computes individual partial derivatives for each parameter by applying the chain rule along the path.
+In the forward pass, the loss function for a given minibatch is computed by applying the model to the minibatch data and computing the error score on its output. During these computations all operations on the hidden layers are recorded in a graph structure. For each of these basic operations computing the gradient is trivial. Taking the final loss value as the root of the graph, the algorithm traverses backwards through the graph and computes individual partial derivatives for each parameter by applying the chain rule along the path.
+
 
 \section{Benchmarking}
-\begin{markdown}
-There are no standard established benchmarking protocols for new optimizers. It isn't even clear what measures to consider, or how they are to be measured. As a result, nobody knows which optimizers are actually good. And some bad optimizers will seem good.
+There are no standard established benchmarking protocols in research on optimizers. It is unclear what measures to consider, or how they are to be measured. This means there is no rigorous base for chosing an optimizer as a practicioner.
 DeepOBS is a solution to this problem, standardizing a protocol, providing benchmarks and standard test problems.
 
-- Description and examples of previous optimizer plots.
-- Short overview of how deepobs handles stuff:
-    - Test problems:
-      	- DeepOBS includes the most used standard datasets and a variety of neural network models to train. This ensures that everyone is evaluated on the same problem.
-    - Tuning:
-    	- Many optimizers have hyperparameters that greatly affect the optimizer's performance
- 	    - These need to be tuned by running many settings seperately, for example in a grid search. The actual deepobs protocol isn't ready yet.
-      - DeepOBS generates commands for the grid search.
-    - Running:
-      	- DeepOBS provides a standard way to run your optimizer, taking care of logging parameters and evaluating success measures.
-    - Analyzing:
-      	- DeepOBS provides the analyzer class, which is able to automatically generate matplotlib plots showing the results of your runs.
-\end{markdown}
+It includes the most used standard datasets and a variety of neural network models to train as standard problems. Also, the performance of a variety of widely-used optimizers comes with DeepOBS as a baseline, which means these runs don't have to be repeated by every single researcher.
+DeepOBS specifies a protocol for hyperparameter tuning(see \cite{abahde}). Otherwise, researchers with ressources for extensive hyperparameter tuning would have an edge over those who can't afford such extensive tuning.
+It also provides the software suite to run the actual experiments on optimizers. It takes care of logging parameters and evaluating success measures.
+The analyzer class can generate matplotlib plots showing the experiment data.
+
+All in all, DeepOBS fixes most parameters that need to be fixed when evaluating optimizers, which provides for a reasonably solid foundation for comparison.
 
 %\section{Related Work}
 %\todo{in which other ways has this problem been adressed? (What even is the problem?)}
 
 
-\chapter{Approach (Implementation)}
+\chapter{Approach and Implementation}
 \section{Description of the algorithm}
 As described in section \ref{sec:preconditioning}, a perfect preconditioner would be the inverse of the Hessian of the loss function, wich is not directly accessible and expensive to compute.
 The algorithm tested in this thesis is described in detail in \cite{roos2019active}.
@@ -559,8 +558,13 @@ Both SGD and Preconditioned SGD with a stable manual first-epoch learning rate a
 
 
 
-\section{Discussion}
-The experiments presented in the previous sections show that the algorithm proposed in \cite{roos2019active} is not generally useful for application in deep learning. In Experiment 1 it is outperformed in nearly every measure of training success by established optimizers. When compared to a direct alternative without it, neither the preconditioner nor the adaptive step size show an increase in performance.
+\section{Discussion} % Important stuff first - neat details last.
+The experiments presented in the previous sections show that the tested implementation of the algorithm proposed in \cite{roos2019active} is not generally useful for application in deep learning.
+
+In Experiment 1A it performs worse than established baseline optimizers in nearly every measure of training success.
+Experiment 1B was set up to check effects of other stuff.
+
+When compared to a direct alternative without it, neither the preconditioner nor the adaptive step size show an increase in performance.
 
 This stands in direct contrast to the findings of the original authors, who report the algorithm comparing favourably against SGD in particular. However, the used testing protocol is not thoroughly explained. Test problem, batch size and SGD learning rates were set manually and without giving a reason, which makes the results hard to interpret. In a similar way, the Preconditioner's hyperparameters were not tuned in a systematic way in the experiments in this thesis.
 
@@ -569,10 +573,12 @@ Given this caveat, the comparatively poor performance of both AdaptiveSGD and Pr
 In order to keep computational overhead of applying the preconditioner manageable, the preconditioner matrix was reduced to rank two. This however does not have a large effect on the condition number. In Deep Learning, generally there are many large eigenvalues that would all need to be reduced by a preconditioner in order to see a notable improvement on the condition number. Given that applying the preconditioner actually leads to smaller learning success than ignoring it, applying the rank-2-approximation preconditioner seems to be counterproductive. Because gradients can vary dramatically, the preconditioner is noisy. The algorithm also always re-starts the whole estimation process, while ignoring curvature data gathered in previous iterations. As a consequence the estimate does not become more accurate over time. This is in accordance with the authors' assesment that the good performance is mainly caused by the adaptive step size.
 
 Another possible reason that SGD outperforms the preconditioner is that while estimating the Hessian, the Preconditioner does not use the data for actual parameter updates. The effect of this depends on the number of minibatches.
+
 \begin{markdown}
 *Preconditioning + adaptive learning rate* performs worse than *tuned SGD*, but *Preconditioning + fixed tuned learning rate* performs better than *tuned SGD*. *Adaptive learning rate* performs worse than *tuned SGD* but better than *Preconditioning + adaptive learning rate*. This means that there are interaction effects between applying preconditioning and dynamically adapting the learning rate. On the preconditioned loss landscape, using the adaptive learning rate is beneficial, while on the non-preconditioned loss landscape, it is not optimal.
 \end{markdown}
 
+%%% Experiment 2
 In experiment 2, the performance penalty was investigated. The authors report that the cost of building the rank 2 approximation accounted for 2-5\% of the total computational cost per epoch, using a batch size of 32 on the training subset of CIFAR-10. This number does not tell the whole story. This thesis adds to this finding the performance penalty of estimating the Hessian and applying the preconditioner. The prior observations add no considerable overhead compared to SGD, while both calculating and applying the Preconditioner add considerable overhead. Adam as another adaptive method is almost exactly as fast as SGD.
 
 Using the DeepOBS standard batch size of 128, there are fewer minibatches per epoch, which means the estimation of the Hessian on the same number of steps uses a larger proportion of total training time. In this setting, using the preconditioner incurs a computational cost of more than double that of SGD. Two epochs of SGD can be run in the time it takes to compute the preconditioner and apply it during every step in one epoch.
@@ -588,7 +594,7 @@ Generally, the experiments in this thesis were mostly performed on convolutional
 
 The usability goals of the implementation were met, as the experiments required no modifications to the final optimizer class to be run and integrate nicely with DeepOBS.
 
-\section{Further research/development}
+\section{Further Research and Development}
 This thesis can not exhaustively cover all aspects of the presented optimizer implementation. There are open questions the experiments didn't answer and several improvements to be made to the implementation and the algorithm itself.
 
 The relationship between the Preconditioner's remaining hyperparameters and accuracy and computational overhead remains unclear. How much better does the estimate get when using an additional data point? The Hessian is taken as the mean of a Gaussian distribution, so the variance of this distribution could be taken as a measure for uncertainty. The algorithm could keep using new data points until the certainty of the estimate doesn't improve anymore and the remaining variance can mostly be explained by minibatch sampling noise.
