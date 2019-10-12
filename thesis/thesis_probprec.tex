@@ -435,34 +435,69 @@ Computation was distributed over multiple GPU compute nodes using the workload m
 
 During development, I used git on github for distributed version control.
 
-
 \chapter{Experiments}
+The main goal of the experiments was to investigate the training performance of the proposed algorithm on neural networks.
+In Experiments 1 and 2, the various phases of the optimizer were tested seperately for training performance and wallclock time as a proxy for complexity.
+In Experiments 3 and 4, outside factors were varied to study the influence of initialization, batch size and the first-epoch learning rate on the proposed full algorithm.
+
+Experiments were run on the setup described in the previous chapter, using DeepOBS standard procedures and parameters.
+
 \section{Experiment 1: Preconditioning}
 \begin{markdown}
-In order to investigate the effect on training performance of the proposed preconditioning algorithm, two similar, but distinct versions were used. Firstly, `PreconditionedSGD`, the full algorithm as previously described uses SGD to do the actual parameter updates. Secondly, `AdaptiveSGD` also computes the preconditioner and constructs a learning rate, but does not apply the preconditioner. It is a subclass of `Preconditioner` that has the `_apply_precenditioner()` method replaced with an empty method. Those two optimizers were tested on the DeepOBS testproblems `cifar10_3c3d` and `fmnist_2c2d`, using the standard settings as provided by DeepOBS.
-The hyperparameters used for the experiment were the same for both optimizers: `num_observations = 10`, `prior_iterations = 5`, `est_rank = 2`, `optim_class = torch.SGD`, `lr = None`
-
-The results are presented in figure \end{markdown}
-\ref{fig:exp_preconditioning}
-\begin{markdown}, together with the DeepOBS baselines on the same problems. In almost every metric, both tested optimizers were outperformed by all widely used standards like simple SGD and Adam. Interesingly, the `fmnist_2c2d` problem seems prone to overfitting: All the standard optimizers increase on test loss after reaching a local minimum. However, the test accuracy does not seem to suffer from this same problem. `PreconditionedSGD` and `AdaptiveSGD` don't show this behavior, but also don't reach convergence even after 100 epochs, when they still continue to improve. The difference in achieved accuracy is smaller on `fmnist_2c2d` than on `cifar10_3c3d`.
-Another finding is that the variance of `PreconditionedSGD` and `AdaptiveSGD` is larger than the variance of the baseline optimizers.
-
-On every metric, `PreconditionedSGD` is significantly outperformed by the variant without preconditioning, `AdaptiveSGD`.
+This experiment consists of two parts: In part A, the full preconditioning algorithm applied to SGD is tested against the baselines.
+In part B, the different phases of the algorithm are tested seperately by using subclasses of `Preconditioner` that knock out the corresponding functions.
+The hyperparameters used during the runs were the same for all versions of the algorithm: `num_observations = 10`, `prior_iterations = 5`, `est_rank = 2`, `optim_class = torch.SGD`, `lr = None`. The DeepOBS test problems used were `fmnist_2c2d` and `cifar10_3c3d`.
 \end{markdown}
 
-Investigating further, figure \ref{fig:exp_tunedalpha} shows the performance of \verb|PreconditionedTunedSGD|, which calculates the preconditioner, but does not apply the constructed learning rate. Instead, it uses the exact same learning rate as the well-tuned baseline SGD. Comparing it to SGD isolates the effectiveness of preconditioning without an adaptive learning rate. This version performs comparably to SGD and outperforms the two adaptive versions. On the \verb|cifar10_3c3d| testproblem, it even outperforms SGD.
+The results of part A are presented in figure \ref{fig:exp_preconditioning},
+\begin{markdown}
+together with the DeepOBS baselines on the same problems. In almost every metric, Preconditioned SGD is outperformed by all widely used baselines like bare SGD, Momentum and Adam.
+Interesingly, the `fmnist_2c2d` problem seems prone to overfitting: All the standard optimizers increase on test loss after reaching a local minimum. However, the test accuracy does not seem to suffer from this same problem.
+Preconditioned SGD does not show this behavior, but also does not reach convergence even after 100 epochs, when they still continue to improve, while the baseline optimizers reach convergence between 40 an d 60 epochs.
+Another finding is that the variance of Preconditioned SGD is larger than the variance of the baseline optimizers.
 
+\end{markdown}
 \begin{figure}
-		\input{images/exp_preconditioning.pgf}
-		%\missingfigure[figheight=22cm]{Excluded for performance reasons. Many optimizers on fmnist and cifar10}
-		\caption{Both variants of the algorithm perform significantly worse than established alternatives. AdaptiveSGD is better than PreconditionedSGD. On the fmnist model, the baseline optimizers quickly reach a minimum, but then get worse on the loss. AdaptiveSGD and PreconditionedSGD arrive close the mimimum much later and don't diverge.}
-		\label{fig:exp_preconditioning}
+	\input{images/exp_preconditioning.pgf}
+	%\missingfigure[figheight=22cm]{Excluded for performance reasons. Many optimizers on fmnist and cifar10}
+	\caption{This figure shows training performance of Preconditioned SGD\\
+		 compared with DeepOBS baseline optimizers. It performs comparatively bad on both testproblems.}
+	\label{fig:exp_preconditioning}
 \end{figure}
 
+
+For part B of the experiment, different versions of the preconditioning algorithm were created. See the appendix for an example definition of \verb|AdaptiveSGD|.
+Table \ref{tab:exp_tunedalpha} shows the definitions of the variations. The "Tuned" versions use a constant learning rate during the entire run, precisely the one which was tuned for the baseline standalone inner optimizer for each test problem.
+Momentum was run with the parameter \verb|momentum = 0.9|, as in the DeepOBS baseline.
+
+\begin{table}[h]
+	\centering
+	\begin{tabular}{|r||c|c|c|c|c|}
+		\hline 
+		& (1) & (2) & (3) & (4) & Inner optimizer\\ 
+		\hline 
+		Preconditioned SGD & $\checkmark$ & $\checkmark$& $\checkmark$ & $\checkmark$ & SGD \\ 
+		\hline 
+		Adaptive SGD & $\checkmark$ & $\checkmark$ & $\checkmark$ & & SGD \\ 
+		\hline 
+		Preconditioned Tuned Momentum &  & $\checkmark$ & $\checkmark$ & $\checkmark$ & Momentum \\ 
+		\hline 
+		Preconditoned Tuned SGD & $\checkmark$ &  & $\checkmark$ & $\checkmark$ & SGD \\ 
+		\hline 
+	\end{tabular}
+	\caption{The original algorithm, Preconditioned SGD, calculates a prior (1), constructs and uses a learning rate for the inner optimizer (2), calculates the preconditioner (3) and applies it before every step of the inner optimizer (4). The variations are defined as shown here.}
+	\label{tab:exp_tunedalpha}
+\end{table}
+
+Figure \ref{fig:exp_tunedalpha} shows the results of part B. 
+On every metric, Preconditioned SGD is outperformed by the variant without preconditioning, Adaptive SGD, but both perform much worse than the other optimizers.
+On cifar10\_3c3d, The "Tuned" versions perform very similarly to standalone Momentum, beating standalone SGD. On fmnist\_2c2d, the "Tuned" versions perform similarly to their respective standalone optimizers, but slightly worse.
+The overfitting behaviour on fmnist\_2c2d observed in part A is also exhibited by the "Tuned" optimizers.
 \begin{figure}
 		\input{images/exp_tunedalpha.pgf}
 		%\missingfigure[figheight=22cm]{Excluded for performance reasons. Many optimizers on fmnist and cifar10}
-		\caption{This figure shows the preconditioning algorithm, modified to use the same learning rate as well-tuned SGD, for every epoch. It performs better than standard tuned SGD using the same learning rate, and even better than the adaptive versions.}
+		\caption{Variations of the original algorithm perform better. "Tuned" versions use the same learning rate as tuned baseline standalone optimizers.
+			This figure shows the preconditioning algorithm, modified to use the same learning rate as well-tuned SGD, for every epoch. It performs better than standard tuned SGD using the same learning rate, and even better than the adaptive versions.}
 		\label{fig:exp_tunedalpha}
 \end{figure}
 
