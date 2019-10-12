@@ -501,18 +501,16 @@ The overfitting behaviour on fmnist\_2c2d observed in part A is also exhibited b
 		\label{fig:exp_tunedalpha}
 \end{figure}
 
-\section{Experiment 2: Computational Complexity}
-\begin{markdown}
-Wallclock time is an important metric for practitioners. To the practicioner it is important how much time, energy and money the training of a model costs. It is however difficult to interpret in experiment, because it depends on outside factors like hardware configuration, system load and other sources of statistical noise. DeepOBS provides a script that allows to compare the runtime of an optimizer against the runtime of SGD, run as a baseline on the same problem and the same hardware.
+\section{Experiment 2: Wallclock Time}
+To the practicioner it is important how much time, energy and money the training of a model costs. For this reason, DeepOBS includes a script to estimate wallclock time for given optimizers as compared to SGD. Wallclock time is the runtime as measured by a clock on the wall. It does not correct for hardware and parallelization. As such, it is not a direct measurement for an algorithm's complexity, but rather a proxy for the efficiency of a specific implementation.
 
-The three investigated optimizers were `PreconditionedSGD` and `AdaptiveSGD`, as defined in the previous experiment, and `OnlyAdaptiveSGD`, which only estimates the prior and constructs a step size. `OnlyAdaptiveSGD` is a more efficient version of `AdaptiveSGD`, which also constructs the estimate for the Hessian and the precondiotioner itself, but does not use this information. Once again, `OnlyAdaptiveSGD` is a subclass of `PreconditionedSGD`, but with some knocked-out functions.
+The three investigated optimizers were Preconditioned SGD and Adaptive SGD, as defined in table \ref{tab:exp_tunedalpha}, and OnlyAdaptiveSGD, which is an optimized version of AdaptiveSGD. It simply skips the construction of the preconditioner, which isn't applied anyways.
+As a further baseline, Adam's runtime is tested.
 
-The testproblem used was the default value set by DeepOBS, `mnist_mlp`. Every optimizer was run 5 times for 5 epochs each, on a GPU node of the TCML cluster.
-\end{markdown}
+The testproblem used was the default value set by DeepOBS, \verb|mnist_mlp|, which is a rather small model on mnist, using a batch size of 128. Every optimizer was run 5 times for 5 epochs each, on a GPU node of the TCML cluster.
 
-The results are presented in figure \ref{fig:exp_perf_prec}. As expected, the more computations an optimizer does, the more time it takes to run.
+The results are presented in figure \ref{fig:exp_perf_prec}. As expected, the more phases of the algorithm the preconditioner version goes through, the more time it takes to run.
 \verb|PreconditionedSGD| was the slowest optimizer, taking an average of 2.39 ($SD = 0.36$) times as long as SGD, followed by \verb|AdaptiveSGD|, which required 1.87 ($SD = 0.25$) times the runtime of SGD. \verb|OnlyAdaptiveSGD| took about as much time as SGD, with a mean time of 1.00 ($SD = 0.07$) the time of SGD. \verb|Adam| took about as long as SGD, with a mean time of 0.99 ($SD = 0.08$).
-
 
 \begin{figure}
 	\centering \hspace{-1,5cm}
