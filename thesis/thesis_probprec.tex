@@ -522,33 +522,38 @@ The results are presented in figure \ref{fig:exp_perf_prec}. As expected, the mo
 
 
 \section{Experiment 3: Initialization}
-In \cite{roos2019active} it is reported that the studied implementation of the algorithm includes a hyperparameter for the manual first-epoch learning rate, because the learning rate constructed by the algorithm would be so high that the model diverges in the first epochs. Using the proposed implementation, I was not able to replicate this finding. On all tested problems included in DeepOBS, using the constructed learning rate for the first epoch lead the algorithm to eventual convergence. The authors used a model very similar to the one used in DeepOBS' testproblem \verb|cifar10_3c3d|. Upon closer inspection, the main difference was that DeepOBS initializes the weights explicitly, while the authors used the built-in pytorch initialization functions.
+The original algorithm as studied in \cite{roos2019active} includes a hyperparameter for the manual first-epoch learning rate, because the learning rate constructed by the algorithm would be so high that the model becomes unstable and diverges in the first epochs.
+Using the implementation proposed in this thesis, this instability was not observed. On all tested problems included in DeepOBS, using the constructed learning rate for the first epoch lead the algorithm to eventual convergence.
 
-In order to investigate the effect of initialization, DeepOBS was modied to include the original paper's net, either with explicit DeepOBS or implicit pytorch initialization. This model was then trained for both versions, with batch sizes of 32 (as in the original paper), 64 and 128, for five epochs, for each of 10 random seed values.
+The goal for the experiment was to narrow down the source of the instability by replicating the original setup as closely as possible. The DeepOBS testproblem \verb|cifar10_3c3d| differs in three ways from the original setup. DeepOBS uses an explicit initialization of the weights, while the original setup uses the pyTorch default methods. DeepOBS sets the default batch size for the cifar10 problems to 128, while the original paper used 32. The model itself also differs in small ways.
 
-As is presented in figure \ref{fig:exp_init}, while the initialization method certainly plays a big role in training performance, neither initialization method and neither batch size lead to a diverging run.
+For this experiment, DeepOBS was adapted to use the original model and the initialization method was varied, as well as the batch size. In order to be able to spot inconsistency, each run was 5 epochs long and was repeated on 10 different random seeds. The used optimizer version was Preconditioned SGD, as in the experiments before.
+
+The results are presented in figure \ref{fig:exp_init}. Both the initialization method and batch size have an effect on training performance, but the algorithm was stable for all combinations. The pyTorch initialization is a better prior for this test problem than the DeepOBS initialization. The smaller the batch size, the better Preconditioned SGD performs.
+
 \begin{figure}
 	\centering \hspace{-1,5cm}
 	\input{images/exp_init.pgf}
 	\caption{Experiment 3: PreconditionedSGD on a cifar10 net, comparing initialization methods. The algorithm is stable regardless of batch size and initialization method.}
 	\label{fig:exp_init}
-	
 \end{figure}
 
 
 \section{Experiment 4: Learning Rate Sensitivity}
+The proposed algorithm constructs a learning rate for the inner optimizer, but one can manually specify a learning rate for the first epoch.
+The goal of this experiment was to test how the choice of first-epoch learning rate influences training performance of Preconditioned SGD.
 
-After establishing that it's safe to use the automatically constructed learning rate, it is still unclear whether there is an effect on training success of manually setting a first-epoch learning rate versus using the constructed learning rate.
-A DeepOBS-aided grid search with 10 evaluations on a logarithmic grid between $10^-5$ and $10^2$ on the \verb|fmnist_2c2d| testproblem.
+DeepOBS was used to create independent commands for a grid search with 10 evaluations on a logarithmic grid between $10^-5$ and $10^2$ on the \verb|fmnist_2c2d| testproblem. Having independent commands to execute on the computing cluster meade the grid search easily parallelizable.
 
-The results are shown in \ref{fig:exp_lr_sens}, together with the baseline SGD reference.
-Like SGD, the model diverges in the first epoch if the learning rate is set over a certain threshold. Below this threshold, the first-epoch learning rate has next to no effect on the model's final accuracy after training for 100 epochs. For SGD, which uses the same learning rate for all 100 epochs, there is a significant dropoff in training success for smaler learning rates.
-Both SGD and \verb|PreconditionedSGD| with an optimal choice for learning rate achieve a similar accuracy to \verb|PreconditionedSGD| using the automatically constructed learning rate. 
+The results are shown in \ref{fig:exp_lr_sens}, together with the baseline SGD as reference and a dashed line which represents Preconditioned SGD constructing the first-epoch learning rate by itself.
+Like SGD, the model diverges in the first epoch if the learning rate is set over a certain threshold. Below this threshold, the first-epoch learning rate does not seem to have an effect on the model's final accuracy after training for 100 epochs. 
+For SGD, which uses the same learning rate for all 100 epochs, there is a significant dropoff in training success for smaller learning rates.
+Both SGD and Preconditioned SGD with a stable manual first-epoch learning rate achieve a similar final accuracy to Preconditioned SGD using the automatically constructed learning rate. 
 
 \begin{figure}
 	\centering \hspace{-1,5cm}
 	\input{images/exp_lr_sens.pgf}
-	\caption{Experiment 4: The originally proposed algorithm has an optional hyperparameter "learning rate", which is used as SGD's learning rate in the first epoch. Below a certain model-specific threshold, it performs just as well as the constructed learning rate. Over that threshold, it diverges in the first epoch. }
+	\caption{Experiment 4: The originally proposed algorithm has an optional hyperparameter "learning rate", which is used as SGD's learning rate in the first epoch. Below a certain model-specific threshold, it performs just as well as the constructed learning rate. Over that threshold, it diverges in the first epoch.}
 	\label{fig:exp_lr_sens}
 \end{figure}
 
