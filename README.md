@@ -1,5 +1,6 @@
 # My B.Sc. Thesis
 [📜 pdf: Investigating Probabilistic Preconditioning on Artificial Neural Networks](thesis/thesis_probprec.pdf)
+
 [💻 pdf: Presentation](presentation/talk.pdf)
 
 This repository contains all sources and experimental data for my B.Sc. thesis, in which I evaluate the performance of a probabilistic preconditioning algorithm on neural networks using the benchmarking suite DeepOBS.
